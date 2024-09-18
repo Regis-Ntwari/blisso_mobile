@@ -19,11 +19,13 @@ class ButtonComponent extends StatelessWidget {
       child: Container(
         color: backgroundColor,
         padding:
-            const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
-        child: Text(
-          text,
-          style: TextStyle(color: foregroundColor),
-        ),
+            const EdgeInsets.only(top: 10, left: 15, right: 15, bottom: 10),
+        child: Wrap(children: [
+          Text(
+            text,
+            style: TextStyle(color: foregroundColor),
+          ),
+        ]),
       ),
     );
   }

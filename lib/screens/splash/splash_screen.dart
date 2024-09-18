@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   void navigateToRegister() {
     Future.delayed(Duration(seconds: 3), () {
-      Routemaster.of(context).replace("/register");
+      Routemaster.of(context).replace("/welcome");
     });
   }
 

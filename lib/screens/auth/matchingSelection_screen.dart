@@ -12,6 +12,45 @@ class MatchingSelectionScreen extends StatefulWidget {
 
 class _MatchingSelectionScreenState extends State<MatchingSelectionScreen> {
   int detailsIndex = 0;
+
+  Map<String, double> _chosenValues = {};
+
+  void _showScalePopup(BuildContext context, String attribute) {
+    showDialog(
+        context: context,
+        builder: (BuildContext ctx) {
+          return Dialog(
+            child: StatefulBuilder(builder: (context, setState) {
+              return AlertDialog(
+                title: Text('Choose Scale for $attribute'),
+                content: Slider(
+                    value: _chosenValues[attribute] == null
+                        ? 0
+                        : _chosenValues[attribute]!,
+                    min: 0,
+                    max: 10,
+                    divisions: 10,
+                    label: _chosenValues[attribute] == null
+                        ? '0.0'
+                        : _chosenValues[attribute]!.toStringAsFixed(1),
+                    onChanged: (value) {
+                      setState(() {
+                        _chosenValues[attribute] = value;
+                      });
+                    }),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Routemaster.of(context).pop();
+                      },
+                      child: const Text('OK'))
+                ],
+              );
+            }),
+          );
+        });
+  }
+
   var details = [
     {
       'Interests': [
@@ -60,14 +99,17 @@ class _MatchingSelectionScreenState extends State<MatchingSelectionScreen> {
                           childAspectRatio: 1),
                       itemCount: values!.length,
                       itemBuilder: (BuildContext context, int index) {
-                        return Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Wrap(
-                              children: [Text(values[index])],
+                        return InkWell(
+                          onTap: () => _showScalePopup(context, values[index]),
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Wrap(
+                                children: [Text(values[index])],
+                              ),
                             ),
                           ),
                         );
@@ -82,7 +124,11 @@ class _MatchingSelectionScreenState extends State<MatchingSelectionScreen> {
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.red,
                           onTap: () {
-                            Routemaster.of(context).pop();
+                            if (detailsIndex != 0) {
+                              setState(() {
+                                detailsIndex = detailsIndex - 1;
+                              });
+                            }
                           },
                         ),
                         ButtonComponent(
@@ -90,13 +136,25 @@ class _MatchingSelectionScreenState extends State<MatchingSelectionScreen> {
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                           onTap: () {
-                            setState(() {
-                              detailsIndex = detailsIndex + 1;
-                            });
+                            if (detailsIndex != details.length - 1) {
+                              setState(() {
+                                detailsIndex = detailsIndex + 1;
+                              });
+                            }
                           },
                         )
                       ],
                     ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: ButtonComponent(
+                        text: 'Back to Register',
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        onTap: () {
+                          Routemaster.of(context).replace('/register');
+                        }),
                   )
                 ],
               )),
