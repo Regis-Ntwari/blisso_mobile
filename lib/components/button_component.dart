@@ -14,19 +14,19 @@ class ButtonComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        color: backgroundColor,
-        padding:
-            const EdgeInsets.only(top: 10, left: 15, right: 15, bottom: 10),
-        child: Wrap(children: [
-          Text(
-            text,
-            style: TextStyle(color: foregroundColor),
-          ),
-        ]),
-      ),
-    );
+    double height = MediaQuery.sizeOf(context).height;
+    double width = MediaQuery.sizeOf(context).width;
+    return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            padding:
+                const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
+            shadowColor: Colors.black,
+            fixedSize: Size(width * 0.5, height * 0.05),
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor),
+        onPressed: onTap,
+        child: Text(text));
   }
 }

@@ -39,7 +39,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (_currentPage < _images.length - 1) {
         _currentPage++;
       } else {
-        Routemaster.of(context).push('/register');
+        Routemaster.of(context).push('/register/EMAIL');
       }
 
       _pageController.animateToPage(_currentPage,
@@ -119,19 +119,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   fontWeight: FontWeight.bold, fontSize: 32),
                             ),
                             _buildPageIndicator(),
-                            Row(
+                            Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 ButtonComponent(
-                                    onTap: () {},
+                                    onTap: () => Routemaster.of(context)
+                                        .replace('/register/EMAIL'),
                                     foregroundColor: Colors.white,
                                     backgroundColor: Colors.red,
                                     text: 'Sign up with Email'),
-                                ButtonComponent(
-                                  onTap: () {},
-                                  text: 'Sign up with Phone',
-                                  foregroundColor: Colors.red,
-                                  backgroundColor: Colors.white,
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: ButtonComponent(
+                                    onTap: () => Routemaster.of(context)
+                                        .replace('/register/PHONE'),
+                                    text: 'Sign up with Phone',
+                                    foregroundColor: Colors.red,
+                                    backgroundColor: Colors.white,
+                                  ),
                                 )
                               ],
                             ),
