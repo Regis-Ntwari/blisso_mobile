@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const Padding(
             padding: EdgeInsets.only(top: 8.0, bottom: 16),
             child: Text(
-              'Register',
+              'Login',
               style: TextStyle(
                   color: Colors.red, fontSize: 48, fontWeight: FontWeight.bold),
             ),
@@ -28,8 +28,11 @@ class _LoginScreenState extends State<LoginScreen> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: Text(
-              "Provide your personal details to create your account",
-              style: TextStyle(fontSize: scaler.scale(12)),
+              "Provide email or phone number you used to generate a one tiem password to your account",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: scaler.scale(12),
+              ),
             ),
           ),
           Padding(

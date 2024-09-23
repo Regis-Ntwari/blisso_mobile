@@ -203,6 +203,7 @@ class _MatchingSelectionScreenState extends State<MatchingSelectionScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           'Click the $key which you want and choose a scale out of 10',
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
