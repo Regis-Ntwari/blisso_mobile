@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/screens/auth/login_screen.dart';
-import 'package:blisso_mobile/screens/auth/matchingSelection_screen.dart';
+import 'package:blisso_mobile/screens/auth/password_screen.dart';
+import 'package:blisso_mobile/screens/profile/matchingSelection_screen.dart';
 import 'package:blisso_mobile/screens/auth/register_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
 import 'package:blisso_mobile/screens/welcome/welcome_screen.dart';
@@ -15,6 +16,10 @@ void main() {
     '/matching-selection': (_) =>
         const MaterialPage(child: MatchingSelectionScreen()),
     '/Login': (_) => const MaterialPage(child: LoginScreen()),
+    '/password/:username': (route) => MaterialPage(
+            child: PasswordScreen(
+          username: route.pathParameters['username']!,
+        ))
   });
 
   runApp(MaterialApp.router(

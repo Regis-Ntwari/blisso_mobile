@@ -1,15 +1,37 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:flutter/material.dart';
+import 'package:telephony/telephony.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class PasswordScreen extends StatefulWidget {
+  final String username;
+  const PasswordScreen({super.key, required this.username});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<PasswordScreen> createState() => _PasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final usernameController = TextEditingController();
+class _PasswordScreenState extends State<PasswordScreen> {
+  final Telephony telephony = Telephony.instance;
+
+  final passwordController = TextEditingController();
+
+  void startListen() {
+    telephony.listenIncomingSms(
+        onNewMessage: (smsMessage) {
+          if (smsMessage.body!.contains('Blisso')) {
+            setState(() {
+              passwordController.text = smsMessage.body!.substring(0, 6);
+            });
+          }
+        },
+        listenInBackground: false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    startListen();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: Text(
-              "Provide email or phone number you used to generate a one time password to your account",
+              "Provide one-time password generated to ${widget.username}",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: scaler.scale(12),
@@ -44,14 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                   child: TextFormField(
-                    controller: usernameController,
+                    controller: passwordController,
                     decoration: const InputDecoration(
                         icon: Icon(Icons.person),
-                        hintText: 'Enter your Username',
-                        labelText: 'username *'),
+                        hintText: 'Enter your password',
+                        labelText: 'password *'),
                     validator: (value) {
                       return (value == null
-                          ? 'Your username should be present'
+                          ? 'Your password should be present'
                           : null);
                     },
                   ),
@@ -59,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: ButtonComponent(
-                      text: 'Generate Code',
+                      text: 'Login',
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       onTap: () {}),
