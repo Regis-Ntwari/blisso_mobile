@@ -19,11 +19,11 @@ class ButtonComponent extends StatelessWidget {
     return ElevatedButton(
         style: ElevatedButton.styleFrom(
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             padding:
                 const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
             shadowColor: Colors.black,
-            fixedSize: Size(width * 0.5, height * 0.05),
+            fixedSize: Size(width * 0.90, height * 0.05),
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor),
         onPressed: onTap,

@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:flutter/material.dart';
+import 'package:routemaster/routemaster.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final usernameController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -40,31 +43,37 @@ class _LoginScreenState extends State<LoginScreen> {
           Padding(
               padding: const EdgeInsets.all(10),
               child: Form(
+                  key: _formKey,
                   child: Column(children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                  child: TextFormField(
-                    controller: usernameController,
-                    decoration: const InputDecoration(
-                        icon: Icon(Icons.person),
-                        hintText: 'Enter your Username',
-                        labelText: 'username *'),
-                    validator: (value) {
-                      return (value == null
-                          ? 'Your username should be present'
-                          : null);
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: ButtonComponent(
-                      text: 'Generate Code',
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      onTap: () {}),
-                ),
-              ])))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                      child: TextFormField(
+                        controller: usernameController,
+                        decoration: const InputDecoration(
+                            icon: Icon(Icons.person),
+                            hintText: 'Enter your Username',
+                            labelText: 'username *'),
+                        validator: (value) {
+                          return (value!.isEmpty
+                              ? 'Your username should be present'
+                              : null);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: ButtonComponent(
+                          text: 'Generate Code',
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          onTap: () {
+                            if (_formKey.currentState!.validate()) {
+                              Routemaster.of(context)
+                                  .push('/password/${usernameController.text}');
+                            }
+                          }),
+                    ),
+                  ])))
         ],
       ),
     ));

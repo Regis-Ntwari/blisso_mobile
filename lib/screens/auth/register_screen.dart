@@ -1,4 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -16,6 +18,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final emailUsername = TextEditingController();
   final phoneUsername = TextEditingController(text: '+250 ');
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -46,71 +50,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Padding(
               padding: const EdgeInsets.all(10),
               child: Form(
+                key: _formKey,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                      child: TextFormField(
+                    TextInputComponent(
                         controller: firstname,
-                        decoration: const InputDecoration(
-                            icon: Icon(Icons.person),
-                            hintText: 'Enter your Firstname',
-                            labelText: 'Firstname *'),
-                        validator: (value) {
-                          return (value == null
+                        labelText: 'Firstname *',
+                        hintText: 'Enter your Firstname',
+                        validatorFunction: (value) {
+                          return (value!.isEmpty
                               ? 'Your firstname should be present'
                               : null);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                      child: TextFormField(
+                        }),
+                    TextInputComponent(
                         controller: lastname,
-                        decoration: const InputDecoration(
-                            icon: Icon(Icons.person),
-                            hintText: 'Enter your Lastname',
-                            labelText: 'Lastname *'),
-                        validator: (value) {
-                          return (value == null
+                        labelText: 'Lastname *',
+                        hintText: 'Enter your lastname',
+                        validatorFunction: (value) {
+                          return (value!.isEmpty
                               ? 'Your lastname should be present'
                               : null);
-                        },
-                      ),
-                    ),
+                        }),
                     widget.type == 'EMAIL'
-                        ? Padding(
-                            padding:
-                                const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                            child: TextFormField(
-                              controller: emailUsername,
-                              decoration: const InputDecoration(
-                                  icon: Icon(Icons.person),
-                                  hintText: 'Enter your Email',
-                                  labelText: 'Email *'),
-                              validator: (value) {
-                                return (value == null
-                                    ? 'Your email should be present'
-                                    : null);
-                              },
-                            ),
-                          )
-                        : Padding(
-                            padding:
-                                const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                            child: TextFormField(
-                              controller: phoneUsername,
-                              decoration: const InputDecoration(
-                                  icon: Icon(Icons.person),
-                                  hintText: 'Enter your phone number',
-                                  labelText: 'Phone *'),
-                              validator: (value) {
-                                return (value == null
-                                    ? 'Your phone should be present'
-                                    : null);
-                              },
-                            ),
-                          ),
+                        ? TextInputComponent(
+                            controller: emailUsername,
+                            labelText: 'Email *',
+                            hintText: 'Enter your Email',
+                            validatorFunction: (value) {
+                              return (value!.isEmpty
+                                  ? 'Your email should be present'
+                                  : null);
+                            })
+                        : TextInputComponent(
+                            controller: phoneUsername,
+                            labelText: 'Phone number',
+                            hintText: 'Enter your Phone number',
+                            validatorFunction: (value) {
+                              return (value!.isEmpty
+                                  ? 'Your phone number should be present'
+                                  : null);
+                            }),
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                       child: Column(
@@ -123,8 +102,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
                                   onTap: () {
-                                    Routemaster.of(context)
-                                        .push('/matching-selection');
+                                    if (_formKey.currentState!.validate()) {
+                                      Routemaster.of(context)
+                                          .push('/matching-selection');
+                                    }
                                   })
                             ],
                           ),
@@ -142,7 +123,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.red,
                                 onTap: () {
-                                  Routemaster.of(context).push('/Login');
+                                  if (_formKey.currentState!.validate()) {
+                                    showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (context) {
+                                          return const LoadingScreen();
+                                        });
+                                    Future.delayed(const Duration(seconds: 3),
+                                        () {
+                                      Routemaster.of(context).pop();
+                                      Routemaster.of(context).push('/Login');
+                                    });
+                                  }
                                 }),
                           )
                         ],
