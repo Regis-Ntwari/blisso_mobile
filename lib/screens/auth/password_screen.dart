@@ -1,13 +1,14 @@
 import 'dart:io';
 
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/text_input_component.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:telephony/telephony.dart';
 
 class PasswordScreen extends StatefulWidget {
-  final String username;
-  const PasswordScreen({super.key, required this.username});
+  const PasswordScreen({super.key});
 
   @override
   State<PasswordScreen> createState() => _PasswordScreenState();
@@ -43,6 +44,10 @@ class _PasswordScreenState extends State<PasswordScreen> {
   @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
+
+    String username =
+        SharedPreferencesService.getPreference('username') as String;
+
     return SafeArea(
         child: Scaffold(
       body: Column(
@@ -60,7 +65,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: Text(
-              "Provide one-time password generated to ${widget.username}",
+              "Provide one-time password generated to $username",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: scaler.scale(12),
@@ -74,13 +79,11 @@ class _PasswordScreenState extends State<PasswordScreen> {
                   child: Column(children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                      child: TextFormField(
+                      child: TextInputComponent(
                         controller: passwordController,
-                        decoration: const InputDecoration(
-                            icon: Icon(Icons.person),
-                            hintText: 'Enter your password',
-                            labelText: 'password *'),
-                        validator: (value) {
+                        labelText: 'Password *',
+                        hintText: 'Enter your password',
+                        validatorFunction: (value) {
                           return (value!.isEmpty
                               ? 'Your password should be present'
                               : null);

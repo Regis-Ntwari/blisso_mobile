@@ -18,10 +18,7 @@ void main() {
     '/matching-selection': (_) =>
         const MaterialPage(child: MatchingSelectionScreen()),
     '/Login': (_) => const MaterialPage(child: LoginScreen()),
-    '/password/:username': (route) => MaterialPage(
-            child: PasswordScreen(
-          username: route.pathParameters['username']!,
-        ))
+    '/password': (route) => const MaterialPage(child: PasswordScreen())
   });
 
   runApp(ProviderScope(

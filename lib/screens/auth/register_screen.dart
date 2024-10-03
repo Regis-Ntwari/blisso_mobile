@@ -132,32 +132,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                               showSnackBar(
                                                   context, userState.error!);
                                             } else {
-                                              print(userState.error);
-                                              Routemaster.of(context)
-                                                  .push('/matching-selection');
+                                              Routemaster.of(context).push(
+                                                  '/password/${widget.type == 'EMAIL' ? emailUsername.text : phoneUsername.text}');
                                             }
                                           }
                                         })
                                   ],
                                 ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                SizedBox(
-                                    child: Text(
-                                  'Already have an account? Click the below button',
-                                  style:
-                                      TextStyle(fontSize: textScaler.scale(9)),
-                                )),
-                                SizedBox(
-                                  child: ButtonComponent(
-                                      text: 'Login',
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.red,
-                                      onTap: () {
-                                        Routemaster.of(context).push('/Login');
-                                      }),
-                                )
                               ],
                             ),
                           )

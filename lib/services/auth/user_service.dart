@@ -14,4 +14,12 @@ class UserService {
 
     return response;
   }
+
+  Future<ApiResponse> loginUser(String username, String password) async {
+    final response = await ApiService().postData(
+        endpoint: '/authentication/token',
+        body: {'username': username, 'password': password});
+
+    return response;
+  }
 }
