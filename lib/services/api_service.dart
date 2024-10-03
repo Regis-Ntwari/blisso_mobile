@@ -5,20 +5,29 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
 class ApiService {
-  static const String baseURL = 'http://10.0.2.2:8080/api/v1';
+  static const String baseURL = 'http://40.122.188.22:8000/';
 
   Future<ApiResponse> _processRequest(Response response) async {
-    try {
-      final data = response.body;
-      final decodedData = jsonDecode(data);
+    final data = response.body;
+    final decodedData = jsonDecode(data);
 
-      return ApiResponse.success(
-        result: decodedData['result'],
-        statusCode: decodedData['statusCode'],
-      );
+    try {
+      if (decodedData.containsKey('data')) {
+        return ApiResponse.success(
+          result: decodedData['data'],
+          statusCode: decodedData['status_code'],
+        );
+      } else {
+        return ApiResponse.failure(
+            errorMessage: decodedData['errors']
+                .toString()
+                .substring(1, decodedData['errors'].toString().length - 1),
+            statusCode: decodedData['status_code']);
+      }
     } catch (e) {
       return ApiResponse.failure(
-          errorMessage: 'Error processing response ${e.toString()}');
+          errorMessage: decodedData['errors'],
+          statusCode: decodedData['status_code']);
     }
   }
 

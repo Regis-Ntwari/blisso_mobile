@@ -15,7 +15,8 @@ class TextInputComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 6, right: 6),
+      padding:
+          const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 6, right: 6),
       child: TextFormField(
           controller: controller,
           decoration: InputDecoration(
@@ -32,7 +33,8 @@ class TextInputComponent extends StatelessWidget {
                 borderSide: BorderSide(color: Colors.transparent),
               ),
               hintText: hintText,
-              labelText: labelText),
+              labelText: labelText,
+              floatingLabelBehavior: FloatingLabelBehavior.auto),
           validator: (value) => validatorFunction(value)),
     );
   }

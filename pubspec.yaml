@@ -38,6 +38,9 @@ dependencies:
   routemaster: ^1.0.1
   telephony: ^0.2.0
   http: ^1.2.2
+  local_auth: ^2.3.0
+  shared_preferences: ^2.3.2
+  flutter_riverpod: ^2.5.1
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +70,7 @@ flutter:
     - assets/images/welcome1.jpg
     - assets/images/welcome2.jpg
     - assets/images/welcome3.jpg
+    - assets/images/avatar1.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

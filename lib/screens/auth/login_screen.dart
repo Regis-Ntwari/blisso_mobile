@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -45,21 +46,15 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Form(
                   key: _formKey,
                   child: Column(children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                      child: TextFormField(
+                    TextInputComponent(
                         controller: usernameController,
-                        decoration: const InputDecoration(
-                            icon: Icon(Icons.person),
-                            hintText: 'Enter your Username',
-                            labelText: 'username *'),
-                        validator: (value) {
+                        labelText: 'Username *',
+                        hintText: 'Enter your username',
+                        validatorFunction: (value) {
                           return (value!.isEmpty
                               ? 'Your username should be present'
                               : null);
-                        },
-                      ),
-                    ),
+                        }),
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: ButtonComponent(

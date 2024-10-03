@@ -1,11 +1,9 @@
 class ApiResponse {
   String? errorMessage;
-  String? statusCode;
+  int? statusCode;
   dynamic result;
-  bool isProcessed;
 
-  ApiResponse.success({this.result, this.statusCode}) : isProcessed = true;
+  ApiResponse.success({this.result, this.statusCode});
 
-  ApiResponse.failure({this.errorMessage, this.statusCode})
-      : isProcessed = false;
+  ApiResponse.failure({this.errorMessage, this.statusCode});
 }
