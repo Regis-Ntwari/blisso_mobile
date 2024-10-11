@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class BiometricButtonComponent extends StatelessWidget {
-  const BiometricButtonComponent({super.key});
+  final VoidCallback onTap;
+  const BiometricButtonComponent({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,7 @@ class BiometricButtonComponent extends StatelessWidget {
             fixedSize: Size(width * 0.90, height * 0.05),
             backgroundColor: Colors.white,
             foregroundColor: Colors.red),
-        onPressed: () {},
+        onPressed: onTap,
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

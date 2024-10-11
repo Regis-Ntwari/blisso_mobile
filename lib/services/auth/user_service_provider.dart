@@ -49,7 +49,44 @@ class UserServiceProvider extends StateNotifier<ApiState> {
         state = ApiState(data: response.result, isLoading: false);
 
         SharedPreferencesService.setPreference(
-            "accessToken", response.result['']);
+            "accessToken", response.result['access']);
+
+        SharedPreferencesService.setPreference(
+            "refreshToken", response.result['refresh']);
+
+        SharedPreferencesService.setPreference("isRegistered", true);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> generateLoginCode() async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await _userService.generateLoginCode();
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> loginBio() async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await _userService.loginViaBiometrics();
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
       }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);

@@ -132,8 +132,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                               showSnackBar(
                                                   context, userState.error!);
                                             } else {
-                                              Routemaster.of(context).push(
-                                                  '/password/${widget.type == 'EMAIL' ? emailUsername.text : phoneUsername.text}');
+                                              Routemaster.of(context)
+                                                  .push('/password');
                                             }
                                           }
                                         })

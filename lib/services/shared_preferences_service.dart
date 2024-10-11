@@ -47,4 +47,8 @@ class SharedPreferencesService {
       debugPrint('$key: $value');
     }
   }
+
+  static Future<SharedPreferences> getSharedPreferences() async {
+    return await SharedPreferences.getInstance();
+  }
 }
