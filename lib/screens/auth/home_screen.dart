@@ -66,7 +66,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset('assets/images/blisso.png'),
+                    Container(
+                        color: Colors.grey[300],
+                        child: Image.asset('assets/images/blisso.png')),
                     Padding(
                       padding: const EdgeInsets.only(top: 30.0),
                       child: Row(
@@ -77,7 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: scaler.scale(28),
-                                color: Colors.red,
+                                color: GlobalColors.primaryColor,
                                 fontWeight: FontWeight.bold),
                           ),
                           Text(
@@ -144,8 +146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               if (userState.error != null) {
                                 showSnackBar(context, userState.error!);
                               } else {
-                                Routemaster.of(context)
-                                    .push('/profile/nickname');
+                                Routemaster.of(context).push('/profile');
                               }
                             }
                             setState(() {

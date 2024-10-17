@@ -4,7 +4,7 @@ import 'package:blisso_mobile/screens/auth/password_screen.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/profile/matchingSelection_screen.dart';
 import 'package:blisso_mobile/screens/auth/register_screen.dart';
-import 'package:blisso_mobile/screens/profile/nickname_screen.dart';
+import 'package:blisso_mobile/screens/profile/profile_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
 import 'package:blisso_mobile/screens/welcome/welcome_screen.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,7 @@ void main() {
     '/password': (_) => const MaterialPage(child: PasswordScreen()),
     '/home': (_) => const MaterialPage(child: HomeScreen()),
     '/homepage': (_) => const MaterialPage(child: HomepageScreen()),
-    '/profile/nickname': (_) => const MaterialPage(child: NicknameScreen())
+    '/profile/': (_) => const MaterialPage(child: ProfileScreen())
   });
 
   runApp(ProviderScope(

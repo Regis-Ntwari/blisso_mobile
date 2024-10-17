@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class BiometricButtonComponent extends StatelessWidget {
@@ -10,6 +11,7 @@ class BiometricButtonComponent extends StatelessWidget {
     double width = MediaQuery.sizeOf(context).width;
     return ElevatedButton(
         style: ElevatedButton.styleFrom(
+            elevation: 5,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             padding:
@@ -17,7 +19,7 @@ class BiometricButtonComponent extends StatelessWidget {
             shadowColor: Colors.black,
             fixedSize: Size(width * 0.90, height * 0.05),
             backgroundColor: Colors.white,
-            foregroundColor: Colors.red),
+            foregroundColor: GlobalColors.primaryColor),
         onPressed: onTap,
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -25,7 +27,7 @@ class BiometricButtonComponent extends StatelessWidget {
             Icon(Icons.fingerprint),
             Text(
               'Login using Biometrics',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: GlobalColors.primaryColor),
             ),
           ],
         ));

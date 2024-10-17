@@ -32,7 +32,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     TextScaler textScaler = MediaQuery.textScalerOf(context);
     return SafeArea(
       child: Scaffold(
-        body: userState.isLoading
+          body: SingleChildScrollView(
+        child: userState.isLoading
             ? const LoadingScreen()
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -148,7 +149,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ],
               ),
-      ),
+      )),
     );
   }
 }

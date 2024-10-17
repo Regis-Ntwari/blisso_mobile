@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
@@ -9,7 +7,6 @@ import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:telephony/telephony.dart';
 
 class PasswordScreen extends ConsumerStatefulWidget {
   const PasswordScreen({super.key});
@@ -19,8 +16,6 @@ class PasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _PasswordScreenState extends ConsumerState<PasswordScreen> {
-  final Telephony telephony = Telephony.instance;
-
   final _passwordController = TextEditingController();
 
   String? username;

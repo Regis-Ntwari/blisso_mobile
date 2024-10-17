@@ -18,6 +18,7 @@ class ButtonComponent extends StatelessWidget {
     double width = MediaQuery.sizeOf(context).width;
     return ElevatedButton(
         style: ElevatedButton.styleFrom(
+            elevation: 5,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             padding:
