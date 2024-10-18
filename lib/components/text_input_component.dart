@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class TextInputComponent extends StatelessWidget {
@@ -14,6 +15,7 @@ class TextInputComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isThemeBright = Theme.of(context).brightness == Brightness.light;
     return Padding(
       padding:
           const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 6, right: 6),
@@ -21,7 +23,8 @@ class TextInputComponent extends StatelessWidget {
           controller: controller,
           decoration: InputDecoration(
               filled: true,
-              fillColor: Colors.grey[800],
+              fillColor:
+                  isThemeBright ? GlobalColors.whiteColor : Colors.grey[800],
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               border: InputBorder.none,

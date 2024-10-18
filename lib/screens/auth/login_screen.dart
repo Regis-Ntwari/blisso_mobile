@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/text_input_component.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -18,8 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
+
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
         child: Scaffold(
+      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

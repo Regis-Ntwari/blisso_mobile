@@ -8,6 +8,7 @@ import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:routemaster/routemaster.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -20,13 +21,20 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _codeController = TextEditingController();
 
+  final LocalAuthentication _localAuthentication = LocalAuthentication();
+
+  bool _canCheckBiometrics = false;
+
+  bool _authenticated = false;
+
   @override
   void initState() {
     super.initState();
     getFirstnameAndUsername();
+    _checkBiometrics();
   }
 
-  String firstname = 'Regis';
+  String firstname = '';
   String? username;
   Future<void> getFirstnameAndUsername() async {
     await SharedPreferencesService.getPreference('firstname').then(
@@ -46,6 +54,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Future<void> _checkBiometrics() async {
+    bool canCheckBiometrics;
+    try {
+      canCheckBiometrics = await _localAuthentication.canCheckBiometrics;
+    } catch (e) {
+      canCheckBiometrics = false;
+    }
+
+    setState(() {
+      _canCheckBiometrics = canCheckBiometrics;
+    });
+  }
+
+  Future<void> _authenticateUsingBiometrics(BuildContext context) async {
+    bool authenticated = false;
+
+    try {
+      authenticated = await _localAuthentication.authenticate(
+        localizedReason: 'Please authenticate to log in',
+        options: const AuthenticationOptions(
+          biometricOnly: true, // Only allow biometric authentication
+          stickyAuth: true,
+        ),
+      );
+    } catch (e) {
+      print(e.toString());
+      showSnackBar(context, 'Authentication failed: $e');
+    }
+
+    if (authenticated) {
+      await ref.read(userServiceProviderImpl.notifier).loginBio();
+
+      final userState = ref.read(userServiceProviderImpl);
+      if (userState.error != null) {
+        showSnackBar(context, userState.error!);
+      } else {
+        Routemaster.of(context).push('/profile/');
+      }
+    }
+  }
+
   bool isCodeClicked = false;
 
   @override
@@ -55,8 +104,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final userState = ref.watch(userServiceProviderImpl);
 
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
     return SafeArea(
         child: Scaffold(
+      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       body: userState.isLoading
           ? const LoadingScreen()
           : SingleChildScrollView(
@@ -66,9 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                        color: Colors.grey[300],
-                        child: Image.asset('assets/images/blisso.png')),
+                    Image.asset('assets/images/blisso.png'),
                     Padding(
                       padding: const EdgeInsets.only(top: 30.0),
                       child: Row(
@@ -160,22 +210,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       padding: const EdgeInsets.only(top: 20),
                       child: Stack(
                         children: [
-                          BiometricButtonComponent(
-                            onTap: () async {
-                              await ref
-                                  .read(userServiceProviderImpl.notifier)
-                                  .loginBio();
-
-                              final userState =
-                                  ref.read(userServiceProviderImpl);
-                              if (userState.error != null) {
-                                showSnackBar(context, userState.error!);
-                              } else {
-                                Routemaster.of(context)
-                                    .push('/profile/nickname');
-                              }
-                            },
-                          ),
+                          _canCheckBiometrics
+                              ? BiometricButtonComponent(
+                                  onTap: () async {
+                                    await _authenticateUsingBiometrics(context);
+                                  },
+                                )
+                              : const SizedBox.shrink(),
                         ],
                       ),
                     )
