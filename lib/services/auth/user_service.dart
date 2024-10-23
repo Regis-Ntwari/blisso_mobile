@@ -24,7 +24,7 @@ class UserService {
     return response;
   }
 
-  Future<ApiResponse> generateLoginCode() async {
+  Future<ApiResponse> generateLoginCode({bool sendLogin = true}) async {
     String? username;
 
     await SharedPreferencesService.getPreference("username").then((value) {
@@ -33,13 +33,13 @@ class UserService {
 
     final response = await ApiService().postData(
         endpoint: '/authentication/generate-login-code/',
-        body: {'username': username, 'send_login_code': true});
+        body: {'username': username, 'send_login_code': sendLogin});
 
     return response;
   }
 
   Future<ApiResponse> loginViaBiometrics() async {
-    ApiResponse response = await generateLoginCode();
+    ApiResponse response = await generateLoginCode(sendLogin: false);
 
     String password = response.result['password'];
 

@@ -25,8 +25,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   bool _canCheckBiometrics = false;
 
-  bool _authenticated = false;
-
   @override
   void initState() {
     super.initState();
@@ -79,7 +77,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
     } catch (e) {
-      print(e.toString());
       showSnackBar(context, 'Authentication failed: $e');
     }
 

@@ -7,11 +7,13 @@ class SexualOrientationComponent extends StatelessWidget {
   final List<String> sexes;
   final String chosenSex;
   final Function changeSex;
+  final VoidCallback onContinue;
   const SexualOrientationComponent(
       {super.key,
       required this.sexes,
       required this.chosenSex,
-      required this.changeSex});
+      required this.changeSex,
+      required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +56,7 @@ class SexualOrientationComponent extends StatelessWidget {
               text: 'Continue',
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
-              onTap: () {})
+              onTap: onContinue)
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/screens/profile/dob_component.dart';
 import 'package:blisso_mobile/screens/profile/gender_component.dart';
+import 'package:blisso_mobile/screens/profile/location_component.dart';
 import 'package:blisso_mobile/screens/profile/nickname_component.dart';
 import 'package:blisso_mobile/screens/profile/sexual_orientation_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -108,11 +109,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SexualOrientationComponent(
                       sexes: sexes,
                       chosenSex: chosenSex,
+                      onContinue: () {
+                        setState(() {
+                          _index = _index + 1;
+                        });
+                      },
                       changeSex: (sex) {
                         setState(() {
                           chosenSex = sex;
                         });
                       })
+                else if (_index == 5)
+                  const LocationComponent()
               ],
             )));
   }
