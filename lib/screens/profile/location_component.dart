@@ -75,7 +75,7 @@ class _LocationComponentState extends State<LocationComponent> {
   Future<String> _getAddressFromLatLong(Position position) async {
     print('${position.latitude} = ${position.longitude}');
     final response = await http.get(Uri.parse(
-        'https://revgeocode.search.hereapi.com/v1/revgeocode?at=${position.latitude},${position.longitude}&apiKey=VfGM4fPchN0G_atKPQNbENtTcRPLN1TgZmoIy05Glek'));
+        'https://revgeocode.search.hereapi.com/v1/revgeocode?at=${position.latitude},${position.longitude}&apiKey=??'));
 
     print(jsonDecode(response.body));
     return 'Hello';
