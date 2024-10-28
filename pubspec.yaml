@@ -72,6 +72,7 @@ flutter:
     - assets/images/welcome2.jpg
     - assets/images/welcome3.jpg
     - assets/images/avatar1.jpg
+    - assets/config/config.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
