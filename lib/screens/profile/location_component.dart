@@ -1,83 +1,103 @@
-import 'dart:convert';
-
+import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:blisso_mobile/services/location/location_service_provider.dart';
 
-class LocationComponent extends StatefulWidget {
-  const LocationComponent({super.key});
+class LocationComponent extends ConsumerStatefulWidget {
+  final Function onContinue;
+  final Function onChangePosition;
+  final Function onChangeAddress;
+  const LocationComponent(
+      {super.key,
+      required this.onChangeAddress,
+      required this.onContinue,
+      required this.onChangePosition});
 
   @override
-  State<LocationComponent> createState() => _LocationComponentState();
+  ConsumerState<LocationComponent> createState() => _LocationComponentState();
 }
 
-class _LocationComponentState extends State<LocationComponent> {
+class _LocationComponentState extends ConsumerState<LocationComponent> {
   String _location = 'Unknown';
 
   String _exactLocation = 'Unknown';
+
+  Future<void> getLocation() async {
+    Position position = await ref
+        .read(locationServiceProviderImpl.notifier)
+        .getLatitudeAndLongitude();
+
+    widget.onChangePosition(position);
+
+    String location = await ref
+        .read(locationServiceProviderImpl.notifier)
+        .getAddress(position);
+    setState(() {
+      _location =
+          'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
+
+      _exactLocation = location;
+    });
+
+    widget.onChangeAddress(location);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 300,
-      width: 300,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('Location: $_location'),
-          Text('Exact Location: $_exactLocation'),
-          ElevatedButton(
-              onPressed: () async {
-                Position position = await _determinePosition();
-
-                String location = await _getAddressFromLatLong(position);
-                setState(() {
-                  _location =
-                      'Lat: ${position.latitude}, Long: ${position.longitude}';
-
-                  _exactLocation = location;
-                });
-              },
-              child: const Text('Get Location'))
-        ],
-      ),
-    );
-  }
-
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled');
-    }
-
-    permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied');
-    }
-
-    return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-  }
-
-  Future<String> _getAddressFromLatLong(Position position) async {
-    print('${position.latitude} = ${position.longitude}');
-    final response = await http.get(Uri.parse(
-        'https://revgeocode.search.hereapi.com/v1/revgeocode?at=${position.latitude},${position.longitude}&apiKey=??'));
-
-    print(jsonDecode(response.body));
-    return 'Hello';
+    final userState = ref.watch(locationServiceProviderImpl);
+    TextScaler textScaler = MediaQuery.textScalerOf(context);
+    return userState.isLoading
+        ? const LoadingScreen()
+        : SizedBox(
+            height: 500,
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  children: [
+                    Text('Location',
+                        style: TextStyle(
+                            fontSize: textScaler.scale(24),
+                            color: GlobalColors.primaryColor)),
+                    Text(_location,
+                        style: TextStyle(fontSize: textScaler.scale(12))),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      'Exact Location',
+                      style: TextStyle(
+                          fontSize: textScaler.scale(24),
+                          color: GlobalColors.primaryColor),
+                    ),
+                    Text(
+                      _exactLocation,
+                      style: TextStyle(
+                        fontSize: textScaler.scale(12),
+                      ),
+                    )
+                  ],
+                ),
+                ButtonComponent(
+                  onTap: () async {
+                    await getLocation();
+                  },
+                  text: 'Get Location',
+                  backgroundColor: GlobalColors.whiteColor,
+                  foregroundColor: GlobalColors.primaryColor,
+                ),
+                ButtonComponent(
+                    text: 'Next',
+                    backgroundColor: GlobalColors.primaryColor,
+                    foregroundColor: GlobalColors.whiteColor,
+                    onTap: () => widget.onContinue())
+              ],
+            ),
+          );
   }
 }

@@ -68,19 +68,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _authenticateUsingBiometrics(BuildContext context) async {
     bool authenticated = false;
 
-    // try {
-    //   authenticated = await _localAuthentication.authenticate(
-    //     localizedReason: 'Please authenticate to log in',
-    //     options: const AuthenticationOptions(
-    //       biometricOnly: true, // Only allow biometric authentication
-    //       stickyAuth: true,
-    //     ),
-    //   );
-    // } catch (e) {
-    //   showSnackBar(context, 'Authentication failed: $e');
-    // }
+    try {
+      authenticated = await _localAuthentication.authenticate(
+        localizedReason: 'Please authenticate to log in',
+        options: const AuthenticationOptions(
+          biometricOnly: true, // Only allow biometric authentication
+          stickyAuth: true,
+        ),
+      );
+    } catch (e) {
+      showSnackBar(context, 'Authentication failed: $e');
+    }
 
-    if (true) {
+    if (authenticated) {
       await ref.read(userServiceProviderImpl.notifier).loginBio();
 
       final userState = ref.read(userServiceProviderImpl);

@@ -5,11 +5,13 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
 class ApiService {
-  static const String baseURL = 'http://40.122.188.22:8000/';
+  static const String baseURL = 'http://40.122.188.22:8000';
 
   Future<ApiResponse> _processRequest(Response response) async {
     final data = response.body;
     final decodedData = jsonDecode(data);
+
+    print(decodedData);
 
     try {
       if (decodedData.containsKey('data')) {
@@ -61,8 +63,6 @@ class ApiService {
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
-
-      print(body);
 
       final response =
           await http.post(url, headers: headers, body: jsonEncode(body));

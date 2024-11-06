@@ -15,7 +15,11 @@ class NicknameComponent extends StatelessWidget {
     return Wrap(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 20, left: 10, right: 10),
+          padding: const EdgeInsets.only(
+            top: 20,
+            left: 10,
+            right: 10,
+          ),
           child: Text(
             'My Nickname is',
             textAlign: TextAlign.center,

@@ -32,7 +32,7 @@ class UserService {
     });
 
     final response = await ApiService().postData(
-        endpoint: '/authentication/generate-login-code/',
+        endpoint: 'authentication/generate-login-code/',
         body: {'username': username, 'send_login_code': sendLogin});
 
     return response;

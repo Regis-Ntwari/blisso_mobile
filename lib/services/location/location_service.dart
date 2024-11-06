@@ -1,15 +1,11 @@
 import 'dart:convert';
 
-import 'package:blisso_mobile/services/api_state.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
-class LocationServiceProvider extends StateNotifier<ApiState> {
-  LocationServiceProvider() : super(ApiState());
-
-  Future<Position> _determineLocation() async {
+class LocationService {
+  Future<Position> determineLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -42,9 +38,13 @@ class LocationServiceProvider extends StateNotifier<ApiState> {
 
     final configs = jsonDecode(configData);
     final response = await http.get(Uri.parse(
-        '${configs['LOCATION_API_URL']}"/"${position.latitude},${position.longitude}&apiKey=${configs['LOCATION_API_KEY']}'));
+        '${configs['LOCATION_API_URL']}${position.latitude},${position.longitude}&apiKey=${configs['LOCATION_API_KEY']}'));
 
-    print(jsonDecode(response.body));
-    return 'Hello';
+    Map<String, dynamic> location = jsonDecode(response.body);
+
+    dynamic globalAddress = location['items'][0]['address'];
+    String address =
+        '${globalAddress['countryName']}, ${globalAddress['city']}, ${globalAddress['county']}, ${globalAddress['district']}';
+    return address;
   }
 }
