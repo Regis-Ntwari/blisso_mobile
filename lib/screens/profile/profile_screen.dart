@@ -5,6 +5,7 @@ import 'package:blisso_mobile/screens/profile/gender_component.dart';
 import 'package:blisso_mobile/screens/profile/image_component.dart';
 import 'package:blisso_mobile/screens/profile/location_component.dart';
 import 'package:blisso_mobile/screens/profile/nickname_component.dart';
+import 'package:blisso_mobile/screens/profile/profile_snapshots_component.dart';
 import 'package:blisso_mobile/screens/profile/sexual_orientation_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _thirdPicture;
   File? _fourthPicture;
 
+  final List<int> _chosenOwnInterests = [];
+
   @override
   void initState() {
     super.initState();
@@ -59,14 +62,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       this.position = position;
     });
-    print(position);
   }
 
   void changeAddress(String address) {
     setState(() {
       this.address = address;
     });
-    print(address);
   }
 
   void changeProfilePicture(File? file) {
@@ -97,6 +98,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _fourthPicture = file;
     });
+  }
+
+  void addOwnInterest(interest) {
+    if (_chosenOwnInterests.contains(interest['id'])) {
+      setState(() {
+        _chosenOwnInterests.remove(interest['id']);
+      });
+    } else {
+      _chosenOwnInterests.add(interest['id']);
+    }
+  }
+
+  bool checkInterest(interest) {
+    return _chosenOwnInterests.contains(interest['id']);
   }
 
   @override
@@ -203,6 +218,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             _index = _index + 1;
                           });
                         },
+                      )
+                    else if (_index == 7)
+                      ProfileSnapshotsComponent(
+                        checkInterest: checkInterest,
+                        chosenValues: _chosenOwnInterests,
+                        toggleInterest: addOwnInterest,
                       )
                   ],
                 ),
