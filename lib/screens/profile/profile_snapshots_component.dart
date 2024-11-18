@@ -1,9 +1,11 @@
+import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:blisso_mobile/utils/global_fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
-class ProfileSnapshotsComponent extends StatefulWidget {
+class ProfileSnapshotsComponent extends ConsumerStatefulWidget {
   final List<int> chosenValues;
   final Function checkInterest;
   final Function toggleInterest;
@@ -14,11 +16,12 @@ class ProfileSnapshotsComponent extends StatefulWidget {
       required this.toggleInterest});
 
   @override
-  State<ProfileSnapshotsComponent> createState() =>
+  ConsumerState<ProfileSnapshotsComponent> createState() =>
       _ProfileSnapshotsComponentState();
 }
 
-class _ProfileSnapshotsComponentState extends State<ProfileSnapshotsComponent> {
+class _ProfileSnapshotsComponentState
+    extends ConsumerState<ProfileSnapshotsComponent> {
   int detailsIndex = 0;
 
   final List<String> _chosenValues = [];
@@ -45,11 +48,19 @@ class _ProfileSnapshotsComponentState extends State<ProfileSnapshotsComponent> {
     }
   ];
 
-  Future<void> fetchProfileSnapshots() async {}
+  Future<void> fetchProfileSnapshots() async {
+    final userState =
+        await ref.read(snapshotServiceProviderImpl.notifier).getLifeSnapshots();
+
+    print(userState.data);
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchProfileSnapshots();
+    });
     _copyList();
   }
 
@@ -79,6 +90,7 @@ class _ProfileSnapshotsComponentState extends State<ProfileSnapshotsComponent> {
 
   @override
   Widget build(BuildContext context) {
+    final userState = ref.watch(snapshotServiceProviderImpl);
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final key = _filteredValues[detailsIndex].keys.first;
     final values = _filteredValues[detailsIndex][key];

@@ -3,16 +3,16 @@ import 'package:blisso_mobile/components/pill_button_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
-class SexualOrientationComponent extends StatelessWidget {
-  final List<String> sexes;
-  final String chosenSex;
-  final Function changeSex;
-  final VoidCallback onContinue;
-  const SexualOrientationComponent(
+class MaritalStatusComponent extends StatelessWidget {
+  final List<String> statuses;
+  final String chosenStatus;
+  final Function changeStatus;
+  final Function onContinue;
+  const MaritalStatusComponent(
       {super.key,
-      required this.sexes,
-      required this.chosenSex,
-      required this.changeSex,
+      required this.statuses,
+      required this.chosenStatus,
+      required this.changeStatus,
       required this.onContinue});
 
   @override
@@ -26,8 +26,7 @@ class SexualOrientationComponent extends StatelessWidget {
         children: [
           Wrap(children: [
             Text(
-              'Interested In? ',
-              textAlign: TextAlign.center,
+              'Marital Status ',
               style: TextStyle(
                   fontSize: scaler.scale(32), color: GlobalColors.primaryColor),
             ),
@@ -39,25 +38,25 @@ class SexualOrientationComponent extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: PillButtonComponent(
-                      text: sexes[index],
-                      buttonColor: chosenSex == sexes[index]
+                      text: statuses[index],
+                      buttonColor: chosenStatus == statuses[index]
                           ? GlobalColors.primaryColor
                           : GlobalColors.whiteColor,
-                      foregroundColor: chosenSex == sexes[index]
+                      foregroundColor: chosenStatus == statuses[index]
                           ? GlobalColors.whiteColor
                           : GlobalColors.primaryColor,
-                      onPressed: () => changeSex(sexes[index])),
+                      onPressed: () => changeStatus(statuses[index])),
                 );
               },
-              itemCount: sexes.length,
+              itemCount: statuses.length,
               padding: const EdgeInsets.only(top: 10, bottom: 10),
             ),
           ),
           ButtonComponent(
-              text: 'Continue',
+              text: 'Save Profile',
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
-              onTap: onContinue)
+              onTap: () => onContinue(context))
         ],
       ),
     );

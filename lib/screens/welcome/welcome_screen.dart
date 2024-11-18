@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -16,6 +17,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final PageController _pageController = PageController();
 
   int _currentPage = 0;
+
+  String? chosenLanguage;
 
   Timer? _timer;
 
@@ -78,6 +81,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar: AppBar(
+      //   leading: Container(),
+      //   actions: [
+      //     DropdownButton<String>(
+      //       value: chosenLanguage,
+      //       icon: const Icon(Icons.arrow_downward),
+      //       elevation: 16,
+      //       style: TextStyle(color: GlobalColors.whiteColor),
+      //       underline: Container(
+      //         height: 2,
+      //         color: GlobalColors.primaryColor,
+      //       ),
+      //       onChanged: (String? value) {
+      //         // This is called when the user selects an item.
+      //         setState(() {
+      //           chosenLanguage = value!;
+      //         });
+      //       },
+      //       items:
+      //           L10n.allLanguages.map<DropdownMenuItem<String>>((String value) {
+      //         return DropdownMenuItem<String>(
+      //           value: value == 'ENGLISH' ? 'en' : 'fr',
+      //           child: Text(value),
+      //         );
+      //       }).toList(),
+      //     )
+      //   ],
+      // ),
       body: Stack(
         children: [
           PageView.builder(
@@ -113,11 +144,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Text(
-                              _images[index]['text']!,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 32),
-                            ),
+                            if (index == 0)
+                              Text(
+                                AppLocalizations.of(context)!.welcomeMessage1,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 32),
+                              ),
+                            if (index == 1)
+                              Text(
+                                AppLocalizations.of(context)!.welcomeMessage2,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 32),
+                              ),
+                            if (index == 2)
+                              Text(
+                                AppLocalizations.of(context)!.welcomeMessage3,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 32),
+                              ),
                             _buildPageIndicator(),
                             Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -127,17 +171,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                         .replace('/register/EMAIL'),
                                     foregroundColor: Colors.white,
                                     backgroundColor: Colors.red,
-                                    text: 'Sign up with Email'),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: ButtonComponent(
-                                    onTap: () => Routemaster.of(context)
-                                        .replace('/register/PHONE'),
-                                    text: 'Sign up with Phone',
-                                    foregroundColor: Colors.red,
-                                    backgroundColor: Colors.white,
-                                  ),
-                                )
+                                    text: AppLocalizations.of(context)!
+                                        .signupEmail),
+                                // Padding(
+                                //   padding: const EdgeInsets.only(top: 8.0),
+                                //   child: ButtonComponent(
+                                //     onTap: () => Routemaster.of(context)
+                                //         .replace('/register/PHONE'),
+                                //     text: AppLocalizations.of(context)!
+                                //         .signupPhone,
+                                //     foregroundColor: Colors.red,
+                                //     backgroundColor: Colors.white,
+                                //   ),
+                                // )
                               ],
                             ),
                           ],

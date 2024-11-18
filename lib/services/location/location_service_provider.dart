@@ -11,6 +11,7 @@ class LocationServiceProvider extends StateNotifier<ApiState> {
   Future<Position> getLatitudeAndLongitude() async {
     late Position position;
     try {
+      state = ApiState(isLoading: true);
       position = await locationService.determineLocation();
 
       state = ApiState(data: position, isLoading: false);

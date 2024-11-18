@@ -1,13 +1,18 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class NicknameComponent extends StatelessWidget {
   final GlobalKey<FormState> formKey;
+  final TextEditingController controller;
   final VoidCallback onContinue;
 
   const NicknameComponent(
-      {super.key, required this.formKey, required this.onContinue});
+      {super.key,
+      required this.formKey,
+      required this.onContinue,
+      required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +26,7 @@ class NicknameComponent extends StatelessWidget {
             right: 10,
           ),
           child: Text(
-            'My Nickname is',
+            AppLocalizations.of(context)!.nicknameTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: scaler.scale(32),
@@ -36,15 +41,19 @@ class NicknameComponent extends StatelessWidget {
                   child: Form(
                     key: formKey,
                     child: TextFormField(
-                      decoration: const InputDecoration(
-                          labelText: 'Nickname *',
-                          hintText: 'Enter your Nickname'),
+                      controller: controller,
+                      decoration: InputDecoration(
+                          labelText:
+                              '${AppLocalizations.of(context)!.nickname} *',
+                          hintText: AppLocalizations.of(context)!.hintNickname),
                       validator: (value) {
                         if (value == null) {
-                          return 'Your nickname should be present';
+                          return AppLocalizations.of(context)!
+                              .validatorNickname1;
                         }
                         if (value.trim().length < 3) {
-                          return 'Your nickname requires a minimum of 3 characters';
+                          return AppLocalizations.of(context)!
+                              .validatorNickname2;
                         }
                         return null;
                       },
@@ -55,7 +64,7 @@ class NicknameComponent extends StatelessWidget {
                   top: 10,
                 ),
                 child: Text(
-                  'Nickname should be chosen once. You will not be able to change it afterwards',
+                  AppLocalizations.of(context)!.nicknameSubtitle,
                   style: TextStyle(
                       fontSize: scaler.scale(9),
                       color: GlobalColors.secondaryColor),
@@ -64,7 +73,7 @@ class NicknameComponent extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: ButtonComponent(
-                    text: 'Continue',
+                    text: AppLocalizations.of(context)!.continuei,
                     backgroundColor: GlobalColors.primaryColor,
                     foregroundColor: GlobalColors.whiteColor,
                     onTap: () {

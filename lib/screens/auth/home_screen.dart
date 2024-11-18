@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -122,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'WELCOME BACK, ',
+                            '${AppLocalizations.of(context)!.welcomeBack}, ',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: scaler.scale(28),
@@ -154,11 +155,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               width: width * 0.90,
                               child: TextInputComponent(
                                   controller: _codeController,
-                                  labelText: 'One Time Password',
-                                  hintText: 'Enter your OTP',
+                                  labelText:
+                                      AppLocalizations.of(context)!.password,
+                                  hintText: AppLocalizations.of(context)!
+                                      .hintPassword,
                                   validatorFunction: (value) {
                                     return (value!.isEmpty
-                                        ? 'Your phone number should be present'
+                                        ? AppLocalizations.of(context)!
+                                            .validatorPassword
                                         : null);
                                   }),
                             ),
@@ -167,8 +171,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
                       child: ButtonComponent(
-                          text:
-                              !isCodeClicked ? 'Generate Login Code' : 'Login',
+                          text: !isCodeClicked
+                              ? AppLocalizations.of(context)!.generateCode
+                              : AppLocalizations.of(context)!.login,
                           backgroundColor: GlobalColors.primaryColor,
                           foregroundColor:
                               const Color.fromRGBO(255, 255, 255, 1),

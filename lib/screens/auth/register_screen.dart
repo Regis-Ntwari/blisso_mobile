@@ -7,6 +7,7 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   final String type;
@@ -39,20 +40,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8.0, bottom: 16),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 16),
                     child: Text(
-                      'Register',
+                      AppLocalizations.of(context)!.registerTitle,
                       style: TextStyle(
                           color: GlobalColors.primaryColor,
-                          fontSize: 48,
+                          fontSize: textScaler.scale(48),
                           fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: Text(
-                      "Provide your personal details to create your account",
+                      AppLocalizations.of(context)!.registerSubtitle,
                       style: TextStyle(fontSize: textScaler.scale(12)),
                     ),
                   ),
@@ -64,39 +65,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         children: [
                           TextInputComponent(
                               controller: firstname,
-                              labelText: 'Firstname *',
-                              hintText: 'Enter your Firstname',
+                              labelText:
+                                  '${AppLocalizations.of(context)!.firstname} *',
+                              hintText:
+                                  AppLocalizations.of(context)!.hintFirstname,
                               validatorFunction: (value) {
                                 return (value!.isEmpty
-                                    ? 'Your firstname should be present'
+                                    ? AppLocalizations.of(context)!
+                                        .validatorFirstname
                                     : null);
                               }),
                           TextInputComponent(
                               controller: lastname,
-                              labelText: 'Lastname *',
-                              hintText: 'Enter your lastname',
+                              labelText:
+                                  '${AppLocalizations.of(context)!.lastname} *',
+                              hintText:
+                                  AppLocalizations.of(context)!.hintLastname,
                               validatorFunction: (value) {
                                 return (value!.isEmpty
-                                    ? 'Your lastname should be present'
+                                    ? AppLocalizations.of(context)!
+                                        .validatorLastname
                                     : null);
                               }),
                           widget.type == 'EMAIL'
                               ? TextInputComponent(
                                   controller: emailUsername,
-                                  labelText: 'Email *',
-                                  hintText: 'Enter your Email',
+                                  labelText:
+                                      '${AppLocalizations.of(context)!.email} *',
+                                  hintText:
+                                      AppLocalizations.of(context)!.hintEmail,
                                   validatorFunction: (value) {
                                     return (value!.isEmpty
-                                        ? 'Your email should be present'
+                                        ? AppLocalizations.of(context)!
+                                            .validatorEmail
                                         : null);
                                   })
                               : TextInputComponent(
                                   controller: phoneUsername,
-                                  labelText: 'Phone number',
-                                  hintText: 'Enter your Phone number',
+                                  labelText:
+                                      AppLocalizations.of(context)!.phoneNumber,
+                                  hintText: AppLocalizations.of(context)!
+                                      .hintPhoneNumber,
                                   validatorFunction: (value) {
                                     return (value!.isEmpty
-                                        ? 'Your phone number should be present'
+                                        ? AppLocalizations.of(context)!
+                                            .validatorPhoneNumber
                                         : null);
                                   }),
                           Padding(
@@ -108,7 +121,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     ButtonComponent(
-                                        text: 'Register',
+                                        text: AppLocalizations.of(context)!
+                                            .registerTitle,
                                         backgroundColor: Colors.red,
                                         foregroundColor: Colors.white,
                                         onTap: () async {

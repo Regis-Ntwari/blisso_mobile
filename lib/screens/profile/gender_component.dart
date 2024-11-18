@@ -2,6 +2,7 @@ import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/pill_button_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class GenderComponent extends StatelessWidget {
   final List<String> genders;
@@ -24,7 +25,7 @@ class GenderComponent extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Choose your Gender ',
+            AppLocalizations.of(context)!.genderTitle,
             style: TextStyle(
                 fontSize: scaler.scale(32), color: GlobalColors.primaryColor),
           ),
@@ -50,7 +51,7 @@ class GenderComponent extends StatelessWidget {
             ),
           ),
           ButtonComponent(
-              text: 'Continue',
+              text: AppLocalizations.of(context)!.continuei,
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
               onTap: onContinue)

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:blisso_mobile/services/models/api_response.dart';
 import 'package:http/http.dart' as http;
@@ -21,14 +22,12 @@ class ApiService {
         );
       } else {
         return ApiResponse.failure(
-            errorMessage: decodedData['errors']
-                .toString()
-                .substring(1, decodedData['errors'].toString().length - 1),
+            errorMessage: decodedData['message'],
             statusCode: decodedData['status_code']);
       }
     } catch (e) {
       return ApiResponse.failure(
-          errorMessage: decodedData['errors'],
+          errorMessage: decodedData['message'],
           statusCode: decodedData['status_code']);
     }
   }
@@ -66,6 +65,45 @@ class ApiService {
 
       final response =
           await http.post(url, headers: headers, body: jsonEncode(body));
+
+      return _processRequest(response);
+    } catch (e) {
+      return ApiResponse.failure(
+          errorMessage: 'Error processing the request : ${e.toString()}');
+    }
+  }
+
+  Future<ApiResponse> postFormDataRequest(
+      {required String endpoint,
+      required Map<String, dynamic> body,
+      String? token}) async {
+    final url = Uri.parse('$baseURL/$endpoint');
+
+    final request = http.MultipartRequest('POST', url);
+
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    for (var entry in body.entries) {
+      final key = entry.key;
+      final value = entry.value;
+
+      if (value is File) {
+        request.files.add(await http.MultipartFile.fromPath(key, value.path));
+      } else if (value is List<File>) {
+        for (File file in value) {
+          request.files.add(await http.MultipartFile.fromPath(key, file.path));
+        }
+      } else {
+        request.fields[key] = value;
+      }
+    }
+
+    try {
+      final streamedResponse = await request.send();
+
+      final response = await http.Response.fromStream(streamedResponse);
 
       return _processRequest(response);
     } catch (e) {

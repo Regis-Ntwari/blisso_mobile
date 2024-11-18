@@ -79,17 +79,20 @@ class UserServiceProvider extends StateNotifier<ApiState> {
 
   Future<void> loginBio() async {
     state = ApiState(isLoading: true);
-    print("In login bio");
     try {
       final response = await _userService.loginViaBiometrics();
-      print(response);
       if (response.result == null) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
+
+        SharedPreferencesService.setPreference(
+            "accessToken", response.result['access']);
+
+        SharedPreferencesService.setPreference(
+            "refreshToken", response.result['refresh']);
       }
     } catch (e) {
-      print(e);
       state = ApiState(error: e.toString(), isLoading: false);
     }
   }

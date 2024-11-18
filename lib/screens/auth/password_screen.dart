@@ -7,6 +7,7 @@ import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class PasswordScreen extends ConsumerStatefulWidget {
   const PasswordScreen({super.key});
@@ -66,12 +67,12 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
           : Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0, bottom: 16),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 16),
                   child: Text(
-                    'Verify OTP',
+                    AppLocalizations.of(context)!.otpVerifyTitle,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.red,
                         fontSize: 40,
                         fontWeight: FontWeight.bold),
@@ -80,7 +81,7 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                 Padding(
                   padding: const EdgeInsets.all(10),
                   child: Text(
-                    "Provide one-time password generated to $username",
+                    AppLocalizations.of(context)!.otpVerifySubtitle(username!),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: scaler.scale(12),
@@ -97,11 +98,14 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                                 const EdgeInsets.only(top: 8.0, bottom: 8.0),
                             child: TextInputComponent(
                               controller: _passwordController,
-                              labelText: 'Password *',
-                              hintText: 'Enter your password',
+                              labelText:
+                                  '${AppLocalizations.of(context)!.password} *',
+                              hintText:
+                                  AppLocalizations.of(context)!.hintPassword,
                               validatorFunction: (value) {
                                 return (value!.isEmpty
-                                    ? 'Your password should be present'
+                                    ? AppLocalizations.of(context)!
+                                        .validatorPassword
                                     : null);
                               },
                             ),
@@ -109,7 +113,7 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: ButtonComponent(
-                                text: 'Login',
+                                text: AppLocalizations.of(context)!.login,
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
                                 onTap: () async {

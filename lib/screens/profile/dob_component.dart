@@ -2,6 +2,7 @@ import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class DobComponent extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -40,7 +41,7 @@ class DobComponent extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8.0, bottom: 20),
               child: Text(
-                'My Date of Birth is: ',
+                AppLocalizations.of(context)!.dateOfBirthTitle,
                 style: TextStyle(
                     fontSize: scaler.scale(32),
                     color: GlobalColors.primaryColor),
@@ -66,11 +67,11 @@ class DobComponent extends StatelessWidget {
                     ],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter day';
+                        return AppLocalizations.of(context)!.dayValidator1;
                       }
                       final day = int.tryParse(value);
                       if (day == null || day < 1 || day > 31) {
-                        return 'Invalid day';
+                        return AppLocalizations.of(context)!.dayValidator2;
                       }
                       return null;
                     },
@@ -99,11 +100,11 @@ class DobComponent extends StatelessWidget {
                     ],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter month';
+                        return AppLocalizations.of(context)!.monthValidator1;
                       }
                       final month = int.tryParse(value);
                       if (month == null || month < 1 || month > 12) {
-                        return 'Invalid month';
+                        return AppLocalizations.of(context)!.monthValidator2;
                       }
                       return null;
                     },
@@ -132,13 +133,13 @@ class DobComponent extends StatelessWidget {
                     ],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter year';
+                        return AppLocalizations.of(context)!.yearValidator1;
                       }
                       final year = int.tryParse(value);
                       if (year == null ||
                           year < 1900 ||
                           year > DateTime.now().year) {
-                        return 'Invalid year';
+                        return AppLocalizations.of(context)!.yearValidator2;
                       }
                       return null;
                     },
@@ -154,7 +155,7 @@ class DobComponent extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ButtonComponent(
-                text: 'Continue',
+                text: AppLocalizations.of(context)!.continuei,
                 backgroundColor: GlobalColors.primaryColor,
                 foregroundColor: GlobalColors.whiteColor,
                 onTap: () {
