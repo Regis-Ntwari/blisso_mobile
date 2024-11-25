@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -88,7 +89,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (userState.error != null) {
         showSnackBar(context, userState.error!);
       } else {
-        Routemaster.of(context).push('/profile/');
+        SharedPreferences prefs =
+            await SharedPreferencesService.getSharedPreferences();
+
+        if (prefs.containsKey('is_profile_completed')) {
+          Routemaster.of(context).replace('/homepage');
+        } else if (prefs.containsKey('is_target_snapshots')) {
+          Routemaster.of(context).push('/profile-pictures');
+        } else if (prefs.containsKey('is_my_snapshots')) {
+          Routemaster.of(context).push('/target-snapshot');
+        } else if (prefs.containsKey('is_profile_created')) {
+          Routemaster.of(context).replace('/snapshots');
+        } else if (prefs.containsKey('isRegistered')) {
+          Routemaster.of(context).replace('/profile/');
+        }
       }
     }
   }
@@ -198,7 +212,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               if (userState.error != null) {
                                 showSnackBar(context, userState.error!);
                               } else {
-                                Routemaster.of(context).push('/profile');
+                                SharedPreferences prefs =
+                                    await SharedPreferencesService
+                                        .getSharedPreferences();
+
+                                if (prefs.containsKey('is_profile_completed')) {
+                                  Routemaster.of(context).replace('/homepage');
+                                } else if (prefs
+                                    .containsKey('is_target_snapshots')) {
+                                  Routemaster.of(context)
+                                      .push('/profile-pictures');
+                                } else if (prefs
+                                    .containsKey('is_my_snapshots')) {
+                                  Routemaster.of(context)
+                                      .push('/target-snapshot');
+                                } else if (prefs
+                                    .containsKey('is_profile_created')) {
+                                  Routemaster.of(context).replace('/snapshots');
+                                } else if (prefs.containsKey('isRegistered')) {
+                                  Routemaster.of(context).replace('/profile/');
+                                }
                               }
                             }
                             setState(() {

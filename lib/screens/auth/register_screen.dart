@@ -123,8 +123,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     ButtonComponent(
                                         text: AppLocalizations.of(context)!
                                             .registerTitle,
-                                        backgroundColor: Colors.red,
-                                        foregroundColor: Colors.white,
+                                        backgroundColor:
+                                            GlobalColors.primaryColor,
+                                        foregroundColor:
+                                            GlobalColors.whiteColor,
                                         onTap: () async {
                                           if (_formKey.currentState!
                                               .validate()) {

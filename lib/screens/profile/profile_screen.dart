@@ -54,13 +54,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   File? _profilePicture;
 
-  File? _firstPicture;
-  File? _secondPicture;
-  File? _thirdPicture;
-  File? _fourthPicture;
-
-  final List<int> _chosenOwnInterests = [];
-
   @override
   void initState() {
     super.initState();
@@ -82,45 +75,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() {
       _profilePicture = file;
     });
-    print(_profilePicture == null);
-  }
-
-  void changeFirstPicture(File? file) {
-    setState(() {
-      _firstPicture = file;
-    });
-  }
-
-  void changeSecondPicture(File? file) {
-    setState(() {
-      _secondPicture = file;
-    });
-  }
-
-  void changeThirdPicture(File? file) {
-    setState(() {
-      _thirdPicture = file;
-    });
-  }
-
-  void changeFourthPicture(File? file) {
-    setState(() {
-      _fourthPicture = file;
-    });
-  }
-
-  void addOwnInterest(interest) {
-    if (_chosenOwnInterests.contains(interest['id'])) {
-      setState(() {
-        _chosenOwnInterests.remove(interest['id']);
-      });
-    } else {
-      _chosenOwnInterests.add(interest['id']);
-    }
-  }
-
-  bool checkInterest(interest) {
-    return _chosenOwnInterests.contains(interest['id']);
   }
 
   String capitalize(String input) {
@@ -129,7 +83,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void saveProfile(BuildContext context) async {
-    print(position.latitude);
     final profile = ProfileModel(
         nickname: _nicknameController.text,
         dob:
@@ -139,7 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         longitude: position.longitude.toString(),
         profilePic: _profilePicture!,
         gender: chosenGender.toLowerCase(),
-        showMe: chosenGender.toLowerCase(),
+        showMe: chosenSex.toLowerCase(),
         maritalStatus: chosenStatus.toLowerCase(),
         lang: capitalize('ENGLISH'));
 
@@ -149,7 +102,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (userState.error != null) {
       showSnackBar(context, userState.error!);
     } else {
-      Routemaster.of(context).push('/password');
+      Routemaster.of(context).push('/snapshots');
     }
   }
 
@@ -280,7 +233,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   chosenStatus = status;
                                 });
                               },
-                              onContinue: saveProfile)
+                              onContinue: () => saveProfile(context))
                         // else if (_index == 8)
                         //   ProfileSnapshotsComponent(
                         //     checkInterest: checkInterest,

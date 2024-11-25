@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:blisso_mobile/services/api_state.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,17 +10,73 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
   SnapshotServiceProvider({required this.snapshotService}) : super(ApiState());
 
-  Future<dynamic> getLifeSnapshots() async {
-    dynamic snapshots;
-
+  Future<void> getLifeSnapshots() async {
     try {
       state = ApiState(isLoading: true);
 
-      snapshots = await snapshotService.fetchProfileSnapshots();
+      final snapshots = await snapshotService.fetchProfileSnapshots();
 
-      print(snapshots);
+      if (snapshots.result == null) {
+        state = ApiState(error: snapshots.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: snapshots.result, isLoading: false);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
 
-      state = ApiState(data: snapshots, isLoading: false);
+  Future<void> postMyProfileSnapshots(List<int> snapshots) async {
+    try {
+      state = ApiState(isLoading: true);
+
+      final response = await snapshotService.postProfileSnapshots(snapshots);
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+
+        SharedPreferencesService.setPreference('is_my_snapshots', true);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> postTargetProfileSnapshots(List<dynamic> snapshots) async {
+    snapshots.removeWhere((element) => element.isEmpty);
+    try {
+      state = ApiState(isLoading: true);
+
+      final response =
+          await snapshotService.postTargetProfileSnapshots(snapshots);
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+
+        SharedPreferencesService.setPreference('is_target_snapshots', true);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> postProfileImages(List<File> images) async {
+    try {
+      state = ApiState(isLoading: true);
+
+      final response = await snapshotService.postImages(images);
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+
+        SharedPreferencesService.setPreference('is_profile_completed', true);
+      }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);
     }

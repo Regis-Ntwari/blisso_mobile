@@ -56,7 +56,7 @@ class MaritalStatusComponent extends StatelessWidget {
               text: 'Save Profile',
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
-              onTap: () => onContinue(context))
+              onTap: () => onContinue())
         ],
       ),
     );

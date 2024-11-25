@@ -4,6 +4,7 @@ import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/services/auth/user_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
@@ -73,7 +74,7 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                     AppLocalizations.of(context)!.otpVerifyTitle,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        color: Colors.red,
+                        color: GlobalColors.primaryColor,
                         fontSize: 40,
                         fontWeight: FontWeight.bold),
                   ),
@@ -114,7 +115,7 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                             padding: const EdgeInsets.only(top: 8.0),
                             child: ButtonComponent(
                                 text: AppLocalizations.of(context)!.login,
-                                backgroundColor: Colors.red,
+                                backgroundColor: GlobalColors.primaryColor,
                                 foregroundColor: Colors.white,
                                 onTap: () async {
                                   if (_formKey.currentState!.validate()) {
@@ -128,8 +129,7 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                                     if (userState.error != null) {
                                       showSnackBar(context, userState.error!);
                                     } else {
-                                      Routemaster.of(context)
-                                          .push('/matching-selection');
+                                      Routemaster.of(context).push('/profile/');
                                     }
                                   }
                                 }),

@@ -22,19 +22,12 @@ class ImageComponent extends StatefulWidget {
 }
 
 class _ImageComponentState extends State<ImageComponent> {
-  File? _profilePicture;
-
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage(ImageSource source, int flag) async {
     final pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
       widget.changeProfilePicture(File(pickedFile.path));
-      // setState(() {
-      //   if (flag == 0) {
-      //     _profilePicture = File(pickedFile.path);
-      //   }
-      // });
     }
   }
 
@@ -110,119 +103,6 @@ class _ImageComponentState extends State<ImageComponent> {
                     )),
               )
             ]),
-            // Padding(
-            //   padding: const EdgeInsets.only(top: 20),
-            //   child: Column(children: [
-            //     SizedBox(
-            //       height: height * 0.5,
-            //       child: GridView.count(
-            //         crossAxisCount: 2,
-            //         children: [
-            //           InkWell(
-            //               onTap: () => _showImagePickerOptions(1),
-            //               child: Container(
-            //                 height: 50,
-            //                 color: Colors.grey,
-            //                 child: Card(
-            //                   child: Stack(
-            //                     fit: StackFit.expand,
-            //                     children: [
-            //                       _firstPicture != null
-            //                           ? Image(
-            //                               image: FileImage(_firstPicture!),
-            //                               fit: BoxFit.cover,
-            //                             )
-            //                           : const Icon(
-            //                               Icons.camera_alt,
-            //                               size: 50,
-            //                             ),
-            //                       Container(
-            //                         color: Colors.black.withOpacity(0.3),
-            //                       )
-            //                     ],
-            //                   ),
-            //                 ),
-            //               )),
-            //           InkWell(
-            //               onTap: () => _showImagePickerOptions(2),
-            //               child: Container(
-            //                 height: 50,
-            //                 color: Colors.grey,
-            //                 child: Card(
-            //                   child: Stack(
-            //                     fit: StackFit.expand,
-            //                     children: [
-            //                       _secondPicture != null
-            //                           ? Image(
-            //                               image: FileImage(_secondPicture!),
-            //                               fit: BoxFit.cover,
-            //                             )
-            //                           : const Icon(
-            //                               Icons.camera_alt,
-            //                               size: 50,
-            //                             ),
-            //                       Container(
-            //                         color: Colors.black.withOpacity(0.3),
-            //                       )
-            //                     ],
-            //                   ),
-            //                 ),
-            //               )),
-            //           InkWell(
-            //               onTap: () => _showImagePickerOptions(3),
-            //               child: Container(
-            //                 color: Colors.grey,
-            //                 height: 50,
-            //                 child: Card(
-            //                   child: Stack(
-            //                     fit: StackFit.expand,
-            //                     children: [
-            //                       _thirdPicture != null
-            //                           ? Image(
-            //                               image: FileImage(_thirdPicture!),
-            //                               fit: BoxFit.cover,
-            //                             )
-            //                           : const Icon(
-            //                               Icons.camera_alt,
-            //                               size: 50,
-            //                             ),
-            //                       Container(
-            //                         color: Colors.black.withOpacity(0.3),
-            //                       )
-            //                     ],
-            //                   ),
-            //                 ),
-            //               )),
-            //           InkWell(
-            //               onTap: () => _showImagePickerOptions(4),
-            //               child: Container(
-            //                 height: 50,
-            //                 color: Colors.grey,
-            //                 child: Card(
-            //                   child: Stack(
-            //                     fit: StackFit.expand,
-            //                     children: [
-            //                       _fourthPicture != null
-            //                           ? Image(
-            //                               image: FileImage(_fourthPicture!),
-            //                               fit: BoxFit.cover,
-            //                             )
-            //                           : const Icon(
-            //                               Icons.camera_alt,
-            //                               size: 50,
-            //                             ),
-            //                       Container(
-            //                         color: Colors.black.withOpacity(0.3),
-            //                       )
-            //                     ],
-            //                   ),
-            //                 ),
-            //               ))
-            //         ],
-            //       ),
-            //     )
-            //   ]),
-            // ),
             Padding(
               padding: const EdgeInsets.only(top: 20),
               child: ButtonComponent(
