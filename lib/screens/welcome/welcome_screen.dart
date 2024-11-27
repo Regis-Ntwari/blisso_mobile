@@ -80,122 +80,128 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // appBar: AppBar(
-      //   leading: Container(),
-      //   actions: [
-      //     DropdownButton<String>(
-      //       value: chosenLanguage,
-      //       icon: const Icon(Icons.arrow_downward),
-      //       elevation: 16,
-      //       style: TextStyle(color: GlobalColors.whiteColor),
-      //       underline: Container(
-      //         height: 2,
-      //         color: GlobalColors.primaryColor,
-      //       ),
-      //       onChanged: (String? value) {
-      //         // This is called when the user selects an item.
-      //         setState(() {
-      //           chosenLanguage = value!;
-      //         });
-      //       },
-      //       items:
-      //           L10n.allLanguages.map<DropdownMenuItem<String>>((String value) {
-      //         return DropdownMenuItem<String>(
-      //           value: value == 'ENGLISH' ? 'en' : 'fr',
-      //           child: Text(value),
-      //         );
-      //       }).toList(),
-      //     )
-      //   ],
-      // ),
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _images.length,
-            onPageChanged: (value) {
-              setState(() {
-                _currentPage = value;
-              });
-            },
-            itemBuilder: (context, index) {
-              return Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(_images[index]['image']!),
-                            fit: BoxFit.cover)),
-                  ),
-                  BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.3),
+    return SafeArea(
+      child: Scaffold(
+        // appBar: AppBar(
+        //   leading: Container(),
+        //   actions: [
+        //     DropdownButton<String>(
+        //       value: chosenLanguage,
+        //       icon: const Icon(Icons.arrow_downward),
+        //       elevation: 16,
+        //       style: TextStyle(color: GlobalColors.whiteColor),
+        //       underline: Container(
+        //         height: 2,
+        //         color: GlobalColors.primaryColor,
+        //       ),
+        //       onChanged: (String? value) {
+        //         // This is called when the user selects an item.
+        //         setState(() {
+        //           chosenLanguage = value!;
+        //         });
+        //       },
+        //       items:
+        //           L10n.allLanguages.map<DropdownMenuItem<String>>((String value) {
+        //         return DropdownMenuItem<String>(
+        //           value: value == 'ENGLISH' ? 'en' : 'fr',
+        //           child: Text(value),
+        //         );
+        //       }).toList(),
+        //     )
+        //   ],
+        // ),
+        body: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: _images.length,
+              onPageChanged: (value) {
+                setState(() {
+                  _currentPage = value;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: AssetImage(_images[index]['image']!),
+                              fit: BoxFit.cover)),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: SizedBox(
-                        height: 300,
-                        width: double.infinity,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            if (index == 0)
-                              Text(
-                                AppLocalizations.of(context)!.welcomeMessage1,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 32),
+                    BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: SizedBox(
+                          height: 300,
+                          width: double.infinity,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              if (index == 0)
+                                Text(
+                                  AppLocalizations.of(context)!.welcomeMessage1,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32),
+                                ),
+                              if (index == 1)
+                                Text(
+                                  AppLocalizations.of(context)!.welcomeMessage2,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32),
+                                ),
+                              if (index == 2)
+                                Text(
+                                  AppLocalizations.of(context)!.welcomeMessage3,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32),
+                                ),
+                              _buildPageIndicator(),
+                              Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  ButtonComponent(
+                                      onTap: () => Routemaster.of(context)
+                                          .replace('/register/EMAIL'),
+                                      foregroundColor: Colors.white,
+                                      backgroundColor: Colors.red,
+                                      text: AppLocalizations.of(context)!
+                                          .signupEmail),
+                                  // Padding(
+                                  //   padding: const EdgeInsets.only(top: 8.0),
+                                  //   child: ButtonComponent(
+                                  //     onTap: () => Routemaster.of(context)
+                                  //         .replace('/register/PHONE'),
+                                  //     text: AppLocalizations.of(context)!
+                                  //         .signupPhone,
+                                  //     foregroundColor: Colors.red,
+                                  //     backgroundColor: Colors.white,
+                                  //   ),
+                                  // )
+                                ],
                               ),
-                            if (index == 1)
-                              Text(
-                                AppLocalizations.of(context)!.welcomeMessage2,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 32),
-                              ),
-                            if (index == 2)
-                              Text(
-                                AppLocalizations.of(context)!.welcomeMessage3,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 32),
-                              ),
-                            _buildPageIndicator(),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                ButtonComponent(
-                                    onTap: () => Routemaster.of(context)
-                                        .replace('/register/EMAIL'),
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.red,
-                                    text: AppLocalizations.of(context)!
-                                        .signupEmail),
-                                // Padding(
-                                //   padding: const EdgeInsets.only(top: 8.0),
-                                //   child: ButtonComponent(
-                                //     onTap: () => Routemaster.of(context)
-                                //         .replace('/register/PHONE'),
-                                //     text: AppLocalizations.of(context)!
-                                //         .signupPhone,
-                                //     foregroundColor: Colors.red,
-                                //     backgroundColor: Colors.white,
-                                //   ),
-                                // )
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
-          )
-        ],
+                  ],
+                );
+              },
+            )
+          ],
+        ),
       ),
     );
   }

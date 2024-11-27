@@ -11,6 +11,7 @@ import 'package:blisso_mobile/screens/profile/snapshots/snapshot_screen.dart';
 import 'package:blisso_mobile/screens/profile/snapshots/target_profile_snapshots_component.dart';
 import 'package:blisso_mobile/screens/profile/subscription/subscription_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
+import 'package:blisso_mobile/screens/utils/autowrite_screen.dart';
 import 'package:blisso_mobile/screens/welcome/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -20,7 +21,7 @@ import 'package:routemaster/routemaster.dart';
 
 void main() {
   final routes = RouteMap(routes: {
-    '/': (_) => const MaterialPage(child: SubscriptionScreen()),
+    '/': (_) => const MaterialPage(child: HomepageScreen()),
     '/welcome': (_) => const MaterialPage(child: WelcomeScreen()),
     '/register/:type': (route) => MaterialPage(
         child: RegisterScreen(type: route.pathParameters['type']!)),
@@ -36,6 +37,9 @@ void main() {
         const MaterialPage(child: ProfilePicturesComponent()),
     '/target-snapshot': (_) =>
         const MaterialPage(child: TargetProfileSnapshotsComponent()),
+    '/subscription': (_) => const MaterialPage(child: SubscriptionScreen()),
+    '/auto-write': (_) =>
+        const MaterialPage(child: AutowriteScreen(fullText: ''))
   });
 
   runApp(ProviderScope(

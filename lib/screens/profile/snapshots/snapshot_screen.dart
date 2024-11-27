@@ -75,34 +75,36 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen> {
     final chosenValues = ref.watch(mySnapshotsProviderImpl);
     return state.isLoading && isLoading
         ? const LoadingScreen()
-        : Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              leading: IconButton(
-                  onPressed: () {
-                    Routemaster.of(context).pop();
-                  },
-                  icon: Icon(
-                    Icons.keyboard_arrow_left,
-                    color: GlobalColors.secondaryColor,
-                  )),
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  children: [
-                    ProfileSnapshotsComponent(
-                        values:
-                            state.data != null ? buildList(state.data!) : [],
-                        chosenValues: chosenValues,
-                        checkInterest: ref
-                            .read(mySnapshotsProviderImpl.notifier)
-                            .containsInterest,
-                        toggleInterest: ref
-                            .read(mySnapshotsProviderImpl.notifier)
-                            .toggleInterest)
-                  ],
+        : SafeArea(
+            child: Scaffold(
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                leading: IconButton(
+                    onPressed: () {
+                      Routemaster.of(context).pop();
+                    },
+                    icon: Icon(
+                      Icons.keyboard_arrow_left,
+                      color: GlobalColors.secondaryColor,
+                    )),
+              ),
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    children: [
+                      ProfileSnapshotsComponent(
+                          values:
+                              state.data != null ? buildList(state.data!) : [],
+                          chosenValues: chosenValues,
+                          checkInterest: ref
+                              .read(mySnapshotsProviderImpl.notifier)
+                              .containsInterest,
+                          toggleInterest: ref
+                              .read(mySnapshotsProviderImpl.notifier)
+                              .toggleInterest)
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -54,6 +54,18 @@ class UserServiceProvider extends StateNotifier<ApiState> {
         SharedPreferencesService.setPreference(
             "refreshToken", response.result['refresh']);
 
+        SharedPreferencesService.setPreference(
+            'is_profile_created', response.result['has_profile']);
+
+        SharedPreferencesService.setPreference(
+            'is_target_snapshots', response.result['has_target_snapshots']);
+
+        SharedPreferencesService.setPreference(
+            'is_my_snapshots', response.result['has_my_snapshots']);
+
+        SharedPreferencesService.setPreference(
+            'is_profile_completed', response.result['has_pictures']);
+
         SharedPreferencesService.setPreference("isRegistered", true);
       }
     } catch (e) {

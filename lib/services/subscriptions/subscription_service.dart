@@ -10,4 +10,14 @@ class SubscriptionService {
 
     return response;
   }
+
+  Future<ApiResponse> createSubscription(
+      Map<String, dynamic> subscription) async {
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    final response = await ApiService().postData(
+        endpoint: '/subscriptions/', body: subscription, token: token);
+
+    return response;
+  }
 }

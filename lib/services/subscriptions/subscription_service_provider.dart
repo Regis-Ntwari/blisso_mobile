@@ -17,7 +17,23 @@ class SubscriptionServiceProvider extends StateNotifier<ApiState> {
       if (response.result == null) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
-        print(response.result);
+        state = ApiState(isLoading: false, data: response.result);
+      }
+    } catch (e) {
+      state = ApiState(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> createSubscription(Map<String, dynamic> subscription) async {
+    try {
+      state = ApiState(isLoading: true);
+
+      final response =
+          await subscriptionService.createSubscription(subscription);
+
+      if (response.result == null) {
+        state = ApiState(isLoading: false, error: response.errorMessage);
+      } else {
         state = ApiState(isLoading: false, data: response.result);
       }
     } catch (e) {
