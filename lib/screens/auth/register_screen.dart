@@ -31,141 +31,163 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final userState = ref.watch(userServiceProviderImpl);
 
     TextScaler textScaler = MediaQuery.textScalerOf(context);
+
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
-          body: SingleChildScrollView(
-        child: userState.isLoading
-            ? const LoadingScreen()
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, bottom: 16),
-                    child: Text(
-                      AppLocalizations.of(context)!.registerTitle,
-                      style: TextStyle(
-                          color: GlobalColors.primaryColor,
-                          fontSize: textScaler.scale(48),
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Text(
-                      AppLocalizations.of(context)!.registerSubtitle,
-                      style: TextStyle(fontSize: textScaler.scale(12)),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TextInputComponent(
-                              controller: firstname,
-                              labelText:
-                                  '${AppLocalizations.of(context)!.firstname} *',
-                              hintText:
-                                  AppLocalizations.of(context)!.hintFirstname,
-                              validatorFunction: (value) {
-                                return (value!.isEmpty
-                                    ? AppLocalizations.of(context)!
-                                        .validatorFirstname
-                                    : null);
-                              }),
-                          TextInputComponent(
-                              controller: lastname,
-                              labelText:
-                                  '${AppLocalizations.of(context)!.lastname} *',
-                              hintText:
-                                  AppLocalizations.of(context)!.hintLastname,
-                              validatorFunction: (value) {
-                                return (value!.isEmpty
-                                    ? AppLocalizations.of(context)!
-                                        .validatorLastname
-                                    : null);
-                              }),
-                          widget.type == 'EMAIL'
-                              ? TextInputComponent(
-                                  controller: emailUsername,
-                                  labelText:
-                                      '${AppLocalizations.of(context)!.email} *',
-                                  hintText:
-                                      AppLocalizations.of(context)!.hintEmail,
-                                  validatorFunction: (value) {
-                                    return (value!.isEmpty
-                                        ? AppLocalizations.of(context)!
-                                            .validatorEmail
-                                        : null);
-                                  })
-                              : TextInputComponent(
-                                  controller: phoneUsername,
-                                  labelText:
-                                      AppLocalizations.of(context)!.phoneNumber,
-                                  hintText: AppLocalizations.of(context)!
-                                      .hintPhoneNumber,
-                                  validatorFunction: (value) {
-                                    return (value!.isEmpty
-                                        ? AppLocalizations.of(context)!
-                                            .validatorPhoneNumber
-                                        : null);
-                                  }),
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+          backgroundColor:
+              isLightTheme ? GlobalColors.lightBackgroundColor : null,
+          body: userState.isLoading
+              ? const LoadingScreen()
+              : SingleChildScrollView(
+                  child: userState.isLoading
+                      ? const LoadingScreen()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, bottom: 16),
+                              child: Text(
+                                AppLocalizations.of(context)!.registerTitle,
+                                style: TextStyle(
+                                    color: GlobalColors.primaryColor,
+                                    fontSize: textScaler.scale(48),
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Text(
+                                AppLocalizations.of(context)!.registerSubtitle,
+                                style:
+                                    TextStyle(fontSize: textScaler.scale(12)),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
                                   children: [
-                                    ButtonComponent(
-                                        text: AppLocalizations.of(context)!
-                                            .registerTitle,
-                                        backgroundColor:
-                                            GlobalColors.primaryColor,
-                                        foregroundColor:
-                                            GlobalColors.whiteColor,
-                                        onTap: () async {
-                                          if (_formKey.currentState!
-                                              .validate()) {
-                                            _formKey.currentState!.save();
+                                    TextInputComponent(
+                                        controller: firstname,
+                                        labelText:
+                                            '${AppLocalizations.of(context)!.firstname} *',
+                                        hintText: AppLocalizations.of(context)!
+                                            .hintFirstname,
+                                        validatorFunction: (value) {
+                                          return (value!.isEmpty
+                                              ? AppLocalizations.of(context)!
+                                                  .validatorFirstname
+                                              : null);
+                                        }),
+                                    TextInputComponent(
+                                        controller: lastname,
+                                        labelText:
+                                            '${AppLocalizations.of(context)!.lastname} *',
+                                        hintText: AppLocalizations.of(context)!
+                                            .hintLastname,
+                                        validatorFunction: (value) {
+                                          return (value!.isEmpty
+                                              ? AppLocalizations.of(context)!
+                                                  .validatorLastname
+                                              : null);
+                                        }),
+                                    widget.type == 'EMAIL'
+                                        ? TextInputComponent(
+                                            controller: emailUsername,
+                                            labelText:
+                                                '${AppLocalizations.of(context)!.email} *',
+                                            hintText:
+                                                AppLocalizations.of(context)!
+                                                    .hintEmail,
+                                            validatorFunction: (value) {
+                                              return (value!.isEmpty
+                                                  ? AppLocalizations.of(
+                                                          context)!
+                                                      .validatorEmail
+                                                  : null);
+                                            })
+                                        : TextInputComponent(
+                                            controller: phoneUsername,
+                                            labelText:
+                                                AppLocalizations.of(context)!
+                                                    .phoneNumber,
+                                            hintText:
+                                                AppLocalizations.of(context)!
+                                                    .hintPhoneNumber,
+                                            validatorFunction: (value) {
+                                              return (value!.isEmpty
+                                                  ? AppLocalizations.of(
+                                                          context)!
+                                                      .validatorPhoneNumber
+                                                  : null);
+                                            }),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 8.0, bottom: 8.0),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              ButtonComponent(
+                                                  text: AppLocalizations.of(
+                                                          context)!
+                                                      .registerTitle,
+                                                  backgroundColor:
+                                                      GlobalColors.primaryColor,
+                                                  foregroundColor:
+                                                      GlobalColors.whiteColor,
+                                                  onTap: () async {
+                                                    if (_formKey.currentState!
+                                                        .validate()) {
+                                                      _formKey.currentState!
+                                                          .save();
 
-                                            await ref
-                                                .read(userServiceProviderImpl
-                                                    .notifier)
-                                                .registerUser(
-                                                    widget.type == 'EMAIL'
-                                                        ? emailUsername.text
-                                                        : phoneUsername.text,
-                                                    firstname.text,
-                                                    lastname.text,
-                                                    widget.type);
+                                                      await ref
+                                                          .read(
+                                                              userServiceProviderImpl
+                                                                  .notifier)
+                                                          .registerUser(
+                                                              widget.type ==
+                                                                      'EMAIL'
+                                                                  ? emailUsername
+                                                                      .text
+                                                                  : phoneUsername
+                                                                      .text,
+                                                              firstname.text,
+                                                              lastname.text,
+                                                              widget.type);
 
-                                            final userState = ref
-                                                .read(userServiceProviderImpl);
-                                            if (userState.error != null) {
-                                              showSnackBar(
-                                                  context, userState.error!);
-                                            } else {
-                                              Routemaster.of(context)
-                                                  .push('/password');
-                                            }
-                                          }
-                                        })
+                                                      final userState = ref.read(
+                                                          userServiceProviderImpl);
+                                                      if (userState.error !=
+                                                          null) {
+                                                        showSnackBar(context,
+                                                            userState.error!);
+                                                      } else {
+                                                        Routemaster.of(context)
+                                                            .push(
+                                                                "/auto-write/Thanks for registering. Now, let's create your profile/password");
+                                                      }
+                                                    }
+                                                  })
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    )
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-      )),
+                          ],
+                        ),
+                )),
     );
   }
 }

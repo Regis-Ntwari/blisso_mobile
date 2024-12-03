@@ -1,5 +1,5 @@
 import 'package:blisso_mobile/components/loading_component.dart';
-import 'package:blisso_mobile/screens/profile/snapshots/profile_snapshots_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/snapshots/profile_snapshots_component.dart';
 import 'package:blisso_mobile/services/snapshots/my_snapshots_provider.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -73,10 +73,13 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(snapshotServiceProviderImpl);
     final chosenValues = ref.watch(mySnapshotsProviderImpl);
-    return state.isLoading && isLoading
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    return (state.isLoading && isLoading) || state.data == null
         ? const LoadingScreen()
         : SafeArea(
             child: Scaffold(
+              backgroundColor:
+                  isLightTheme ? GlobalColors.lightBackgroundColor : null,
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 leading: IconButton(

@@ -154,8 +154,11 @@ class _TargetProfileSnapshotsComponentState
     final key = _filteredValues[detailsIndex].keys.elementAt(0);
     final values = _filteredValues[detailsIndex][key];
     var snapshot = ref.watch(snapshotServiceProviderImpl);
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : null,
         body: snapshot.isLoading
             ? const LoadingScreen()
             : CustomScrollView(slivers: [
@@ -334,7 +337,8 @@ class _TargetProfileSnapshotsComponentState
                           if (snapshot.error != null) {
                             showSnackBar(context, snapshot.error!);
                           } else {
-                            Routemaster.of(context).push('/profile-pictures');
+                            Routemaster.of(context).push(
+                                "auto-write/Now, let's add gorgeous pictures/profile-pictures");
                           }
                         }),
                   ),

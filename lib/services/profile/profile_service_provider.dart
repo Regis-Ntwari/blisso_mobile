@@ -30,6 +30,54 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
       state = ApiState(error: e.toString(), isLoading: false);
     }
   }
+
+  Future<void> getAnyProfile(String username) async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await profileService.getAnyProfile(username);
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> getMyProfile() async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await profileService.getMyProfile();
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> getAllProfiles() async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await profileService.getAllProfiles();
+
+      if (response.result == null) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
 }
 
 final profileServiceProviderImpl =

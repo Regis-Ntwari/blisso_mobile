@@ -62,8 +62,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     double height = MediaQuery.sizeOf(context).height;
 
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
     return SafeArea(
         child: Scaffold(
+      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       appBar: AppBar(
         centerTitle: true,
         title: Text(

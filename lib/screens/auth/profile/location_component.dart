@@ -50,7 +50,10 @@ class _LocationComponentState extends ConsumerState<LocationComponent> {
     final userState = ref.watch(locationServiceProviderImpl);
     TextScaler textScaler = MediaQuery.textScalerOf(context);
     return userState.isLoading
-        ? const LoadingScreen()
+        ? const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [Center(child: LoadingScreen()), SizedBox.shrink()],
+          )
         : SizedBox(
             height: 500,
             width: double.infinity,

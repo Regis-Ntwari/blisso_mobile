@@ -81,8 +81,10 @@ class _ProfilePicturesComponentState
     TextScaler scaler = MediaQuery.of(context).textScaler;
     double height = MediaQuery.sizeOf(context).height;
     final snapshot = ref.watch(snapshotServiceProviderImpl);
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
         child: Scaffold(
+      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       body: snapshot.isLoading
           ? const LoadingScreen()
           : SingleChildScrollView(
@@ -234,7 +236,8 @@ class _ProfilePicturesComponentState
                         if (snapshot.error != null) {
                           showSnackBar(context, snapshot.error!);
                         } else {
-                          Routemaster.of(context).push('/homepage');
+                          Routemaster.of(context).push(
+                              '/auto-write/One more step, choose your plan/homepage');
                         }
                       }),
                 )

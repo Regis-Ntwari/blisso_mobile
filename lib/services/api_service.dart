@@ -2,17 +2,23 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blisso_mobile/services/models/api_response.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
 class ApiService {
-  static const String baseURL = 'http://40.122.188.22:8000';
+  dynamic loadVariables() async {
+    final configData = await rootBundle.loadString('assets/config/config.json');
+
+    final configs = jsonDecode(configData);
+
+    return configs;
+  }
 
   Future<ApiResponse> _processRequest(Response response) async {
     final data = response.body;
     final decodedData = jsonDecode(data);
-
-    print(decodedData);
 
     try {
       if (decodedData.containsKey('data')) {
@@ -26,6 +32,7 @@ class ApiService {
             statusCode: decodedData['status_code']);
       }
     } catch (e) {
+      debugPrint(' test process request ${e.toString()}');
       return ApiResponse.failure(
           errorMessage: decodedData['message'],
           statusCode: decodedData['status_code']);
@@ -38,9 +45,12 @@ class ApiService {
       'Authorization': 'Bearer $token'
     };
 
+    dynamic configs = await loadVariables();
+
     try {
-      final response =
-          await http.get(Uri.parse('$baseURL/$endpoint'), headers: headers);
+      final response = await http.get(
+          Uri.parse("${configs['BACKEND_URL']}/$endpoint"),
+          headers: headers);
 
       return _processRequest(response);
     } catch (e) {
@@ -54,7 +64,8 @@ class ApiService {
       required Map<String, dynamic> body,
       String? token}) async {
     try {
-      final url = Uri.parse('$baseURL/$endpoint');
+      dynamic configs = await loadVariables();
+      final url = Uri.parse("${configs['BACKEND_URL']}/$endpoint");
       final headers = {
         'Content-Type': 'application/json',
       };
@@ -77,7 +88,8 @@ class ApiService {
       {required String endpoint,
       required Map<String, dynamic> body,
       String? token}) async {
-    final url = Uri.parse('$baseURL/$endpoint');
+    final configs = await loadVariables();
+    final url = Uri.parse("${configs['BACKEND_URL']}/$endpoint");
 
     final request = http.MultipartRequest('POST', url);
 

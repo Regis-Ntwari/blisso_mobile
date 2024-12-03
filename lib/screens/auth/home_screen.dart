@@ -92,15 +92,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         SharedPreferences prefs =
             await SharedPreferencesService.getSharedPreferences();
 
-        if (prefs.containsKey('is_profile_completed')) {
+        debugPrint(prefs.get('is_my_snapshots').toString());
+
+        if (prefs.get('is_profile_completed').toString() == 'true') {
           Routemaster.of(context).replace('/homepage');
-        } else if (prefs.containsKey('is_target_snapshots')) {
+        } else if (prefs.get('is_target_snapshots').toString() == 'true') {
           Routemaster.of(context).push('/profile-pictures');
-        } else if (prefs.containsKey('is_my_snapshots')) {
+        } else if (prefs.get('is_my_snapshots').toString() == 'true') {
           Routemaster.of(context).push('/target-snapshot');
-        } else if (prefs.containsKey('is_profile_created')) {
+        } else if (prefs.get('is_profile_created').toString() == 'true') {
           Routemaster.of(context).replace('/snapshots');
-        } else if (prefs.containsKey('isRegistered')) {
+        } else if (prefs.get('isRegistered').toString() == 'true') {
           Routemaster.of(context).replace('/profile/');
         }
       }
@@ -130,7 +132,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset('assets/images/blisso.png'),
+                    SizedBox(
+                        height: 150,
+                        width: 300,
+                        child: Image.asset('assets/images/blisso.png')),
                     Padding(
                       padding: const EdgeInsets.only(top: 30.0),
                       child: Row(
@@ -216,20 +221,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     await SharedPreferencesService
                                         .getSharedPreferences();
 
-                                if (prefs.containsKey('is_profile_completed')) {
+                                if (prefs
+                                        .get('is_profile_completed')
+                                        .toString() ==
+                                    'true') {
                                   Routemaster.of(context).replace('/homepage');
                                 } else if (prefs
-                                    .containsKey('is_target_snapshots')) {
+                                        .get('is_target_snapshots')
+                                        .toString() ==
+                                    'true') {
                                   Routemaster.of(context)
                                       .push('/profile-pictures');
                                 } else if (prefs
-                                    .containsKey('is_my_snapshots')) {
+                                        .get('is_my_snapshots')
+                                        .toString() ==
+                                    'true') {
                                   Routemaster.of(context)
                                       .push('/target-snapshot');
                                 } else if (prefs
-                                    .containsKey('is_profile_created')) {
+                                        .get('is_profile_created')
+                                        .toString() ==
+                                    'true') {
                                   Routemaster.of(context).replace('/snapshots');
-                                } else if (prefs.containsKey('isRegistered')) {
+                                } else if (prefs
+                                        .get('isRegistered')
+                                        .toString() ==
+                                    'true') {
                                   Routemaster.of(context).replace('/profile/');
                                 }
                               }

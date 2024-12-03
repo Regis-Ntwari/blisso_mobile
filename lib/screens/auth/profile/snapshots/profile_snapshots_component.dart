@@ -178,7 +178,8 @@ class _ProfileSnapshotsComponentState
                   if (userState.error != null) {
                     showSnackBar(context, userState.error!);
                   } else {
-                    Routemaster.of(context).push('/target-snapshot');
+                    Routemaster.of(context).push(
+                        '/auto-write/What do you want in your lover?/target-snapshot');
                   }
                 })
           ],

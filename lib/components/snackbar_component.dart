@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
 void showSnackBar(BuildContext context, String message) {
@@ -12,13 +13,16 @@ void showSnackBar(BuildContext context, String message) {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.red,
+            color: GlobalColors.primaryColor,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
           ),
         ),
       ),

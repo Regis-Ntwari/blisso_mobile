@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
-import 'package:blisso_mobile/screens/profile/dob_component.dart';
-import 'package:blisso_mobile/screens/profile/gender_component.dart';
-import 'package:blisso_mobile/screens/profile/image_component.dart';
-import 'package:blisso_mobile/screens/profile/location_component.dart';
-import 'package:blisso_mobile/screens/profile/marital_status_component.dart';
-import 'package:blisso_mobile/screens/profile/nickname_component.dart';
-import 'package:blisso_mobile/screens/profile/sexual_orientation_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/dob_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/gender_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/image_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/location_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/marital_status_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/nickname_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/sexual_orientation_component.dart';
 import 'package:blisso_mobile/services/models/profile_model.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -102,7 +102,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (userState.error != null) {
       showSnackBar(context, userState.error!);
     } else {
-      Routemaster.of(context).push('/snapshots');
+      Routemaster.of(context).push(
+          "auto-write/Profile done. Let's choose our interests/snapshots");
     }
   }
 
@@ -121,10 +122,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(profileServiceProviderImpl);
+
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
         child: userState.isLoading
             ? const LoadingScreen()
             : Scaffold(
+                backgroundColor:
+                    isLightTheme ? GlobalColors.lightBackgroundColor : null,
                 appBar: AppBar(
                   backgroundColor: Colors.transparent,
                   leading: IconButton(

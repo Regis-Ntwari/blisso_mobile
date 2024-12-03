@@ -12,4 +12,34 @@ class ProfileService {
 
     return response;
   }
+
+  Future<ApiResponse> getAnyProfile(String username) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response =
+        await ApiService().getData('profiles/$username/', accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> getMyProfile() async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response =
+        await ApiService().getData('profiles/my/profile/', accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> getAllProfiles() async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response =
+        await ApiService().getData('/profiles/', accessToken);
+
+    return response;
+  }
 }

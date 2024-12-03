@@ -61,8 +61,11 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
 
     final userState = ref.watch(userServiceProviderImpl);
 
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
     return SafeArea(
         child: Scaffold(
+      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       body: userState.isLoading
           ? const LoadingScreen()
           : Column(
@@ -82,7 +85,10 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                 Padding(
                   padding: const EdgeInsets.all(10),
                   child: Text(
-                    AppLocalizations.of(context)!.otpVerifySubtitle(username!),
+                    AppLocalizations.of(context) == null
+                        ? username!
+                        : AppLocalizations.of(context)!
+                            .otpVerifySubtitle(username!),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: scaler.scale(12),
