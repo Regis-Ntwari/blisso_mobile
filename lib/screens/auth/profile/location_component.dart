@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,7 +99,18 @@ class _LocationComponentState extends ConsumerState<LocationComponent> {
                     text: 'Next',
                     backgroundColor: GlobalColors.primaryColor,
                     foregroundColor: GlobalColors.whiteColor,
-                    onTap: () => widget.onContinue())
+                    onTap: () {
+                      if (_location == 'Unknown' ||
+                          _exactLocation == 'Unknown') {
+                        showPopupComponent(
+                            context: context,
+                            icon: Icons.dangerous,
+                            message:
+                                'Please. Click on the buttons to get your location!');
+                      } else {
+                        widget.onContinue();
+                      }
+                    })
               ],
             ),
           );

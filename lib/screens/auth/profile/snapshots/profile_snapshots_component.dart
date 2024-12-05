@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -170,16 +171,23 @@ class _ProfileSnapshotsComponentState
                 backgroundColor: GlobalColors.primaryColor,
                 foregroundColor: GlobalColors.whiteColor,
                 onTap: () {
-                  ref
-                      .read(snapshotServiceProviderImpl.notifier)
-                      .postMyProfileSnapshots(widget.chosenValues);
-
-                  final userState = ref.read(snapshotServiceProviderImpl);
-                  if (userState.error != null) {
-                    showSnackBar(context, userState.error!);
+                  if (widget.chosenValues.isEmpty) {
+                    showPopupComponent(
+                        context: context,
+                        icon: Icons.dangerous,
+                        message: 'Please choose atleast one interest');
                   } else {
-                    Routemaster.of(context).push(
-                        '/auto-write/What do you want in your lover?/target-snapshot');
+                    ref
+                        .read(snapshotServiceProviderImpl.notifier)
+                        .postMyProfileSnapshots(widget.chosenValues);
+
+                    final userState = ref.read(snapshotServiceProviderImpl);
+                    if (userState.error != null) {
+                      showSnackBar(context, userState.error!);
+                    } else {
+                      Routemaster.of(context).push(
+                          '/auto-write/What do you want in your lover.../target-snapshot');
+                    }
                   }
                 })
           ],

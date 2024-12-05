@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/pill_button_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -56,7 +57,16 @@ class MaritalStatusComponent extends StatelessWidget {
               text: 'Save Profile',
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
-              onTap: () => onContinue())
+              onTap: () {
+                if (chosenStatus == '') {
+                  showPopupComponent(
+                      context: context,
+                      icon: Icons.dangerous,
+                      message: 'Please, choose your marital status');
+                } else {
+                  onContinue();
+                }
+              })
         ],
       ),
     );

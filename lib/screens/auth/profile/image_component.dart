@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -109,7 +110,16 @@ class _ImageComponentState extends State<ImageComponent> {
                   text: 'Next',
                   backgroundColor: GlobalColors.primaryColor,
                   foregroundColor: GlobalColors.whiteColor,
-                  onTap: () => widget.onContinue()),
+                  onTap: () {
+                    if (widget.profilePicture == null) {
+                      showPopupComponent(
+                          context: context,
+                          icon: Icons.dangerous,
+                          message: 'Please choose your profile');
+                    } else {
+                      widget.onContinue();
+                    }
+                  }),
             )
           ],
         ),

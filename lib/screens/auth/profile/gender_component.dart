@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/pill_button_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -54,7 +55,16 @@ class GenderComponent extends StatelessWidget {
               text: AppLocalizations.of(context)!.continuei,
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
-              onTap: onContinue)
+              onTap: () {
+                if (chosenGender == '') {
+                  showPopupComponent(
+                      context: context,
+                      icon: Icons.dangerous,
+                      message: 'Please. Choose your gender');
+                } else {
+                  onContinue();
+                }
+              })
         ],
       ),
     );

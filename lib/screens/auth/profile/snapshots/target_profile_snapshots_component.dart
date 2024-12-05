@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -329,16 +330,27 @@ class _TargetProfileSnapshotsComponentState
                         backgroundColor: GlobalColors.primaryColor,
                         foregroundColor: GlobalColors.whiteColor,
                         onTap: () async {
-                          await ref
-                              .read(snapshotServiceProviderImpl.notifier)
-                              .postTargetProfileSnapshots(_chosenValues);
+                          bool isListEffectivelyEmpty = _chosenValues.isEmpty ||
+                              _chosenValues.every((map) => map.isEmpty);
 
-                          snapshot = ref.read(snapshotServiceProviderImpl);
-                          if (snapshot.error != null) {
-                            showSnackBar(context, snapshot.error!);
+                          if (isListEffectivelyEmpty) {
+                            showPopupComponent(
+                                context: context,
+                                icon: Icons.dangerous,
+                                message:
+                                    'Please choose atleast one target interest');
                           } else {
-                            Routemaster.of(context).push(
-                                "auto-write/Now, let's add gorgeous pictures/profile-pictures");
+                            await ref
+                                .read(snapshotServiceProviderImpl.notifier)
+                                .postTargetProfileSnapshots(_chosenValues);
+
+                            snapshot = ref.read(snapshotServiceProviderImpl);
+                            if (snapshot.error != null) {
+                              showSnackBar(context, snapshot.error!);
+                            } else {
+                              Routemaster.of(context).push(
+                                  "/auto-write/Now, let's add gorgeous pictures/profile-pictures");
+                            }
                           }
                         }),
                   ),

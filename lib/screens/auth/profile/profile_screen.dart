@@ -103,7 +103,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       showSnackBar(context, userState.error!);
     } else {
       Routemaster.of(context).push(
-          "auto-write/Profile done. Let's choose our interests/snapshots");
+          "/auto-write/Profile done!! Let's choose our interests/snapshots");
     }
   }
 

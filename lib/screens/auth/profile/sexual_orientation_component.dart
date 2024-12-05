@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/pill_button_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -57,7 +58,16 @@ class SexualOrientationComponent extends StatelessWidget {
               text: 'Continue',
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
-              onTap: onContinue)
+              onTap: () {
+                if (chosenSex == '') {
+                  showPopupComponent(
+                      context: context,
+                      icon: Icons.dangerous,
+                      message: 'Please choose your gender');
+                } else {
+                  onContinue();
+                }
+              })
         ],
       ),
     );

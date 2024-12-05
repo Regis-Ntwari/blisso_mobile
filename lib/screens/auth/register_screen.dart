@@ -171,8 +171,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                                             userState.error!);
                                                       } else {
                                                         Routemaster.of(context)
-                                                            .push(
-                                                                "/auto-write/Thanks for registering. Now, let's create your profile/password");
+                                                            .push("/password");
                                                       }
                                                     }
                                                   })

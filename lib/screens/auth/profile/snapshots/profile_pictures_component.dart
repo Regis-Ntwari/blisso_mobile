@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -223,21 +224,33 @@ class _ProfilePicturesComponentState
                       backgroundColor: GlobalColors.primaryColor,
                       foregroundColor: GlobalColors.whiteColor,
                       onTap: () async {
-                        await ref
-                            .read(snapshotServiceProviderImpl.notifier)
-                            .postProfileImages([
-                          _firstPicture!,
-                          _secondPicture!,
-                          _thirdPicture!,
-                          _fourthPicture!
-                        ]);
-
-                        final snapshot = ref.read(snapshotServiceProviderImpl);
-                        if (snapshot.error != null) {
-                          showSnackBar(context, snapshot.error!);
+                        if (_firstPicture == null ||
+                            _secondPicture == null ||
+                            _thirdPicture == null ||
+                            _fourthPicture == null) {
+                          showPopupComponent(
+                              context: context,
+                              icon: Icons.dangerous,
+                              message:
+                                  'Please ensure you have added all photos');
                         } else {
-                          Routemaster.of(context).push(
-                              '/auto-write/One more step, choose your plan/homepage');
+                          await ref
+                              .read(snapshotServiceProviderImpl.notifier)
+                              .postProfileImages([
+                            _firstPicture!,
+                            _secondPicture!,
+                            _thirdPicture!,
+                            _fourthPicture!
+                          ]);
+
+                          final snapshot =
+                              ref.read(snapshotServiceProviderImpl);
+                          if (snapshot.error != null) {
+                            showSnackBar(context, snapshot.error!);
+                          } else {
+                            Routemaster.of(context).push(
+                                '/auto-write/Homepage now... find your lover/homepage');
+                          }
                         }
                       }),
                 )

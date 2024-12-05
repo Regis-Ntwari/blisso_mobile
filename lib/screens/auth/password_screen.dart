@@ -135,7 +135,8 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                                     if (userState.error != null) {
                                       showSnackBar(context, userState.error!);
                                     } else {
-                                      Routemaster.of(context).push('/profile/');
+                                      Routemaster.of(context).push(
+                                          "/auto-write/Hurrah... thanks for creating an account. Let's create your profile/profile/");
                                     }
                                   }
                                 }),
