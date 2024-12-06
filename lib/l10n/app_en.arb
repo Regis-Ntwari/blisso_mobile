@@ -1,6 +1,8 @@
 {
   "language": "English",
   "@language": {},
+  "getStarted": "Get Started",
+  "@getStarted": {},
   "signupEmail": "Sign up with Email",
   "@signupEmail": {},
   "signupPhone": "Sign up with Phone",

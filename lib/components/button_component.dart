@@ -22,7 +22,7 @@ class ButtonComponent extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: width * 0.90,
-        height: height * 0.05,
+        height: height * 0.06,
         padding:
             const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
         decoration: BoxDecoration(

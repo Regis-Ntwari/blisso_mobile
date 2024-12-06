@@ -179,6 +179,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                           ),
                                         ],
                                       ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 8.0, bottom: 8.0),
+                                      child: Text(
+                                          'Already have an account? Click below..',
+                                          style: TextStyle(
+                                              fontSize: textScaler.scale(12))),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 5),
+                                      child: ButtonComponent(
+                                          text: 'Login',
+                                          backgroundColor:
+                                              GlobalColors.primaryColor,
+                                          foregroundColor:
+                                              GlobalColors.whiteColor,
+                                          onTap: () => Routemaster.of(context)
+                                              .push('/Login')),
                                     )
                                   ],
                                 ),

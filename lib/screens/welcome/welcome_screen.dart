@@ -42,7 +42,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (_currentPage < _images.length - 1) {
         _currentPage++;
       } else {
-        Routemaster.of(context).push('/register/EMAIL');
+        _currentPage = 0;
+        //Routemaster.of(context).push('/register/EMAIL');
       }
 
       _pageController.animateToPage(_currentPage,
@@ -177,7 +178,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                       foregroundColor: Colors.white,
                                       backgroundColor: Colors.red,
                                       text: AppLocalizations.of(context)!
-                                          .signupEmail),
+                                          .getStarted),
                                   // Padding(
                                   //   padding: const EdgeInsets.only(top: 8.0),
                                   //   child: ButtonComponent(
