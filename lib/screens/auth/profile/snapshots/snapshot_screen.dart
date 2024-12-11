@@ -74,24 +74,24 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen> {
     final state = ref.watch(snapshotServiceProviderImpl);
     final chosenValues = ref.watch(mySnapshotsProviderImpl);
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return (state.isLoading && isLoading) || state.data == null
-        ? const LoadingScreen()
-        : SafeArea(
-            child: Scaffold(
-              backgroundColor:
-                  isLightTheme ? GlobalColors.lightBackgroundColor : null,
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                leading: IconButton(
-                    onPressed: () {
-                      Routemaster.of(context).pop();
-                    },
-                    icon: Icon(
-                      Icons.keyboard_arrow_left,
-                      color: GlobalColors.secondaryColor,
-                    )),
-              ),
-              body: SingleChildScrollView(
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : null,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+              onPressed: () {
+                Routemaster.of(context).pop();
+              },
+              icon: Icon(
+                Icons.keyboard_arrow_left,
+                color: GlobalColors.secondaryColor,
+              )),
+        ),
+        body: (state.isLoading && isLoading) || state.data == null
+            ? const LoadingScreen()
+            : SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: Column(
@@ -110,7 +110,7 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen> {
                   ),
                 ),
               ),
-            ),
-          );
+      ),
+    );
   }
 }

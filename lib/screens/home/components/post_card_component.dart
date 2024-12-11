@@ -14,6 +14,7 @@ class PostCardComponent extends StatefulWidget {
 class _PostCardComponentState extends State<PostCardComponent> {
   late final PageController _pageController;
   int _currentPage = 0;
+  double _aspectRatio = 2.8 / 4;
 
   @override
   void initState() {
@@ -39,21 +40,23 @@ class _PostCardComponentState extends State<PostCardComponent> {
         InkWell(
           onTap: () => Routemaster.of(context).push('/favorite-profile'),
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundImage:
-                  CachedNetworkImageProvider(widget.profile['profile_pic']),
-            ),
-            title: Text(widget.profile['nickname']),
-            subtitle:
-                Text('Location: ${widget.profile['distance_annot']} Away'),
-            trailing: Icon(
-              Icons.chat,
-              color: GlobalColors.secondaryColor,
-            ),
-          ),
+              leading: CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(
+                    widget.profile['profile_picture_uri']),
+              ),
+              title: Text(widget.profile['nickname']),
+              subtitle: Row(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(right: 10),
+                    child: Icon(Icons.location_on),
+                  ),
+                  Text('${widget.profile['distance_annot']}'),
+                ],
+              )),
         ),
         AspectRatio(
-          aspectRatio: 2.8 / 4,
+          aspectRatio: _aspectRatio,
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (value) {
@@ -64,7 +67,7 @@ class _PostCardComponentState extends State<PostCardComponent> {
             scrollDirection: Axis.horizontal,
             itemBuilder: (context, index) {
               return CachedNetworkImage(
-                imageUrl: widget.profile['profile_images'][index]['image'],
+                imageUrl: widget.profile['profile_images'][index]['image_uri'],
                 fit: BoxFit.contain,
                 width: width,
                 height: height,
@@ -73,6 +76,24 @@ class _PostCardComponentState extends State<PostCardComponent> {
                     color: GlobalColors.primaryColor,
                   ),
                 ),
+                imageBuilder: (context, imageProvider) {
+                  Image(image: imageProvider)
+                      .image
+                      .resolve(const ImageConfiguration())
+                      .addListener(ImageStreamListener((ImageInfo info, _) {
+                    final width = info.image.width;
+                    final height = info.image.height;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _aspectRatio = width / height;
+                      });
+                    });
+                  }));
+                  return Image(
+                    image: imageProvider,
+                    fit: BoxFit.contain,
+                  );
+                },
               );
             },
             itemCount: widget.profile['profile_images'].length,

@@ -3,6 +3,7 @@ import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/services/auth/user_service_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -170,6 +171,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                                         showSnackBar(context,
                                                             userState.error!);
                                                       } else {
+                                                        await SharedPreferencesService
+                                                            .setPreference(
+                                                          'username',
+                                                          widget.type == 'EMAIL'
+                                                              ? emailUsername
+                                                                  .text
+                                                              : phoneUsername
+                                                                  .text,
+                                                        );
+                                                        Future.delayed(
+                                                            const Duration(
+                                                                seconds: 1));
                                                         Routemaster.of(context)
                                                             .push("/password");
                                                       }

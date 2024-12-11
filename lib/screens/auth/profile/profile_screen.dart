@@ -125,101 +125,101 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
-        child: userState.isLoading
-            ? const LoadingScreen()
-            : Scaffold(
-                backgroundColor:
-                    isLightTheme ? GlobalColors.lightBackgroundColor : null,
-                appBar: AppBar(
-                  backgroundColor: Colors.transparent,
-                  leading: IconButton(
-                      onPressed: () {
-                        Routemaster.of(context).pop();
-                      },
-                      icon: Icon(
-                        Icons.keyboard_arrow_left,
-                        color: GlobalColors.secondaryColor,
-                      )),
-                ),
-                body: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10.0, right: 10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (_index == 1)
-                          NicknameComponent(
-                            formKey: _nicknameFormKey,
-                            controller: _nicknameController,
-                            onContinue: () => setState(() {
-                              _index = _index + 1;
-                            }),
-                          )
-                        else if (_index == 2)
-                          DobComponent(
-                            dayController: _dayController,
-                            dayFocusNode: _dayFocusNode,
-                            monthController: _monthController,
-                            monthFocusNode: _monthFocusNode,
-                            yearController: _yearController,
-                            yearFocusNode: _yearFocusNode,
-                            formKey: _formKey,
-                            onTap: () => setState(() {
-                              _index = _index + 1;
-                            }),
-                          )
-                        else if (_index == 3)
-                          GenderComponent(
-                              key: ValueKey(chosenGender),
-                              genders: genders,
-                              chosenGender: chosenGender,
-                              changeGender: (gender) {
-                                setState(() {
-                                  chosenGender = gender;
-                                });
-                              },
+        child: Scaffold(
+            backgroundColor:
+                isLightTheme ? GlobalColors.lightBackgroundColor : null,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              leading: IconButton(
+                  onPressed: () {
+                    Routemaster.of(context).pop();
+                  },
+                  icon: Icon(
+                    Icons.keyboard_arrow_left,
+                    color: GlobalColors.secondaryColor,
+                  )),
+            ),
+            body: userState.isLoading
+                ? const LoadingScreen()
+                : SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10.0, right: 10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (_index == 1)
+                            NicknameComponent(
+                              formKey: _nicknameFormKey,
+                              controller: _nicknameController,
+                              onContinue: () => setState(() {
+                                _index = _index + 1;
+                              }),
+                            )
+                          else if (_index == 2)
+                            DobComponent(
+                              dayController: _dayController,
+                              dayFocusNode: _dayFocusNode,
+                              monthController: _monthController,
+                              monthFocusNode: _monthFocusNode,
+                              yearController: _yearController,
+                              yearFocusNode: _yearFocusNode,
+                              formKey: _formKey,
+                              onTap: () => setState(() {
+                                _index = _index + 1;
+                              }),
+                            )
+                          else if (_index == 3)
+                            GenderComponent(
+                                key: ValueKey(chosenGender),
+                                genders: genders,
+                                chosenGender: chosenGender,
+                                changeGender: (gender) {
+                                  setState(() {
+                                    chosenGender = gender;
+                                  });
+                                },
+                                onContinue: () {
+                                  setState(() {
+                                    _index = _index + 1;
+                                  });
+                                })
+                          else if (_index == 4)
+                            SexualOrientationComponent(
+                                sexes: sexes,
+                                chosenSex: chosenSex,
+                                onContinue: () {
+                                  setState(() {
+                                    _index = _index + 1;
+                                  });
+                                },
+                                changeSex: (sex) {
+                                  setState(() {
+                                    chosenSex = sex;
+                                  });
+                                })
+                          else if (_index == 5)
+                            LocationComponent(
+                              onChangeAddress: changeAddress,
+                              onChangePosition: changePosition,
                               onContinue: () {
                                 setState(() {
                                   _index = _index + 1;
                                 });
-                              })
-                        else if (_index == 4)
-                          SexualOrientationComponent(
-                              sexes: sexes,
-                              chosenSex: chosenSex,
+                              },
+                            )
+                          else if (_index == 6)
+                            ImageComponent(
+                              changeProfilePicture: changeProfilePicture,
+                              profilePicture: _profilePicture,
                               onContinue: () {
                                 setState(() {
                                   _index = _index + 1;
                                 });
                               },
-                              changeSex: (sex) {
-                                setState(() {
-                                  chosenSex = sex;
-                                });
-                              })
-                        else if (_index == 5)
-                          LocationComponent(
-                            onChangeAddress: changeAddress,
-                            onChangePosition: changePosition,
-                            onContinue: () {
-                              setState(() {
-                                _index = _index + 1;
-                              });
-                            },
-                          )
-                        else if (_index == 6)
-                          ImageComponent(
-                            changeProfilePicture: changeProfilePicture,
-                            profilePicture: _profilePicture,
-                            onContinue: () {
-                              setState(() {
-                                _index = _index + 1;
-                              });
-                            },
-                          )
-                        else if (_index == 7)
-                          MaritalStatusComponent(
-                              /*sexes: sexes,
+                            )
+                          else if (_index == 7)
+                            MaritalStatusComponent(
+                                /*sexes: sexes,
                           chosenSex: chosenSex,
                           onContinue: () {
                             setState(() {
@@ -231,23 +231,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               chosenSex = sex;
                             });
                           } */
-                              statuses: statuses,
-                              chosenStatus: chosenStatus,
-                              changeStatus: (status) {
-                                setState(() {
-                                  chosenStatus = status;
-                                });
-                              },
-                              onContinue: () => saveProfile(context))
-                        // else if (_index == 8)
-                        //   ProfileSnapshotsComponent(
-                        //     checkInterest: checkInterest,
-                        //     chosenValues: _chosenOwnInterests,
-                        //     toggleInterest: addOwnInterest,
-                        //   )
-                      ],
+                                statuses: statuses,
+                                chosenStatus: chosenStatus,
+                                changeStatus: (status) {
+                                  setState(() {
+                                    chosenStatus = status;
+                                  });
+                                },
+                                onContinue: () => saveProfile(context))
+                          // else if (_index == 8)
+                          //   ProfileSnapshotsComponent(
+                          //     checkInterest: checkInterest,
+                          //     chosenValues: _chosenOwnInterests,
+                          //     toggleInterest: addOwnInterest,
+                          //   )
+                        ],
+                      ),
                     ),
-                  ),
-                )));
+                  )));
   }
 }

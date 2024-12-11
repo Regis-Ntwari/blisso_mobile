@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PasswordScreen extends ConsumerStatefulWidget {
   const PasswordScreen({super.key});
@@ -51,6 +52,8 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
         setState(() {
           username = value!;
         });
+        debugPrint(username);
+        debugPrint(value);
       },
     );
   }
@@ -66,7 +69,7 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
     return SafeArea(
         child: Scaffold(
       backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
-      body: userState.isLoading
+      body: userState.isLoading || username == null
           ? const LoadingScreen()
           : Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -135,8 +138,43 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                                     if (userState.error != null) {
                                       showSnackBar(context, userState.error!);
                                     } else {
-                                      Routemaster.of(context).push(
-                                          "/auto-write/Hurrah... thanks for creating an account. Let's create your profile/profile/");
+                                      SharedPreferences prefs =
+                                          await SharedPreferencesService
+                                              .getSharedPreferences();
+
+                                      if (prefs
+                                              .get('is_profile_completed')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .replace('/homepage');
+                                      } else if (prefs
+                                              .get('is_target_snapshots')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .push('/profile-pictures');
+                                      } else if (prefs
+                                              .get('is_my_snapshots')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .push('/target-snapshot');
+                                      } else if (prefs
+                                              .get('is_profile_created')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .replace('/snapshots');
+                                      } else if (prefs
+                                              .get('isRegistered')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .replace('/profile/');
+                                      }
+                                      // Routemaster.of(context).push(
+                                      //     "/auto-write/Hurrah... thanks for creating an account. Let's create your profile/profile/");
                                     }
                                   }
                                 }),
