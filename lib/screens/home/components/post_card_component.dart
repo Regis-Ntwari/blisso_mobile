@@ -35,119 +35,122 @@ class _PostCardComponentState extends State<PostCardComponent> {
 
     return SizedBox(
       child: Card(
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        InkWell(
-          onTap: () => Routemaster.of(context).push('/favorite-profile'),
-          child: ListTile(
-              leading: CircleAvatar(
-                backgroundImage: CachedNetworkImageProvider(
-                    widget.profile['profile_picture_uri']),
-              ),
-              title: Text(widget.profile['nickname']),
-              subtitle: Row(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(right: 10),
-                    child: Icon(Icons.location_on),
+            InkWell(
+              onTap: () => Routemaster.of(context).push('/favorite-profile'),
+              child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(
+                        widget.profile['profile_picture_uri']),
                   ),
-                  Text('${widget.profile['distance_annot']}'),
-                ],
-              )),
-        ),
-        AspectRatio(
-          aspectRatio: _aspectRatio,
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (value) {
-              setState(() {
-                _currentPage = value;
-              });
-            },
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return CachedNetworkImage(
-                imageUrl: widget.profile['profile_images'][index]['image_uri'],
-                fit: BoxFit.contain,
-                width: width,
-                height: height,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(
-                    color: GlobalColors.primaryColor,
-                  ),
-                ),
-                imageBuilder: (context, imageProvider) {
-                  Image(image: imageProvider)
-                      .image
-                      .resolve(const ImageConfiguration())
-                      .addListener(ImageStreamListener((ImageInfo info, _) {
-                    final width = info.image.width;
-                    final height = info.image.height;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() {
-                        _aspectRatio = width / height;
-                      });
-                    });
-                  }));
-                  return Image(
-                    image: imageProvider,
+                  title: Text(widget.profile['nickname']),
+                  subtitle: Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(right: 10),
+                        child: Icon(Icons.location_on),
+                      ),
+                      Text('${widget.profile['distance_annot']}'),
+                    ],
+                  )),
+            ),
+            AspectRatio(
+              aspectRatio: _aspectRatio,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (value) {
+                  setState(() {
+                    _currentPage = value;
+                  });
+                },
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return CachedNetworkImage(
+                    imageUrl: widget.profile['profile_images'][index]
+                        ['image_uri'],
                     fit: BoxFit.contain,
+                    width: width,
+                    height: height,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(
+                        color: GlobalColors.primaryColor,
+                      ),
+                    ),
+                    imageBuilder: (context, imageProvider) {
+                      Image(image: imageProvider)
+                          .image
+                          .resolve(const ImageConfiguration())
+                          .addListener(ImageStreamListener((ImageInfo info, _) {
+                        final width = info.image.width;
+                        final height = info.image.height;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          setState(() {
+                            _aspectRatio = width / height;
+                          });
+                        });
+                      }));
+                      return Image(
+                        image: imageProvider,
+                        fit: BoxFit.contain,
+                      );
+                    },
                   );
                 },
-              );
-            },
-            itemCount: widget.profile['profile_images'].length,
-          ),
-        ),
-        Align(
-          alignment: Alignment.center,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(
-                widget.profile['profile_images'].length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  width: _currentPage == index ? 12.0 : 8.0,
-                  height: 8.0,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? GlobalColors.primaryColor
-                        : Colors.grey,
-                    borderRadius: BorderRadius.circular(4.0),
+                itemCount: widget.profile['profile_images'].length,
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(
+                    widget.profile['profile_images'].length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                      width: _currentPage == index ? 12.0 : 8.0,
+                      height: 8.0,
+                      decoration: BoxDecoration(
+                        color: _currentPage == index
+                            ? GlobalColors.primaryColor
+                            : Colors.grey,
+                        borderRadius: BorderRadius.circular(4.0),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        Padding(
-            padding: const EdgeInsets.all(10),
-            child: Text(
-                textAlign: TextAlign.start,
-                "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")),
-        Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.favorite_border),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: () {},
-                ),
-              ],
-            )),
-      ])),
+            Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                    textAlign: TextAlign.start,
+                    "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")),
+            Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.favorite_border),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share),
+                      onPressed: () {},
+                    ),
+                  ],
+                )),
+          ])),
     );
   }
 }

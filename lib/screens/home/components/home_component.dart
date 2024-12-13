@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 class HomeComponent extends StatefulWidget {
   final List<dynamic>? profiles;
-  const HomeComponent({super.key, required this.profiles});
+  final Function refetch;
+  const HomeComponent(
+      {super.key, required this.profiles, required this.refetch});
 
   @override
   State<HomeComponent> createState() => _HomeComponentState();
@@ -19,13 +21,16 @@ class _HomeComponentState extends State<HomeComponent> {
         ? const LoadingScreen()
         : Column(
             children: [
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemBuilder: (context, index) => PostCardComponent(
-                    profile: widget.profiles![index],
+              RefreshIndicator(
+                onRefresh: () => widget.refetch(),
+                child: Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemBuilder: (context, index) => PostCardComponent(
+                      profile: widget.profiles![index],
+                    ),
+                    itemCount: widget.profiles!.length,
                   ),
-                  itemCount: widget.profiles!.length,
                 ),
               ),
             ],

@@ -16,8 +16,11 @@ class HomepageScreen extends ConsumerStatefulWidget {
 }
 
 class _HomepageScreenState extends ConsumerState<HomepageScreen> {
-  final List<Widget> _widgetOptions = <Widget>[
-    HomeComponent(profiles: null),
+  late final List<Widget> _widgetOptions = <Widget>[
+    HomeComponent(
+      profiles: null,
+      refetch: refetchProfiles,
+    ),
     SearchComponent(),
     ExploreComponent(),
     MyProfileComponent()
@@ -29,6 +32,10 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
     final state = ref.read(profileServiceProviderImpl.notifier);
 
     await state.getAllProfiles();
+  }
+
+  Future<void> refetchProfiles() async {
+    getProfiles();
   }
 
   @override
@@ -55,7 +62,10 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
     ref.listen(profileServiceProviderImpl, (previous, next) {
       if (next.data != null) {
         setState(() {
-          _widgetOptions[0] = HomeComponent(profiles: next.data);
+          _widgetOptions[0] = HomeComponent(
+            profiles: next.data,
+            refetch: refetchProfiles,
+          );
         });
       }
     });

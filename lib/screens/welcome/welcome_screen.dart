@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -149,23 +150,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               if (index == 0)
                                 Text(
                                   AppLocalizations.of(context)!.welcomeMessage1,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 32),
+                                      fontSize: 32,
+                                      color: GlobalColors.whiteColor),
                                 ),
                               if (index == 1)
                                 Text(
                                   AppLocalizations.of(context)!.welcomeMessage2,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 32),
+                                      fontSize: 32,
+                                      color: GlobalColors.whiteColor),
                                 ),
                               if (index == 2)
                                 Text(
                                   AppLocalizations.of(context)!.welcomeMessage3,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 32),
+                                      fontSize: 32,
+                                      color: GlobalColors.whiteColor),
                                 ),
                               _buildPageIndicator(),
                               Column(
