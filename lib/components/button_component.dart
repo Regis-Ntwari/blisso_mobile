@@ -6,12 +6,16 @@ class ButtonComponent extends StatelessWidget {
   final Color backgroundColor;
   final Color foregroundColor;
   final VoidCallback onTap;
+  final double? buttonHeight;
+  final double? buttonWidth;
   const ButtonComponent(
       {super.key,
       required this.text,
       required this.backgroundColor,
       required this.foregroundColor,
-      required this.onTap});
+      required this.onTap,
+      this.buttonHeight,
+      this.buttonWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +25,8 @@ class ButtonComponent extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        width: width * 0.90,
-        height: height * 0.06,
+        width: buttonWidth ?? width * 0.90,
+        height: buttonHeight ?? height * 0.06,
         padding:
             const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
         decoration: BoxDecoration(
@@ -38,12 +42,15 @@ class ButtonComponent extends StatelessWidget {
                       Colors.black87,
                     ],
             )),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: isLightTheme ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold),
+        child: Align(
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: isLightTheme ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

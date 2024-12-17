@@ -34,6 +34,9 @@ class _MyProfileComponentState extends State<MyProfileComponent> {
               'Schadrack Niyibizi',
               style: TextStyle(
                   fontSize: scaler.scale(16), fontWeight: FontWeight.bold),
+            ),
+            ListTile(
+              title: Text('Make changes'),
             )
           ],
         ),

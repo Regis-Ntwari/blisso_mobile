@@ -69,51 +69,32 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
         });
       }
     });
+
     return Scaffold(
       backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-              activeIcon: const Icon(
-                Icons.home,
-                color: GlobalColors.primaryColor,
-              ),
-              icon: Icon(
-                Icons.home,
-                color: GlobalColors.secondaryColor,
-              ),
+              activeIcon:
+                  const Icon(Icons.home, color: GlobalColors.primaryColor),
+              icon: Icon(Icons.home, color: GlobalColors.secondaryColor),
               label: 'Home'),
           BottomNavigationBarItem(
-              activeIcon: const Icon(
-                Icons.search,
-                color: GlobalColors.primaryColor,
-              ),
-              icon: Icon(
-                Icons.search,
-                color: GlobalColors.secondaryColor,
-              ),
+              activeIcon:
+                  const Icon(Icons.search, color: GlobalColors.primaryColor),
+              icon: Icon(Icons.search, color: GlobalColors.secondaryColor),
               label: 'Search'),
           BottomNavigationBarItem(
-              activeIcon: const Icon(
-                Icons.category,
-                color: GlobalColors.primaryColor,
-              ),
-              icon: Icon(
-                Icons.category,
-                color: GlobalColors.secondaryColor,
-              ),
+              activeIcon:
+                  const Icon(Icons.category, color: GlobalColors.primaryColor),
+              icon: Icon(Icons.category, color: GlobalColors.secondaryColor),
               label: 'Explore'),
           BottomNavigationBarItem(
-            activeIcon: const Icon(
-              Icons.person,
-              color: GlobalColors.primaryColor,
-            ),
-            icon: Icon(
-              Icons.person,
-              color: GlobalColors.secondaryColor,
-            ),
+            activeIcon:
+                const Icon(Icons.person, color: GlobalColors.primaryColor),
+            icon: Icon(Icons.person, color: GlobalColors.secondaryColor),
             label: 'Profile',
-          )
+          ),
         ],
         onTap: (value) => _onScreenChanged(value),
         currentIndex: _selectedScreenIndex,
@@ -122,27 +103,48 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
         selectedIconTheme:
             const IconThemeData(color: GlobalColors.primaryColor),
       ),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Blisso',
-          style: TextStyle(
-              color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 20),
-            child: Icon(Icons.notifications),
-          ),
-          Padding(
-              padding: EdgeInsets.only(right: 20, left: 20),
-              child: Icon(Icons.chat)),
-        ],
-      ),
       body: profilesState.isLoading || profilesState.data == null
           ? const LoadingScreen()
-          : SafeArea(
-              child: _widgetOptions[_selectedScreenIndex],
+          : CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  pinned: false,
+                  floating: true,
+                  snap: true,
+                  automaticallyImplyLeading: false,
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Padding(
+                      padding: const EdgeInsets.only(left: 5.0),
+                      child: Text(
+                        _selectedScreenIndex == 3 ? 'Profile' : 'Blisso',
+                        style: TextStyle(
+                          color: GlobalColors.primaryColor,
+                          fontSize: scaler.scale(24),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    centerTitle: false,
+                  ),
+                  actions: _selectedScreenIndex == 0
+                      ? const [
+                          Padding(
+                            padding: EdgeInsets.only(right: 20),
+                            child: Icon(Icons.notifications),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Icon(Icons.chat),
+                          ),
+                        ]
+                      : [],
+                ),
+                SliverFillRemaining(
+                  child: SafeArea(
+                    child: _widgetOptions[_selectedScreenIndex],
+                  ),
+                ),
+              ],
             ),
     );
   }

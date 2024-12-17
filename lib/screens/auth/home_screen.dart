@@ -6,6 +6,7 @@ import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/services/auth/user_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
@@ -36,6 +37,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String firstname = '';
   String? username;
+  String? profilePicture;
   Future<void> getFirstnameAndUsername() async {
     await SharedPreferencesService.getPreference('firstname').then(
       (value) {
@@ -52,6 +54,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       },
     );
+
+    await SharedPreferencesService.getPreference('profile_picture')
+        .then((value) {
+      setState(() {
+        profilePicture = value!;
+      });
+    });
   }
 
   Future<void> _checkBiometrics() async {
@@ -158,13 +167,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.all(30),
+                    Padding(
+                      padding: const EdgeInsets.all(30),
                       child: CircleAvatar(
                         radius: 100,
-                        backgroundImage: AssetImage(
-                          'assets/images/avatar1.jpg',
-                        ),
+                        backgroundImage: profilePicture == null
+                            ? const AssetImage(
+                                'assets/images/avatar1.jpg',
+                              )
+                            : CachedNetworkImageProvider(
+                                profilePicture!,
+                              ),
                       ),
                     ),
                     isCodeClicked

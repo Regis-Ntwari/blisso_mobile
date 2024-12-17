@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/home/components/post_card_component.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class HomeComponent extends StatefulWidget {
@@ -17,23 +18,23 @@ class _HomeComponentState extends State<HomeComponent> {
 
   @override
   Widget build(BuildContext context) {
+    double height = MediaQuery.sizeOf(context).height;
     return widget.profiles == null
         ? const LoadingScreen()
-        : Column(
-            children: [
-              RefreshIndicator(
-                onRefresh: () => widget.refetch(),
-                child: Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemBuilder: (context, index) => PostCardComponent(
-                      profile: widget.profiles![index],
-                    ),
-                    itemCount: widget.profiles!.length,
-                  ),
+        : RefreshIndicator(
+            backgroundColor: GlobalColors.primaryColor,
+            color: GlobalColors.whiteColor,
+            onRefresh: () => widget.refetch(),
+            child: SizedBox(
+              height: height,
+              child: ListView.builder(
+                controller: _scrollController,
+                itemBuilder: (context, index) => PostCardComponent(
+                  profile: widget.profiles![index],
                 ),
+                itemCount: widget.profiles!.length,
               ),
-            ],
+            ),
           );
   }
 }

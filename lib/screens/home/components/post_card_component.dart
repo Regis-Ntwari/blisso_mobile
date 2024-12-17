@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -45,13 +46,12 @@ class _PostCardComponentState extends State<PostCardComponent> {
                     backgroundImage: CachedNetworkImageProvider(
                         widget.profile['profile_picture_uri']),
                   ),
+                  contentPadding: const EdgeInsets.only(left: 5),
+                  horizontalTitleGap: 10,
                   title: Text(widget.profile['nickname']),
                   subtitle: Row(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: Icon(Icons.location_on),
-                      ),
+                      const Icon(Icons.location_on),
                       Text('${widget.profile['distance_annot']}'),
                     ],
                   )),
@@ -93,7 +93,7 @@ class _PostCardComponentState extends State<PostCardComponent> {
                       }));
                       return Image(
                         image: imageProvider,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                       );
                     },
                   );
@@ -104,7 +104,7 @@ class _PostCardComponentState extends State<PostCardComponent> {
             Align(
               alignment: Alignment.center,
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.only(top: 10, right: 10, left: 10),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(
@@ -126,30 +126,40 @@ class _PostCardComponentState extends State<PostCardComponent> {
               ),
             ),
             Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 1.0, vertical: 1.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.favorite_border),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.share),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 100,
+                      child: ButtonComponent(
+                          text: 'Message',
+                          backgroundColor: GlobalColors.primaryColor,
+                          foregroundColor: GlobalColors.whiteColor,
+                          buttonHeight: 40,
+                          buttonWidth: 100,
+                          onTap: () {}),
+                    )
+                  ],
+                )),
+            Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
                     textAlign: TextAlign.start,
                     "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")),
-            Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.favorite_border),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.share),
-                      onPressed: () {},
-                    ),
-                  ],
-                )),
           ])),
     );
   }
