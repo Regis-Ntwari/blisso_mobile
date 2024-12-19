@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blisso_mobile/services/api_state.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service.dart';
+import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SnapshotServiceProvider extends StateNotifier<ApiState> {
@@ -16,7 +17,7 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
       final snapshots = await snapshotService.fetchProfileSnapshots();
 
-      if (snapshots.result == null) {
+      if (!StatusCodes.codes.contains(snapshots.statusCode)) {
         state = ApiState(error: snapshots.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: snapshots.result, isLoading: false);
@@ -32,7 +33,7 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
       final response = await snapshotService.postProfileSnapshots(snapshots);
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
@@ -52,7 +53,7 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
       final response =
           await snapshotService.postTargetProfileSnapshots(snapshots);
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
@@ -70,7 +71,7 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
       final response = await snapshotService.postImages(images);
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);

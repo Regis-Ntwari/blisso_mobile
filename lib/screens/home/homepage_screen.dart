@@ -105,46 +105,47 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
       ),
       body: profilesState.isLoading || profilesState.data == null
           ? const LoadingScreen()
-          : CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  pinned: false,
-                  floating: true,
-                  snap: true,
-                  automaticallyImplyLeading: false,
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: Padding(
-                      padding: const EdgeInsets.only(left: 5.0),
-                      child: Text(
-                        _selectedScreenIndex == 3 ? 'Profile' : 'Blisso',
-                        style: TextStyle(
-                          color: GlobalColors.primaryColor,
-                          fontSize: scaler.scale(24),
-                          fontWeight: FontWeight.bold,
+          : SafeArea(
+              child: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    elevation: 5,
+                    floating: true,
+                    snap: true,
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: Padding(
+                        padding: const EdgeInsets.only(left: 5.0),
+                        child: Text(
+                          _selectedScreenIndex == 3 ? 'Profile' : 'Blisso',
+                          style: TextStyle(
+                            color: GlobalColors.primaryColor,
+                            fontSize: scaler.scale(24),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
+                      centerTitle: false,
                     ),
-                    centerTitle: false,
+                    actions: _selectedScreenIndex == 0
+                        ? const [
+                            Padding(
+                              padding: EdgeInsets.only(right: 20),
+                              child: Icon(Icons.notifications),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Icon(Icons.chat),
+                            ),
+                          ]
+                        : [],
                   ),
-                  actions: _selectedScreenIndex == 0
-                      ? const [
-                          Padding(
-                            padding: EdgeInsets.only(right: 20),
-                            child: Icon(Icons.notifications),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Icon(Icons.chat),
-                          ),
-                        ]
-                      : [],
-                ),
-                SliverFillRemaining(
-                  child: SafeArea(
+                  SliverFillRemaining(
                     child: _widgetOptions[_selectedScreenIndex],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }

@@ -87,6 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                                     final userState =
                                         ref.read(userServiceProviderImpl);
+
                                     if (userState.error != null) {
                                       showSnackBar(context, userState.error!);
                                     } else {

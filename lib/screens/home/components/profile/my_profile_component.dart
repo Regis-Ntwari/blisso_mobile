@@ -1,65 +1,234 @@
+import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MyProfileComponent extends StatefulWidget {
+class MyProfileComponent extends ConsumerStatefulWidget {
   const MyProfileComponent({super.key});
 
   @override
-  State<MyProfileComponent> createState() => _MyProfileComponentState();
+  ConsumerState<MyProfileComponent> createState() => _MyProfileComponentState();
 }
 
-class _MyProfileComponentState extends State<MyProfileComponent> {
+class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
+  String firstname = '';
+  String lastname = '';
+  String profilePicture = '';
+  String expandedField = '';
+  Future<void> getNames() async {
+    await SharedPreferencesService.getPreference('firstname').then((value) {
+      setState(() {
+        firstname = value!;
+      });
+    });
+
+    await SharedPreferencesService.getPreference('lastname').then((value) {
+      setState(() {
+        lastname = value!;
+      });
+    });
+
+    await SharedPreferencesService.getPreference('profile_picture')
+        .then((value) {
+      setState(() {
+        profilePicture = value!;
+      });
+    });
+  }
+
+  Future<void> fetchMyProfile() async {
+    final profileState = ref.read(myProfileServiceProviderImpl.notifier);
+
+    await profileState.getMyProfile();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getNames();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchMyProfile();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
+    final profileState = ref.watch(myProfileServiceProviderImpl);
+    double height = MediaQuery.sizeOf(context).height;
     return SafeArea(
       child: Scaffold(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        body: profileState.isLoading || profileState.data == null
+            ? const LoadingScreen()
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        'http://40.122.188.22:8000//media/profile/main/niyibizischadrack05gmailcom/1000221666_Ods3sIs.png'),
-                    radius: 100,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0, left: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: profilePicture == ''
+                                  ? const AssetImage(
+                                      'assets/images/avatar1.jpg')
+                                  : CachedNetworkImageProvider(
+                                      profilePicture,
+                                    ),
+                              radius: 50,
+                            ),
+                            Text(
+                              '$firstname $lastname',
+                              style: TextStyle(
+                                  fontSize: scaler.scale(16),
+                                  color: GlobalColors.secondaryColor),
+                            )
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Wrap(children: [
+                              const Text(
+                                'Nickname: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(profileState.data['nickname']),
+                            ]),
+                            Wrap(children: [
+                              const Text(
+                                'Language: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(profileState.data['lang']),
+                            ]),
+                            Wrap(children: [
+                              const Text(
+                                'Date of Birth: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(profileState.data['dob']),
+                            ]),
+                            Wrap(children: [
+                              const Text(
+                                'Gender: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(profileState.data['gender']),
+                            ]),
+                            Wrap(children: [
+                              const Text(
+                                'Marital Status: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(profileState.data['marital_status']),
+                            ]),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
+                  SingleChildScrollView(
+                    child: SizedBox(
+                      child: Column(
+                        children: [
+                          SizedBox(
+                              height: height * 0.2,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 2.0),
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: profileState
+                                      .data['profile_images'].length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 2.0),
+                                      child: SizedBox(
+                                        height: 100,
+                                        width: 100,
+                                        child: CachedNetworkImage(
+                                            imageUrl: profileState
+                                                    .data['profile_images']
+                                                [index]['image_uri']),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )),
+                          InkWell(
+                            onTap: () {
+                              if (expandedField == 'interest') {
+                                setState(() {
+                                  expandedField = '';
+                                });
+                              } else {
+                                setState(() {
+                                  expandedField = 'interest';
+                                });
+                              }
+                            },
+                            child: ListTile(
+                              title: const Text(
+                                'Interests',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                  '${profileState.data['lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}'),
+                              trailing: expandedField == 'interest'
+                                  ? const Icon(Icons.keyboard_arrow_down)
+                                  : const Icon(Icons.keyboard_arrow_right),
+                            ),
+                          ),
+                          if (expandedField == 'interest')
+                            Flexible(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: profileState.data['lifesnapshots']
+                                      .map<Widget>((snapshot) {
+                                    return ListTile(
+                                      title: Text(snapshot['name']),
+                                      trailing: Icon(
+                                        Icons.delete,
+                                        color: GlobalColors.primaryColor,
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                          InkWell(
+                            onTap: () {},
+                            child: ListTile(
+                              title: const Text('What you wish in a person',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Text(
+                                  '${profileState.data['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}'),
+                              trailing: const Icon(Icons.keyboard_arrow_right),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {},
+                            child: const ListTile(
+                              title: Text('Make changes'),
+                              subtitle: Text('Click to change your profile'),
+                              trailing: Icon(Icons.keyboard_arrow_right),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               ),
-            ),
-            Text(
-              'Schadrack Niyibizi',
-              style: TextStyle(
-                  fontSize: scaler.scale(16), fontWeight: FontWeight.bold),
-            ),
-            InkWell(
-              onTap: () {},
-              child: const ListTile(
-                title: Text('Make changes'),
-                subtitle: Text('Click to change your profile'),
-                trailing: Icon(Icons.keyboard_arrow_right),
-              ),
-            ),
-            InkWell(
-              onTap: () {},
-              child: const ListTile(
-                title: Text('Make changes'),
-                subtitle: Text('Click to change your profile'),
-                trailing: Icon(Icons.keyboard_arrow_right),
-              ),
-            ),
-            InkWell(
-              onTap: () {},
-              child: const ListTile(
-                title: Text('Make changes'),
-                subtitle: Text('Click to change your profile'),
-                trailing: Icon(Icons.keyboard_arrow_right),
-              ),
-            )
-          ],
-        ),
       ),
     );
   }

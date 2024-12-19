@@ -15,7 +15,6 @@ class PostCardComponent extends StatefulWidget {
 class _PostCardComponentState extends State<PostCardComponent> {
   late final PageController _pageController;
   int _currentPage = 0;
-  double _aspectRatio = 2.8 / 4;
 
   @override
   void initState() {
@@ -32,8 +31,6 @@ class _PostCardComponentState extends State<PostCardComponent> {
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.sizeOf(context).height;
-    double width = MediaQuery.sizeOf(context).width;
-
     return SizedBox(
       child: Card(
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -56,8 +53,8 @@ class _PostCardComponentState extends State<PostCardComponent> {
                     ],
                   )),
             ),
-            AspectRatio(
-              aspectRatio: _aspectRatio,
+            SizedBox(
+              height: height * 0.55,
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (value) {
@@ -71,31 +68,11 @@ class _PostCardComponentState extends State<PostCardComponent> {
                     imageUrl: widget.profile['profile_images'][index]
                         ['image_uri'],
                     fit: BoxFit.contain,
-                    width: width,
-                    height: height,
                     placeholder: (context, url) => const Center(
                       child: CircularProgressIndicator(
                         color: GlobalColors.primaryColor,
                       ),
                     ),
-                    imageBuilder: (context, imageProvider) {
-                      Image(image: imageProvider)
-                          .image
-                          .resolve(const ImageConfiguration())
-                          .addListener(ImageStreamListener((ImageInfo info, _) {
-                        final width = info.image.width;
-                        final height = info.image.height;
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          setState(() {
-                            _aspectRatio = width / height;
-                          });
-                        });
-                      }));
-                      return Image(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                      );
-                    },
                   );
                 },
                 itemCount: widget.profile['profile_images'].length,

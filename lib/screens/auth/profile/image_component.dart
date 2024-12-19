@@ -84,7 +84,7 @@ class _ImageComponentState extends State<ImageComponent> {
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Text(
-                  'Choose your profile picture',
+                  'Choose your profile picture so that people may recognize you',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: textScaler.scale(12)),
                 ),
@@ -97,10 +97,12 @@ class _ImageComponentState extends State<ImageComponent> {
                     backgroundImage: widget.profilePicture != null
                         ? FileImage(widget.profilePicture!)
                         : null,
-                    child: const Align(
-                      alignment: Alignment.center,
-                      child:
-                          Icon(Icons.camera_alt, size: 50, color: Colors.white),
+                    child: Align(
+                      alignment: widget.profilePicture == null
+                          ? Alignment.center
+                          : Alignment.bottomRight,
+                      child: const Icon(Icons.camera_alt,
+                          size: 50, color: Colors.white),
                     )),
               )
             ]),

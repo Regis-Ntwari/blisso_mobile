@@ -9,6 +9,7 @@ import 'package:blisso_mobile/screens/auth/profile/location_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/marital_status_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/nickname_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/sexual_orientation_component.dart';
+import 'package:blisso_mobile/services/location/location_service_provider.dart';
 import 'package:blisso_mobile/services/models/profile_model.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -48,9 +49,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final List<String> statuses = ['MARRIED', 'SINGLE', 'WIDOWED', 'DIVORCED'];
   final List<String> sexes = ['MEN', 'WOMEN', 'EVERYONE'];
 
-  late Position position;
+  Position? position;
 
-  late String address;
+  String? address;
 
   File? _profilePicture;
 
@@ -87,9 +88,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         nickname: _nicknameController.text,
         dob:
             '${_yearController.text}-${_monthController.text}-${_dayController.text}',
-        location: address,
-        latitude: position.latitude.toString(),
-        longitude: position.longitude.toString(),
+        location: address == null ? '' : address!,
+        latitude: position!.latitude.toString(),
+        longitude: position!.longitude.toString(),
         profilePic: _profilePicture!,
         gender: chosenGender.toLowerCase(),
         showMe: chosenSex.toLowerCase(),
@@ -122,6 +123,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(profileServiceProviderImpl);
+    final locationState = ref.watch(locationServiceProviderImpl);
 
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
@@ -139,7 +141,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: GlobalColors.secondaryColor,
                   )),
             ),
-            body: userState.isLoading
+            body: userState.isLoading || locationState.isLoading
                 ? const LoadingScreen()
                 : SingleChildScrollView(
                     child: Padding(
@@ -201,6 +203,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             LocationComponent(
                               onChangeAddress: changeAddress,
                               onChangePosition: changePosition,
+                              location: position,
                               onContinue: () {
                                 setState(() {
                                   _index = _index + 1;

@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/services/api_state.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service.dart';
+import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SubscriptionServiceProvider extends StateNotifier<ApiState> {
@@ -14,7 +15,7 @@ class SubscriptionServiceProvider extends StateNotifier<ApiState> {
 
       final response = await subscriptionService.getSubscriptionPlans();
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
         state = ApiState(isLoading: false, data: response.result);
@@ -31,7 +32,7 @@ class SubscriptionServiceProvider extends StateNotifier<ApiState> {
       final response =
           await subscriptionService.createSubscription(subscription);
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
         state = ApiState(isLoading: false, data: response.result);

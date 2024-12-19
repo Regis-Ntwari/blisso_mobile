@@ -85,6 +85,15 @@ class _ProfilePicturesComponentState
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
         child: Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: Text(
+          'Blisso',
+          style: TextStyle(
+              color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
+        ),
+      ),
       backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       body: snapshot.isLoading
           ? const LoadingScreen()
@@ -114,9 +123,8 @@ class _ProfilePicturesComponentState
                         children: [
                           InkWell(
                               onTap: () => _showImagePickerOptions(1),
-                              child: Container(
+                              child: SizedBox(
                                 height: 50,
-                                color: Colors.grey,
                                 child: Card(
                                   child: Stack(
                                     fit: StackFit.expand,
@@ -139,9 +147,8 @@ class _ProfilePicturesComponentState
                               )),
                           InkWell(
                               onTap: () => _showImagePickerOptions(2),
-                              child: Container(
+                              child: SizedBox(
                                 height: 50,
-                                color: Colors.grey,
                                 child: Card(
                                   child: Stack(
                                     fit: StackFit.expand,
@@ -164,8 +171,7 @@ class _ProfilePicturesComponentState
                               )),
                           InkWell(
                               onTap: () => _showImagePickerOptions(3),
-                              child: Container(
-                                color: Colors.grey,
+                              child: SizedBox(
                                 height: 50,
                                 child: Card(
                                   child: Stack(
@@ -189,9 +195,8 @@ class _ProfilePicturesComponentState
                               )),
                           InkWell(
                               onTap: () => _showImagePickerOptions(4),
-                              child: Container(
+                              child: SizedBox(
                                 height: 50,
-                                color: Colors.grey,
                                 child: Card(
                                   child: Stack(
                                     fit: StackFit.expand,

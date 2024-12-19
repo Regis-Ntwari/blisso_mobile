@@ -47,7 +47,7 @@ class _TargetProfileSnapshotsComponentState
                 child: AlertDialog(
                   title: Text('Choose Scale for ${attribute["name"]}'),
                   content: Slider(
-                      activeColor: Colors.red,
+                      activeColor: GlobalColors.primaryColor,
                       value: _chosenValues[index]['scale'].toDouble(),
                       min: 0,
                       max: 10,
@@ -62,11 +62,13 @@ class _TargetProfileSnapshotsComponentState
                         );
                       }),
                   actions: [
-                    TextButton(
-                        onPressed: () {
+                    ButtonComponent(
+                        onTap: () {
                           Routemaster.of(context).pop();
                         },
-                        child: const Text('OK'))
+                        backgroundColor: GlobalColors.primaryColor,
+                        foregroundColor: GlobalColors.whiteColor,
+                        text: 'OK')
                   ],
                 ),
               );
@@ -169,6 +171,8 @@ class _TargetProfileSnapshotsComponentState
                   snap: false,
                   centerTitle: true,
                   automaticallyImplyLeading: false,
+                  backgroundColor:
+                      isLightTheme ? GlobalColors.lightBackgroundColor : null,
                   title: const Text(
                     'Blisso',
                     style: TextStyle(
@@ -176,6 +180,8 @@ class _TargetProfileSnapshotsComponentState
                   ),
                   bottom: AppBar(
                     automaticallyImplyLeading: false,
+                    backgroundColor:
+                        isLightTheme ? GlobalColors.lightBackgroundColor : null,
                     title: Container(
                       width: double.infinity,
                       height: 40,

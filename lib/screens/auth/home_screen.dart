@@ -58,7 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await SharedPreferencesService.getPreference('profile_picture')
         .then((value) {
       setState(() {
-        profilePicture = value!;
+        profilePicture = null;
       });
     });
   }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blisso_mobile/services/models/api_response.dart';
+import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -21,7 +22,7 @@ class ApiService {
     final decodedData = jsonDecode(data);
 
     try {
-      if (decodedData.containsKey('data')) {
+      if (StatusCodes.codes.contains(decodedData['status_code'])) {
         return ApiResponse.success(
           result: decodedData['data'],
           statusCode: decodedData['status_code'],

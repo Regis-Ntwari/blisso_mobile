@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:blisso_mobile/services/models/profile_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:blisso_mobile/services/api_state.dart';
@@ -19,7 +20,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     try {
       final response = await profileService.createProfile(profile);
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
@@ -37,7 +38,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     try {
       final response = await profileService.getAnyProfile(username);
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
@@ -53,7 +54,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     try {
       final response = await profileService.getMyProfile();
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
@@ -69,7 +70,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     try {
       final response = await profileService.getAllProfiles();
 
-      if (response.result == null) {
+      if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
         state = ApiState(data: response.result, isLoading: false);
