@@ -58,88 +58,96 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
-    double height = MediaQuery.sizeOf(context).height;
+    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : null,
         body: profileState.isLoading || profileState.data == null
             ? const LoadingScreen()
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0, left: 5),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: profilePicture == ''
-                                  ? const AssetImage(
-                                      'assets/images/avatar1.jpg')
-                                  : CachedNetworkImageProvider(
-                                      profilePicture,
-                                    ),
-                              radius: 50,
-                            ),
-                            Text(
-                              '$firstname $lastname',
-                              style: TextStyle(
-                                  fontSize: scaler.scale(16),
-                                  color: GlobalColors.secondaryColor),
-                            )
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Wrap(children: [
-                              const Text(
-                                'Nickname: ',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0, left: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              CircleAvatar(
+                                backgroundImage: profilePicture == ''
+                                    ? const AssetImage(
+                                        'assets/images/avatar1.jpg')
+                                    : CachedNetworkImageProvider(
+                                        profilePicture,
+                                      ),
+                                radius: 50,
                               ),
-                              Text(profileState.data['nickname']),
-                            ]),
-                            Wrap(children: [
-                              const Text(
-                                'Language: ',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              Text(
+                                '$firstname $lastname',
+                                style: TextStyle(
+                                    fontSize: scaler.scale(10),
+                                    color: GlobalColors.secondaryColor),
                               ),
-                              Text(profileState.data['lang']),
-                            ]),
-                            Wrap(children: [
-                              const Text(
-                                'Date of Birth: ',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(profileState.data['dob']),
-                            ]),
-                            Wrap(children: [
-                              const Text(
-                                'Gender: ',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(profileState.data['gender']),
-                            ]),
-                            Wrap(children: [
-                              const Text(
-                                'Marital Status: ',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(profileState.data['marital_status']),
-                            ]),
-                          ],
-                        )
-                      ],
+                              Text(
+                                '${profileState.data['user']['email']}',
+                                style: TextStyle(
+                                    fontSize: scaler.scale(10),
+                                    color: GlobalColors.secondaryColor),
+                              )
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Wrap(children: [
+                                const Text(
+                                  'Nickname: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(profileState.data['nickname']),
+                              ]),
+                              Wrap(children: [
+                                const Text(
+                                  'Language: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(profileState.data['lang']),
+                              ]),
+                              Wrap(children: [
+                                const Text(
+                                  'Date of Birth: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(profileState.data['dob']),
+                              ]),
+                              Wrap(children: [
+                                const Text(
+                                  'Gender: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(profileState.data['gender']),
+                              ]),
+                              Wrap(children: [
+                                const Text(
+                                  'Marital Status: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(profileState.data['marital_status']),
+                              ]),
+                            ],
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                  SingleChildScrollView(
-                    child: SizedBox(
+                    SizedBox(
                       child: Column(
                         children: [
                           SizedBox(
-                              height: height * 0.2,
+                              height: 200,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 2.0),
                                 child: ListView.builder(
@@ -176,7 +184,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                             },
                             child: ListTile(
                               title: const Text(
-                                'Interests',
+                                'My Interests',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text(
@@ -187,34 +195,59 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                             ),
                           ),
                           if (expandedField == 'interest')
-                            Flexible(
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: profileState.data['lifesnapshots']
-                                      .map<Widget>((snapshot) {
-                                    return ListTile(
-                                      title: Text(snapshot['name']),
-                                      trailing: Icon(
-                                        Icons.delete,
-                                        color: GlobalColors.primaryColor,
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
+                            SingleChildScrollView(
+                              child: Wrap(
+                                children: profileState.data['lifesnapshots']
+                                    .map<Widget>((snapshot) {
+                                  return ListTile(
+                                    title: Text(snapshot['name']),
+                                    trailing: const Icon(
+                                      Icons.delete,
+                                      color: GlobalColors.primaryColor,
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
                           InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              if (expandedField == 'target') {
+                                setState(() {
+                                  expandedField = '';
+                                });
+                              } else {
+                                setState(() {
+                                  expandedField = 'target';
+                                });
+                              }
+                            },
                             child: ListTile(
                               title: const Text('What you wish in a person',
                                   style:
                                       TextStyle(fontWeight: FontWeight.bold)),
                               subtitle: Text(
                                   '${profileState.data['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}'),
-                              trailing: const Icon(Icons.keyboard_arrow_right),
+                              trailing: expandedField == 'target'
+                                  ? const Icon(Icons.keyboard_arrow_down)
+                                  : const Icon(Icons.keyboard_arrow_right),
                             ),
                           ),
+                          if (expandedField == 'target')
+                            SingleChildScrollView(
+                              child: Wrap(
+                                children: profileState
+                                    .data['target_lifesnapshots']
+                                    .map<Widget>((snapshot) {
+                                  return ListTile(
+                                    title: Text(snapshot['name']),
+                                    trailing: const Icon(
+                                      Icons.delete,
+                                      color: GlobalColors.primaryColor,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           InkWell(
                             onTap: () {},
                             child: const ListTile(
@@ -226,8 +259,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                         ],
                       ),
                     ),
-                  )
-                ],
+                  ],
+                ),
               ),
       ),
     );

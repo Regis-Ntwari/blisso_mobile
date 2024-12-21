@@ -16,22 +16,26 @@ class HomepageScreen extends ConsumerStatefulWidget {
 }
 
 class _HomepageScreenState extends ConsumerState<HomepageScreen> {
-  late final List<Widget> _widgetOptions = <Widget>[
-    HomeComponent(
-      profiles: null,
-      refetch: refetchProfiles,
-    ),
-    SearchComponent(),
-    ExploreComponent(),
-    MyProfileComponent()
-  ];
+  bool isSearchVisible = false;
 
   int _selectedScreenIndex = 0;
+
+  String searchAttribute = 'Firstname';
+
+  TextEditingController searchValue = TextEditingController();
+
+  dynamic profiles;
 
   Future<void> getProfiles() async {
     final state = ref.read(profileServiceProviderImpl.notifier);
 
     await state.getAllProfiles();
+
+    final profilesState = ref.watch(profileServiceProviderImpl);
+
+    setState(() {
+      profiles = profilesState.data;
+    });
   }
 
   Future<void> refetchProfiles() async {
@@ -53,42 +57,78 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
     });
   }
 
+  void _onSearchChange() {
+    final state = ref.watch(profileServiceProviderImpl);
+    final filteredData = state.data.where((profile) {
+      final filteredUser = profile['user'];
+      return filteredUser['first_name']
+              .toLowerCase()
+              .contains(searchValue.text.toLowerCase()) ||
+          filteredUser['last_name']
+              .toLowerCase()
+              .contains(searchValue.text.toLowerCase()) ||
+          filteredUser['email']
+              .toLowerCase()
+              .contains(searchValue.text.toLowerCase());
+    }).toList();
+
+    print("== $filteredData");
+
+    setState(() {
+      profiles = filteredData;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     final profilesState = ref.watch(profileServiceProviderImpl);
 
-    ref.listen(profileServiceProviderImpl, (previous, next) {
-      if (next.data != null) {
-        setState(() {
-          _widgetOptions[0] = HomeComponent(
-            profiles: next.data,
-            refetch: refetchProfiles,
-          );
-        });
-      }
-    });
+    final List<Widget> widgetOptions = <Widget>[
+      HomeComponent(
+        profiles: profiles,
+        refetch: refetchProfiles,
+      ),
+      SearchComponent(),
+      ExploreComponent(),
+      MyProfileComponent()
+    ];
+
+    // ref.listen(profileServiceProviderImpl, (previous, next) {
+    //   if (next.data != null) {
+    //     setState(() {
+    //       profiles = next.data;
+    //       _widgetOptions[0] = HomeComponent(
+    //         profiles: profiles,
+    //         refetch: refetchProfiles,
+    //       );
+    //     });
+    //   }
+    // });
 
     return Scaffold(
       backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-              activeIcon:
-                  const Icon(Icons.home, color: GlobalColors.primaryColor),
-              icon: Icon(Icons.home, color: GlobalColors.secondaryColor),
-              label: 'Home'),
+            activeIcon:
+                const Icon(Icons.home, color: GlobalColors.primaryColor),
+            icon: Icon(Icons.home, color: GlobalColors.secondaryColor),
+            label: 'Home',
+          ),
           BottomNavigationBarItem(
-              activeIcon:
-                  const Icon(Icons.search, color: GlobalColors.primaryColor),
-              icon: Icon(Icons.search, color: GlobalColors.secondaryColor),
-              label: 'Search'),
+            activeIcon:
+                const Icon(Icons.search, color: GlobalColors.primaryColor),
+            icon: Icon(Icons.search, color: GlobalColors.secondaryColor),
+            label: 'Search',
+          ),
           BottomNavigationBarItem(
-              activeIcon:
-                  const Icon(Icons.category, color: GlobalColors.primaryColor),
-              icon: Icon(Icons.category, color: GlobalColors.secondaryColor),
-              label: 'Explore'),
+            activeIcon:
+                const Icon(Icons.category, color: GlobalColors.primaryColor),
+            icon: Icon(Icons.category, color: GlobalColors.secondaryColor),
+            label: 'Explore',
+          ),
           BottomNavigationBarItem(
             activeIcon:
                 const Icon(Icons.person, color: GlobalColors.primaryColor),
@@ -113,36 +153,102 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                     elevation: 5,
                     floating: true,
                     snap: true,
+                    expandedHeight: isSearchVisible ? 140 : 70, // Adjust height
                     automaticallyImplyLeading: false,
                     flexibleSpace: FlexibleSpaceBar(
-                      title: Padding(
-                        padding: const EdgeInsets.only(left: 5.0),
-                        child: Text(
-                          _selectedScreenIndex == 3 ? 'Profile' : 'Blisso',
-                          style: TextStyle(
-                            color: GlobalColors.primaryColor,
-                            fontSize: scaler.scale(24),
-                            fontWeight: FontWeight.bold,
+                      collapseMode: CollapseMode.pin,
+                      background: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5.0, vertical: 5.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _selectedScreenIndex == 3
+                                      ? 'Profile'
+                                      : 'Blisso',
+                                  style: TextStyle(
+                                    color: GlobalColors.primaryColor,
+                                    fontSize: scaler.scale(24),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (_selectedScreenIndex == 0) ...[
+                                      IconButton(
+                                        icon: const Icon(Icons.search),
+                                        onPressed: () {
+                                          setState(() {
+                                            isSearchVisible = !isSearchVisible;
+                                          });
+                                          if (!isSearchVisible) {
+                                            searchValue.clear();
+                                            _onSearchChange();
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.notifications),
+                                        onPressed: () {},
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.chat),
+                                        onPressed: () {},
+                                      ),
+                                    ]
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          if (isSearchVisible)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: searchValue,
+                                      onChanged: (value) => _onSearchChange(),
+                                      decoration: InputDecoration(
+                                        hintText:
+                                            'Search by Firstname, Lastname or Email...',
+                                        border: OutlineInputBorder(
+                                          borderSide: const BorderSide(
+                                              color: GlobalColors.primaryColor),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        isSearchVisible = false;
+                                        searchValue.clear();
+                                        _onSearchChange();
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
-                      centerTitle: false,
                     ),
-                    actions: _selectedScreenIndex == 0
-                        ? const [
-                            Padding(
-                              padding: EdgeInsets.only(right: 20),
-                              child: Icon(Icons.notifications),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
-                              child: Icon(Icons.chat),
-                            ),
-                          ]
-                        : [],
                   ),
                   SliverFillRemaining(
-                    child: _widgetOptions[_selectedScreenIndex],
+                    child: widgetOptions[_selectedScreenIndex],
                   ),
                 ],
               ),

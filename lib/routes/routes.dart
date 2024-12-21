@@ -8,6 +8,7 @@ import 'package:blisso_mobile/screens/auth/profile/snapshots/snapshot_screen.dar
 import 'package:blisso_mobile/screens/auth/profile/snapshots/target_profile_snapshots_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/subscription/subscription_screen.dart';
 import 'package:blisso_mobile/screens/auth/register_screen.dart';
+import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
@@ -41,6 +42,8 @@ class Routing {
           null,
           route.pathParameters['route']!,
         )),
+    '/target-profile': (route) =>
+        const MaterialPage(child: TargetProfileComponent()),
     '/favorite-profile/:username': (route) => MaterialPage(
         child: FavoriteProfileScreen(
             profileUsername: route.pathParameters['username']!))
