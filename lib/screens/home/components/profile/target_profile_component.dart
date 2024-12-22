@@ -238,14 +238,6 @@ class _TargetProfileComponentState
                           }).toList(),
                         ),
                       ),
-                    InkWell(
-                      onTap: () {},
-                      child: const ListTile(
-                        title: Text('Make changes'),
-                        subtitle: Text('Click to change your profile'),
-                        trailing: Icon(Icons.keyboard_arrow_right),
-                      ),
-                    )
                   ],
                 ),
               ),
