@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -21,11 +22,8 @@ class _TargetProfileComponentState
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final targetProfile = ref.watch(targetProfileProvider);
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
-        backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : null,
         appBar: AppBar(
           leading: InkWell(
             onTap: () => Routemaster.of(context).push('/homepage'),
@@ -44,84 +42,102 @@ class _TargetProfileComponentState
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 10.0, left: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      children: [
-                        CircleAvatar(
-                          backgroundImage: targetProfile.profilePictureUri == ''
-                              ? const AssetImage('assets/images/avatar1.jpg')
-                              : CachedNetworkImageProvider(
-                                  targetProfile.profilePictureUri!,
-                                ),
-                          radius: 50,
-                        ),
-                        Text(
-                          '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
-                          style: TextStyle(
-                              fontSize: scaler.scale(10),
-                              color: GlobalColors.secondaryColor),
-                        ),
-                        Wrap(children: [
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: targetProfile.profilePictureUri ==
+                                    ''
+                                ? const AssetImage('assets/images/avatar1.jpg')
+                                : CachedNetworkImageProvider(
+                                    targetProfile.profilePictureUri!,
+                                  ),
+                            radius: 50,
+                          ),
                           Text(
-                            '${targetProfile.user!['email']}',
+                            '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
                             style: TextStyle(
                                 fontSize: scaler.scale(10),
                                 color: GlobalColors.secondaryColor),
                           ),
-                        ]),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Wrap(children: [
-                          const Text(
-                            'Nickname: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(targetProfile.nickname!),
-                        ]),
-                        Wrap(children: [
-                          const Text(
-                            'Language: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(targetProfile.lang!),
-                        ]),
-                        Wrap(children: [
-                          const Text(
-                            'Date of Birth: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(targetProfile.dob!),
-                        ]),
-                        Wrap(children: [
-                          const Text(
-                            'Gender: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(targetProfile.gender!),
-                        ]),
-                        Wrap(children: [
-                          const Text(
-                            'Marital Status: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(targetProfile.maritalStatus!),
-                        ]),
-                      ],
-                    )
-                  ],
+                          Wrap(children: [
+                            Text(
+                              '${targetProfile.user!['email']}',
+                              style: TextStyle(
+                                  fontSize: scaler.scale(10),
+                                  color: GlobalColors.secondaryColor),
+                            ),
+                          ]),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Wrap(children: [
+                            const Text(
+                              'Nickname: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(targetProfile.nickname!),
+                          ]),
+                          Wrap(children: [
+                            const Text(
+                              'Language: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(targetProfile.lang!),
+                          ]),
+                          Wrap(children: [
+                            const Text(
+                              'Date of Birth: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(targetProfile.dob!),
+                          ]),
+                          Wrap(children: [
+                            const Text(
+                              'Gender: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(targetProfile.gender!),
+                          ]),
+                          Wrap(children: [
+                            const Text(
+                              'Marital Status: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(targetProfile.maritalStatus!),
+                          ]),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: SizedBox(
+                  height: 50,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: ButtonComponent(
+                        text: 'DM Me',
+                        backgroundColor: GlobalColors.primaryColor,
+                        foregroundColor: GlobalColors.lightBackgroundColor,
+                        onTap: () {}),
+                  ),
                 ),
               ),
               SizedBox(
                 child: Column(
                   children: [
                     SizedBox(
-                        height: 200,
+                        height: 150,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: ListView.builder(
@@ -155,9 +171,9 @@ class _TargetProfileComponentState
                         }
                       },
                       child: ListTile(
-                        title: const Text(
-                          'Interests',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        title: Text(
+                          'What ${targetProfile.nickname} like',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(targetProfile.lifesnapshots!
                             .map((snapshot) => snapshot['name'])
@@ -195,8 +211,10 @@ class _TargetProfileComponentState
                         }
                       },
                       child: ListTile(
-                        title: const Text('What you wish in a person',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        title: Text(
+                            'What ${targetProfile.nickname} want in a person',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(targetProfile.targetLifesnapshots!
                             .map((snapshot) => snapshot['name'])
                             .join(", ")),

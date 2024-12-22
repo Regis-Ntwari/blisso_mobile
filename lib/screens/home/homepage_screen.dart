@@ -59,20 +59,46 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
 
   void _onSearchChange() {
     final state = ref.watch(profileServiceProviderImpl);
-    final filteredData = state.data.where((profile) {
-      final filteredUser = profile['user'];
-      return filteredUser['first_name']
-              .toLowerCase()
-              .contains(searchValue.text.toLowerCase()) ||
-          filteredUser['last_name']
-              .toLowerCase()
-              .contains(searchValue.text.toLowerCase()) ||
-          filteredUser['email']
-              .toLowerCase()
-              .contains(searchValue.text.toLowerCase());
-    }).toList();
+    final query = searchValue.text.trim().toLowerCase();
 
-    print("== $filteredData");
+    // If the query is empty, reset profiles to the full dataset
+    if (query.isEmpty) {
+      setState(() {
+        profiles = state.data;
+      });
+      return;
+    }
+
+    // Filter data
+    final filteredData = state.data.where((profile) {
+      final user = profile['user'] as Map<String, dynamic>? ?? {};
+
+      switch (searchAttribute) {
+        case 'Firstname':
+          return user['first_name']?.toString().toLowerCase().contains(query) ??
+              false;
+        case 'Lastname':
+          return user['last_name']?.toString().toLowerCase().contains(query) ??
+              false;
+        case 'Email':
+          return user['email']?.toString().toLowerCase().contains(query) ??
+              false;
+        case 'Nickname':
+          return profile['nickname']
+                  ?.toString()
+                  .toLowerCase()
+                  .contains(query) ??
+              false;
+        case 'Home Address':
+          return profile['home_address']
+                  ?.toString()
+                  .toLowerCase()
+                  .contains(query) ??
+              false;
+        default:
+          return false;
+      }
+    }).toList();
 
     setState(() {
       profiles = filteredData;
@@ -153,7 +179,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                     elevation: 5,
                     floating: true,
                     snap: true,
-                    expandedHeight: isSearchVisible ? 140 : 70, // Adjust height
+                    expandedHeight: isSearchVisible ? 140 : 60,
                     automaticallyImplyLeading: false,
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
@@ -212,6 +238,29 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                                   const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Row(
                                 children: [
+                                  SizedBox(
+                                    height: 50,
+                                    child: DropdownButton<String>(
+                                      value: searchAttribute,
+                                      items: <String>[
+                                        'Firstname',
+                                        'Lastname',
+                                        'Email',
+                                        'Nickname',
+                                        'Home Address'
+                                      ].map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          searchAttribute = value!;
+                                        });
+                                      },
+                                    ),
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextField(
@@ -219,7 +268,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                                       onChanged: (value) => _onSearchChange(),
                                       decoration: InputDecoration(
                                         hintText:
-                                            'Search by Firstname, Lastname or Email...',
+                                            'Search by $searchAttribute...',
                                         border: OutlineInputBorder(
                                           borderSide: const BorderSide(
                                               color: GlobalColors.primaryColor),

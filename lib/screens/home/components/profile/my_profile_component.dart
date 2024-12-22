@@ -58,11 +58,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
-    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
-        backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : null,
         body: profileState.isLoading || profileState.data == null
             ? const LoadingScreen()
             : SingleChildScrollView(
@@ -71,83 +68,91 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 10.0, left: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Column(
-                            children: [
-                              CircleAvatar(
-                                backgroundImage: profilePicture == ''
-                                    ? const AssetImage(
-                                        'assets/images/avatar1.jpg')
-                                    : CachedNetworkImageProvider(
-                                        profilePicture,
-                                      ),
-                                radius: 50,
-                              ),
-                              Text(
-                                '$firstname $lastname',
-                                style: TextStyle(
-                                    fontSize: scaler.scale(10),
-                                    color: GlobalColors.secondaryColor),
-                              ),
-                              Text(
-                                '${profileState.data['user']['email']}',
-                                style: TextStyle(
-                                    fontSize: scaler.scale(10),
-                                    color: GlobalColors.secondaryColor),
-                              )
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Wrap(children: [
-                                const Text(
-                                  'Nickname: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: profilePicture == ''
+                                      ? const AssetImage(
+                                          'assets/images/avatar1.jpg')
+                                      : CachedNetworkImageProvider(
+                                          profilePicture,
+                                        ),
+                                  radius: 50,
                                 ),
-                                Text(profileState.data['nickname']),
-                              ]),
-                              Wrap(children: [
-                                const Text(
-                                  'Language: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Text(
+                                  '$firstname $lastname',
+                                  style: TextStyle(
+                                      fontSize: scaler.scale(10),
+                                      color: GlobalColors.secondaryColor),
                                 ),
-                                Text(profileState.data['lang']),
-                              ]),
-                              Wrap(children: [
-                                const Text(
-                                  'Date of Birth: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(profileState.data['dob']),
-                              ]),
-                              Wrap(children: [
-                                const Text(
-                                  'Gender: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(profileState.data['gender']),
-                              ]),
-                              Wrap(children: [
-                                const Text(
-                                  'Marital Status: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(profileState.data['marital_status']),
-                              ]),
-                            ],
-                          )
-                        ],
+                                Text(
+                                  '${profileState.data['user']['email']}',
+                                  style: TextStyle(
+                                      fontSize: scaler.scale(10),
+                                      color: GlobalColors.secondaryColor),
+                                )
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Wrap(children: [
+                                  const Text(
+                                    'Nickname: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(profileState.data['nickname']),
+                                ]),
+                                Wrap(children: [
+                                  const Text(
+                                    'Language: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(profileState.data['lang']),
+                                ]),
+                                Wrap(children: [
+                                  const Text(
+                                    'Date of Birth: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(profileState.data['dob']),
+                                ]),
+                                Wrap(children: [
+                                  const Text(
+                                    'Gender: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(profileState.data['gender']),
+                                ]),
+                                Wrap(children: [
+                                  const Text(
+                                    'Marital Status: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(profileState.data['marital_status']),
+                                ]),
+                              ],
+                            )
+                          ],
+                        ),
                       ),
                     ),
                     SizedBox(
                       child: Column(
                         children: [
                           SizedBox(
-                              height: 200,
+                              height: 150,
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 2.0),
                                 child: ListView.builder(

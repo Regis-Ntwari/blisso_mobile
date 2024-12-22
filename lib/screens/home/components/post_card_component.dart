@@ -136,7 +136,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     SizedBox(
                       width: 100,
                       child: ButtonComponent(
-                          text: 'Message',
+                          text: 'DM Me',
                           backgroundColor: GlobalColors.primaryColor,
                           foregroundColor: GlobalColors.whiteColor,
                           buttonHeight: 40,
