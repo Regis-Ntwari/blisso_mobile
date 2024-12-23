@@ -1,18 +1,21 @@
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
-class PostCardComponent extends StatefulWidget {
+class PostCardComponent extends ConsumerStatefulWidget {
   final Map<String, dynamic> profile;
   const PostCardComponent({super.key, required this.profile});
 
   @override
-  State<PostCardComponent> createState() => _PostCardComponentState();
+  ConsumerState<PostCardComponent> createState() => _PostCardComponentState();
 }
 
-class _PostCardComponentState extends State<PostCardComponent> {
+class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   late final PageController _pageController;
   int _currentPage = 0;
 
@@ -31,13 +34,18 @@ class _PostCardComponentState extends State<PostCardComponent> {
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.sizeOf(context).height;
+    final targetProfile = ref.read(targetProfileProvider.notifier);
     return SizedBox(
       child: Card(
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             InkWell(
-              onTap: () => Routemaster.of(context).push('/favorite-profile'),
+              onTap: () {
+                targetProfile.updateTargetProfile(
+                    TargetProfileModel.fromMap(widget.profile));
+                Routemaster.of(context).push('/target-profile');
+              },
               child: ListTile(
                   leading: CircleAvatar(
                     backgroundImage: CachedNetworkImageProvider(
@@ -45,7 +53,12 @@ class _PostCardComponentState extends State<PostCardComponent> {
                   ),
                   contentPadding: const EdgeInsets.only(left: 5),
                   horizontalTitleGap: 10,
-                  title: Text(widget.profile['nickname']),
+                  title: Row(
+                    children: [
+                      Text(widget.profile['nickname']),
+                      Text(' - ${widget.profile['age']} years old')
+                    ],
+                  ),
                   subtitle: Row(
                     children: [
                       const Icon(Icons.location_on),
@@ -123,7 +136,7 @@ class _PostCardComponentState extends State<PostCardComponent> {
                     SizedBox(
                       width: 100,
                       child: ButtonComponent(
-                          text: 'Message',
+                          text: 'DM Me',
                           backgroundColor: GlobalColors.primaryColor,
                           foregroundColor: GlobalColors.whiteColor,
                           buttonHeight: 40,
