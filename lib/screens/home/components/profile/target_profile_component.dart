@@ -49,14 +49,11 @@ class _TargetProfileComponentState
                     children: [
                       Column(
                         children: [
-                          CircleAvatar(
-                            backgroundImage: targetProfile.profilePictureUri ==
-                                    ''
-                                ? const AssetImage('assets/images/avatar1.jpg')
-                                : CachedNetworkImageProvider(
-                                    targetProfile.profilePictureUri!,
-                                  ),
-                            radius: 50,
+                          SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: CachedNetworkImage(
+                                imageUrl: targetProfile.profilePictureUri!),
                           ),
                           Text(
                             '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
