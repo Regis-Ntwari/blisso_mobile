@@ -116,9 +116,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
         profiles: profiles,
         refetch: refetchProfiles,
       ),
-      SearchComponent(),
-      ExploreComponent(),
-      MyProfileComponent()
+      const SearchComponent(),
+      const ExploreComponent(),
+      const MyProfileComponent()
     ];
 
     // ref.listen(profileServiceProviderImpl, (previous, next) {
