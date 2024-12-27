@@ -22,6 +22,8 @@ class _TargetProfileComponentState
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final targetProfile = ref.watch(targetProfileProvider);
+    double height = MediaQuery.sizeOf(context).height;
+    double width = MediaQuery.sizeOf(context).width;
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -50,10 +52,11 @@ class _TargetProfileComponentState
                       Column(
                         children: [
                           SizedBox(
-                            height: 100,
-                            width: 100,
+                            height: height * 0.4,
+                            width: width * 0.5,
                             child: CachedNetworkImage(
-                                imageUrl: targetProfile.profilePictureUri!),
+                                imageUrl: targetProfile.profilePictureUri!,
+                                fit: BoxFit.cover),
                           ),
                           Text(
                             '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
@@ -73,9 +76,9 @@ class _TargetProfileComponentState
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Wrap(children: [
+                          Wrap(spacing: 10, children: [
                             const Text(
                               'Nickname: ',
                               style: TextStyle(fontWeight: FontWeight.bold),
