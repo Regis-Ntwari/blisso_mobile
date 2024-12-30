@@ -261,13 +261,12 @@ class _TargetProfileSnapshotsComponentState
                               ],
                             ),
                           ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(top: 8.0, bottom: 10),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0, bottom: 10),
                             child: Align(
                               alignment: Alignment.center,
                               child: Text(
-                                'Click the $key which you want and choose a scale out of 10',
+                                'TELL US WHAT YOU VALUE IN A PERSON',
                                 textAlign: TextAlign.center,
                               ),
                             ),
