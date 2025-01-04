@@ -75,6 +75,7 @@ class ApiService {
         headers['Authorization'] = 'Bearer $token';
       }
 
+      debugPrint(jsonEncode(body));
       final response =
           await http.post(url, headers: headers, body: jsonEncode(body));
 

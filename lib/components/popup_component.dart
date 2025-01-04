@@ -65,7 +65,10 @@ class PopupComponent extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: GlobalColors.primaryColor,
                 ),
-                child: const Text('OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: GlobalColors.whiteColor),
+                ),
               ),
             ),
           ],

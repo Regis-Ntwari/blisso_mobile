@@ -9,6 +9,7 @@ import 'package:blisso_mobile/screens/auth/profile/location_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/marital_status_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/nickname_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/sexual_orientation_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/subscription/subscription_screen.dart';
 import 'package:blisso_mobile/services/location/location_service_provider.dart';
 import 'package:blisso_mobile/services/models/profile_model.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
@@ -31,6 +32,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _dayController = TextEditingController();
   final _monthController = TextEditingController();
   final _yearController = TextEditingController();
+  final _homeAddressController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   String chosenGender = '';
@@ -94,6 +96,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         profilePic: _profilePicture!,
         gender: chosenGender.toLowerCase(),
         showMe: chosenSex.toLowerCase(),
+        homeAddress: _homeAddressController.text,
         maritalStatus: chosenStatus.toLowerCase(),
         lang: capitalize('ENGLISH'));
 
@@ -204,6 +207,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               onChangeAddress: changeAddress,
                               onChangePosition: changePosition,
                               location: position,
+                              homeAddress: _homeAddressController,
                               onContinue: () {
                                 setState(() {
                                   _index = _index + 1;
@@ -242,12 +246,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   });
                                 },
                                 onContinue: () => saveProfile(context))
-                          // else if (_index == 8)
-                          //   ProfileSnapshotsComponent(
-                          //     checkInterest: checkInterest,
-                          //     chosenValues: _chosenOwnInterests,
-                          //     toggleInterest: addOwnInterest,
-                          //   )
+                          else if (_index == 8)
+                            const SubscriptionScreen()
                         ],
                       ),
                     ),

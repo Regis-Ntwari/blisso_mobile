@@ -6,12 +6,14 @@ class TextInputComponent extends StatelessWidget {
   final String labelText;
   final String hintText;
   final Function validatorFunction;
-  const TextInputComponent(
+  TextInputType? keyboardType;
+  TextInputComponent(
       {super.key,
       required this.controller,
       required this.labelText,
       required this.hintText,
-      required this.validatorFunction});
+      required this.validatorFunction,
+      this.keyboardType});
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +23,7 @@ class TextInputComponent extends StatelessWidget {
           const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 6, right: 6),
       child: TextFormField(
           controller: controller,
+          keyboardType: TextInputType.name,
           decoration: InputDecoration(
               filled: true,
               fillColor:

@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
+import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,12 +12,14 @@ class LocationComponent extends ConsumerStatefulWidget {
   final Function onChangePosition;
   final Function onChangeAddress;
   final Position? location;
+  final TextEditingController homeAddress;
   const LocationComponent(
       {super.key,
       required this.onChangeAddress,
       required this.onContinue,
       required this.onChangePosition,
-      required this.location});
+      required this.location,
+      required this.homeAddress});
 
   @override
   ConsumerState<LocationComponent> createState() => _LocationComponentState();
@@ -56,6 +59,7 @@ class _LocationComponentState extends ConsumerState<LocationComponent> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               const Icon(
                 Icons.location_on,
@@ -78,6 +82,26 @@ class _LocationComponentState extends ConsumerState<LocationComponent> {
                   style: TextStyle(
                       fontSize: 10, color: GlobalColors.secondaryColor),
                 ),
+              ),
+              ButtonComponent(
+                onTap: () async {
+                  await getLocation();
+                },
+                text: 'Get Location',
+                backgroundColor: GlobalColors.whiteColor,
+                foregroundColor: GlobalColors.primaryColor,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Form(
+                  child: TextInputComponent(
+                      controller: widget.homeAddress,
+                      labelText: 'Home Address *',
+                      hintText: 'Home Address',
+                      validatorFunction: (value) {
+                        return (value!.isEmpty ? value : null);
+                      }),
+                ),
               )
             ],
           ),
@@ -97,25 +121,20 @@ class _LocationComponentState extends ConsumerState<LocationComponent> {
           //     )
           //   ],
           // ),
-          ButtonComponent(
-            onTap: () async {
-              await getLocation();
-            },
-            text: 'Get Location',
-            backgroundColor: GlobalColors.whiteColor,
-            foregroundColor: GlobalColors.primaryColor,
-          ),
+
           ButtonComponent(
               text: 'Next',
               backgroundColor: GlobalColors.primaryColor,
               foregroundColor: GlobalColors.whiteColor,
               onTap: () {
-                if (widget.location == null) {
+                if (widget.location == null ||
+                    widget.homeAddress.text.isEmpty) {
                   showPopupComponent(
                       context: context,
                       icon: Icons.dangerous,
-                      message:
-                          'Please. Click on the buttons to get your location!');
+                      message: widget.location == null
+                          ? 'Please. Click on the button get location to get your precise location!'
+                          : 'Please type in your home address');
                 } else {
                   widget.onContinue();
                 }

@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/services/api_state.dart';
+import 'package:blisso_mobile/services/models/initiate_payment_model.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +37,23 @@ class SubscriptionServiceProvider extends StateNotifier<ApiState> {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
         state = ApiState(isLoading: false, data: response.result);
+      }
+    } catch (e) {
+      state = ApiState(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> initiatePayment(InitiatePaymentModel payment) async {
+    try {
+      state = ApiState(isLoading: true);
+      final response = await subscriptionService.initiatePayment(payment);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(isLoading: false, error: response.errorMessage);
+      } else {
+        if (response.statusCode == 307) {
+          state = ApiState(isLoading: false, data: response.result);
+        }
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());
