@@ -485,6 +485,35 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                               // }
                                             } else {
                                               // usd payment
+                                              showPaymentModes(
+                                                  context: context,
+                                                  isMomoEnabled: false,
+                                                  payByCard: () {
+                                                    Navigator.of(context).pop();
+
+                                                    showCardPayment(
+                                                        context: context,
+                                                        cardNames: cardNames,
+                                                        cardNumber: cardNumber,
+                                                        expirationDate:
+                                                            expirationDate,
+                                                        cvv: cvv,
+                                                        initiatePayment:
+                                                            initiatePayment);
+                                                  },
+                                                  payByMomo: () {
+                                                    Navigator.of(context).pop();
+
+                                                    showCardPayment(
+                                                        context: context,
+                                                        cardNames: cardNames,
+                                                        cardNumber: cardNumber,
+                                                        expirationDate:
+                                                            expirationDate,
+                                                        cvv: cvv,
+                                                        initiatePayment:
+                                                            initiatePayment);
+                                                  });
                                             }
 
                                             // final state = ref.read(
