@@ -49,11 +49,36 @@ class SubscriptionServiceProvider extends StateNotifier<ApiState> {
       final response = await subscriptionService.initiatePayment(payment);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        state = ApiState(isLoading: false, error: response.errorMessage);
+        state = ApiState(
+            isLoading: false,
+            error: response.errorMessage,
+            statusCode: response.statusCode);
       } else {
-        if (response.statusCode == 307) {
-          state = ApiState(isLoading: false, data: response.result);
-        }
+        state = ApiState(
+            isLoading: false,
+            data: response.result,
+            statusCode: response.statusCode);
+      }
+    } catch (e) {
+      state = ApiState(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> verifyCardDetails(InitiatePaymentModel payment) async {
+    try {
+      state = ApiState(isLoading: true);
+      final response = await subscriptionService.verifyCardPayment(payment);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(
+            isLoading: false,
+            error: response.errorMessage,
+            statusCode: response.statusCode);
+      } else {
+        state = ApiState(
+            isLoading: false,
+            data: response.result,
+            statusCode: response.statusCode);
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());

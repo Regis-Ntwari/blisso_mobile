@@ -1,7 +1,10 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
-import 'package:blisso_mobile/components/text_input_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/subscription/modes/payment_modes.dart';
+import 'package:blisso_mobile/screens/auth/profile/subscription/payment/card_payment.dart';
+import 'package:blisso_mobile/screens/auth/profile/subscription/verification/billing_verification.dart';
+import 'package:blisso_mobile/screens/auth/profile/subscription/verification/pin_verification.dart';
 import 'package:blisso_mobile/services/models/initiate_payment_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
@@ -30,11 +33,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   final TextEditingController cardNames = TextEditingController();
 
-  final _formKey = GlobalKey<FormState>();
+  final TextEditingController city = TextEditingController();
+
+  final TextEditingController state = TextEditingController();
+
+  final TextEditingController country = TextEditingController();
+
+  final TextEditingController zipCode = TextEditingController();
+
+  final TextEditingController address = TextEditingController();
+
+  final TextEditingController otpController = TextEditingController();
 
   dynamic paymentResponse;
 
   late final PageController _pageController;
+
+  InitiatePaymentModel? paymentModel;
   Future<void> getSubscriptionPlans() async {
     final subscriptionState =
         ref.read(subscriptionServiceProviderImpl.notifier);
@@ -71,6 +86,70 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     });
   }
 
+  void verifyAddress() async {
+    paymentModel!.authorization!['city'] = city.text;
+    paymentModel!.authorization!['address'] = address.text;
+    paymentModel!.authorization!['state'] = state.text;
+    paymentModel!.authorization!['country'] = country.text;
+    paymentModel!.authorization!['zipcode'] = zipCode.text;
+
+    final verifyProvider = ref.read(subscriptionServiceProviderImpl.notifier);
+
+    await verifyProvider.verifyCardDetails(paymentModel!);
+
+    final paymentstate = ref.read(subscriptionServiceProviderImpl);
+
+    if (paymentstate.statusCode == 200 || paymentstate.statusCode == 201) {
+      final subscriptionProvider =
+          ref.read(subscriptionServiceProviderImpl.notifier);
+
+      chosenPlan['transaction_id'] = paymentstate.data['transaction_id'];
+
+      await subscriptionProvider.createSubscription(chosenPlan);
+
+      Routemaster.of(context).replace('/homepage');
+    } else if (paymentstate.statusCode == 307) {
+      final subscriptionProvider =
+          ref.read(subscriptionServiceProviderImpl.notifier);
+
+      chosenPlan['transaction_id'] = paymentstate.data['transaction_id'];
+
+      await subscriptionProvider.createSubscription(chosenPlan);
+    } else {
+      showSnackBar(context, paymentstate.error!);
+    }
+  }
+
+  void verifyPin() async {
+    paymentModel!.authorization!['pin'] = otpController.text;
+
+    final verifyProvider = ref.read(subscriptionServiceProviderImpl.notifier);
+
+    await verifyProvider.verifyCardDetails(paymentModel!);
+
+    final paymentState = ref.read(subscriptionServiceProviderImpl);
+
+    if (paymentState.statusCode == 200 || paymentState.statusCode == 201) {
+      final subscriptionProvider =
+          ref.read(subscriptionServiceProviderImpl.notifier);
+
+      chosenPlan['transaction_id'] = paymentState.data['transaction_id'];
+
+      await subscriptionProvider.createSubscription(chosenPlan);
+
+      Routemaster.of(context).replace('/homepage');
+    } else if (paymentState.statusCode == 307) {
+      final subscriptionProvider =
+          ref.read(subscriptionServiceProviderImpl.notifier);
+
+      chosenPlan['transaction_id'] = paymentState.data['transaction_id'];
+
+      await subscriptionProvider.createSubscription(chosenPlan);
+    } else {
+      showSnackBar(context, paymentState.error!);
+    }
+  }
+
   void choosePlan(Map<String, dynamic> plan, String currency, double months) {
     var clickedPlan = {
       'plan_code': plan['code'],
@@ -99,13 +178,51 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final paymentProvider = ref.read(subscriptionServiceProviderImpl.notifier);
 
     await paymentProvider.initiatePayment(payment);
+
+    final paymentState = ref.read(subscriptionServiceProviderImpl);
+
+    if (paymentState.statusCode == 307) {
+      setState(() {
+        paymentModel =
+            InitiatePaymentModel.fromFirstResponse(paymentState.data);
+      });
+      if (paymentModel!.authorizationMode == 'avs_noauth') {
+        Navigator.of(context).pop();
+        showBillingVerification(
+            city: city,
+            address: address,
+            state: state,
+            country: country,
+            zipCode: zipCode,
+            verifyAddress: verifyAddress,
+            context: context);
+      } else {
+        Navigator.of(context).pop();
+        showPinVerification(
+            context: context,
+            otpController: otpController,
+            verifyPin: verifyPin);
+      }
+    } else if (paymentState.statusCode == 200 ||
+        paymentState.statusCode == 201) {
+      final subscriptionProvider =
+          ref.read(subscriptionServiceProviderImpl.notifier);
+
+      chosenPlan['transaction_id'] = paymentState.data['transaction_id'];
+
+      await subscriptionProvider.createSubscription(chosenPlan);
+
+      Routemaster.of(context).replace('/homepage');
+    } else {
+      showSnackBar(context, paymentState.error!);
+    }
   }
 
   String? _currency = 'RWF';
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionState = ref.read(subscriptionServiceProviderImpl);
+    final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
     TextScaler scaler = MediaQuery.textScalerOf(context);
     double height = MediaQuery.sizeOf(context).height;
 
@@ -317,120 +434,57 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                               GlobalColors.whiteColor,
                                           onTap: () async {
                                             if (_currency == 'RWF') {
-                                              debugPrint(_currency);
-                                              showDialog(
+                                              showPaymentModes(
                                                   context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return Dialog(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(10),
-                                                        child: Column(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      top: 10,
-                                                                      bottom:
-                                                                          10),
-                                                              child:
-                                                                  ButtonComponent(
-                                                                      text:
-                                                                          'Pay By Card',
-                                                                      backgroundColor:
-                                                                          GlobalColors
-                                                                              .primaryColor,
-                                                                      foregroundColor:
-                                                                          GlobalColors
-                                                                              .secondaryColor,
-                                                                      onTap:
-                                                                          () {
-                                                                        Navigator.of(context)
-                                                                            .pop();
+                                                  payByCard: () {
+                                                    Navigator.of(context).pop();
 
-                                                                        showDialog(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (context) {
-                                                                            return Dialog(
-                                                                              child: Container(
-                                                                                constraints: const BoxConstraints(maxWidth: 400),
-                                                                                child: Form(
-                                                                                  key: _formKey,
-                                                                                  child: Column(
-                                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                                    children: [
-                                                                                      Align(
-                                                                                        alignment: Alignment.topRight,
-                                                                                        child: InkWell(
-                                                                                          onTap: () {
-                                                                                            Routemaster.of(context).pop();
-                                                                                          },
-                                                                                          child: Container(
-                                                                                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: GlobalColors.secondaryColor),
-                                                                                            child: const Icon(
-                                                                                              Icons.close,
-                                                                                              color: GlobalColors.primaryColor,
-                                                                                              size: 50,
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                      ),
-                                                                                      Flexible(child: TextInputComponent(controller: cardNumber, labelText: 'Card Number', hintText: 'Card Number', validatorFunction: () {})),
-                                                                                      Flexible(child: TextInputComponent(controller: cardNames, labelText: 'Card Names', hintText: 'Card Names', validatorFunction: () {})),
-                                                                                      Row(
-                                                                                        children: [
-                                                                                          Flexible(
-                                                                                              child: TextInputComponent(
-                                                                                            controller: expirationDate,
-                                                                                            labelText: 'Expiration Date',
-                                                                                            hintText: 'MM/YY',
-                                                                                            validatorFunction: () {},
-                                                                                            keyboardType: TextInputType.number,
-                                                                                          )),
-                                                                                          Flexible(
-                                                                                              child: TextInputComponent(
-                                                                                            controller: cvv,
-                                                                                            labelText: 'CVV',
-                                                                                            hintText: 'CVV',
-                                                                                            validatorFunction: () {},
-                                                                                            keyboardType: TextInputType.number,
-                                                                                          ))
-                                                                                        ],
-                                                                                      ),
-                                                                                      ButtonComponent(text: 'Pay', backgroundColor: GlobalColors.primaryColor, foregroundColor: GlobalColors.whiteColor, onTap: () => initiatePayment())
-                                                                                    ],
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                          },
-                                                                        );
-                                                                      }),
-                                                            ),
-                                                            ButtonComponent(
-                                                                text:
-                                                                    'Pay By Mobile Money',
-                                                                backgroundColor:
-                                                                    GlobalColors
-                                                                        .primaryColor,
-                                                                foregroundColor:
-                                                                    GlobalColors
-                                                                        .secondaryColor,
-                                                                onTap: () {})
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
+                                                    showCardPayment(
+                                                        context: context,
+                                                        cardNames: cardNames,
+                                                        cardNumber: cardNumber,
+                                                        expirationDate:
+                                                            expirationDate,
+                                                        cvv: cvv,
+                                                        initiatePayment:
+                                                            initiatePayment);
+                                                  },
+                                                  payByMomo: () {
+                                                    Navigator.of(context).pop();
+
+                                                    showCardPayment(
+                                                        context: context,
+                                                        cardNames: cardNames,
+                                                        cardNumber: cardNumber,
+                                                        expirationDate:
+                                                            expirationDate,
+                                                        cvv: cvv,
+                                                        initiatePayment:
+                                                            initiatePayment);
                                                   });
+
+                                              // Navigator.of(context).pop();
+                                              // if (paymentModel!
+                                              //         .authorizationMode ==
+                                              //     'avs') {
+                                              //   showBillingVerification(
+                                              //       city: city,
+                                              //       address: address,
+                                              //       state: state,
+                                              //       country: country,
+                                              //       zipCode: zipCode,
+                                              //       verifyAddress:
+                                              //           verifyAddress,
+                                              //       context: context);
+                                              // } else {
+                                              //   showPinVerification(
+                                              //       context: context,
+                                              //       otpController:
+                                              //           otpController,
+                                              //       verifyPin: verifyPin);
+                                              // }
                                             } else {
-                                              // card payment
+                                              // usd payment
                                             }
 
                                             // final state = ref.read(

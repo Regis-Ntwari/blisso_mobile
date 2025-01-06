@@ -32,4 +32,17 @@ class SubscriptionService {
 
     return response;
   }
+
+  Future<ApiResponse> verifyCardPayment(
+      InitiatePaymentModel paymentModel) async {
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    print(paymentModel.toVerificationMap());
+    final response = await ApiService().postData(
+        endpoint: '/payment/initiate-card-auth-payment/',
+        body: paymentModel.toVerificationMap(),
+        token: token);
+
+    return response;
+  }
 }

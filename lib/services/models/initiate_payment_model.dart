@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class InitiatePaymentModel {
   String cardNumber;
   String expiryMonth;
@@ -54,7 +52,21 @@ class InitiatePaymentModel {
       authorization: map['authorization'] as Map<String, dynamic>,
       authorizationMode: map['authorization_mode'] as String,
       email: map['email'] as String,
-      phoneNumber: map['phone_number'] as String,
     );
+  }
+
+  Map<String, dynamic> toVerificationMap() {
+    return <String, dynamic>{
+      'card_number': cardNumber,
+      'expiry_month': expiryMonth,
+      'expiry_year': expiryYear,
+      'cvv': cvv,
+      'currency': currency,
+      'amount': amount,
+      'email': email,
+      'fullname': fullname,
+      'authorization_mode': authorization,
+      'authorization': authorization
+    };
   }
 }
