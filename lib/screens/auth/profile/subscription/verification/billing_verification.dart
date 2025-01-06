@@ -1,9 +1,11 @@
-import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/button_loading_component.dart';
 import 'package:blisso_mobile/components/text_input_component.dart';
+import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BillingVerification extends StatelessWidget {
+class BillingVerification extends ConsumerWidget {
   final TextEditingController cityController;
   final TextEditingController addressController;
   final TextEditingController stateController;
@@ -19,7 +21,8 @@ class BillingVerification extends StatelessWidget {
       required this.verifyAddress,
       required this.zipCodeController});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
     return Dialog(
       child: SingleChildScrollView(
         child: Padding(
@@ -53,8 +56,12 @@ class BillingVerification extends StatelessWidget {
                     labelText: 'Zip Code',
                     hintText: 'Enter your Zip Code',
                     validatorFunction: () {}),
-                ButtonComponent(
-                    text: 'Verify',
+                ButtonLoadingComponent(
+                    widget: subscriptionState.isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.black,
+                          )
+                        : const Text('Verify'),
                     backgroundColor: GlobalColors.primaryColor,
                     foregroundColor: GlobalColors.lightBackgroundColor,
                     onTap: () => verifyAddress())

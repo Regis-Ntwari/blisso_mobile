@@ -65,7 +65,7 @@ class InitiatePaymentModel {
       'amount': amount,
       'email': email,
       'fullname': fullname,
-      'authorization_mode': authorization,
+      'authorization_mode': authorizationMode,
       'authorization': authorization
     };
   }

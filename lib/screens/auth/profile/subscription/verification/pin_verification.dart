@@ -1,15 +1,18 @@
-import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/button_loading_component.dart';
+import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PinVerification extends StatelessWidget {
+class PinVerification extends ConsumerWidget {
   final TextEditingController otpController;
   final Function verifyPin;
   const PinVerification(
       {super.key, required this.otpController, required this.verifyPin});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
     return Dialog(
       child: Form(
         child: SingleChildScrollView(
@@ -39,8 +42,12 @@ class PinVerification extends StatelessWidget {
                 const SizedBox(
                   height: 20,
                 ),
-                ButtonComponent(
-                    text: 'Verify',
+                ButtonLoadingComponent(
+                    widget: subscriptionState.isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.black,
+                          )
+                        : const Text('Verify'),
                     backgroundColor: GlobalColors.primaryColor,
                     foregroundColor: GlobalColors.lightBackgroundColor,
                     onTap: () => verifyPin())
