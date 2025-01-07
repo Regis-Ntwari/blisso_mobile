@@ -16,12 +16,16 @@ class PaymentModes extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Text(
+              'Choose a Payment Option',
+              style: TextStyle(color: GlobalColors.primaryColor),
+            ),
             Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              padding: const EdgeInsets.only(top: 20, bottom: 20),
               child: ButtonComponent(
                   text: 'Pay By Card',
                   backgroundColor: GlobalColors.primaryColor,

@@ -7,6 +7,7 @@ import 'package:blisso_mobile/screens/auth/profile/snapshots/profile_pictures_co
 import 'package:blisso_mobile/screens/auth/profile/snapshots/snapshot_screen.dart';
 import 'package:blisso_mobile/screens/auth/profile/snapshots/target_profile_snapshots_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/subscription/subscription_screen.dart';
+import 'package:blisso_mobile/screens/auth/profile/subscription/verification/webview_verification.dart';
 import 'package:blisso_mobile/screens/auth/register_screen.dart';
 import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
@@ -19,7 +20,7 @@ import 'package:routemaster/routemaster.dart';
 
 class Routing {
   static final routes = RouteMap(routes: {
-    '/': (_) => const MaterialPage(child: SubscriptionScreen()),
+    '/': (_) => const MaterialPage(child: SplashScreen()),
     '/welcome': (_) => const MaterialPage(child: WelcomeScreen()),
     '/register/:type': (route) => MaterialPage(
         child: RegisterScreen(type: route.pathParameters['type']!)),
@@ -46,6 +47,8 @@ class Routing {
         const MaterialPage(child: TargetProfileComponent()),
     '/favorite-profile/:username': (route) => MaterialPage(
         child: FavoriteProfileScreen(
-            profileUsername: route.pathParameters['username']!))
+            profileUsername: route.pathParameters['username']!)),
+    '/webview-complete/:url': (route) => MaterialPage(
+        child: WebviewVerification(url: route.pathParameters['url']!))
   });
 }

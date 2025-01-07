@@ -49,6 +49,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   late final PageController _pageController;
 
+  bool isSubscriptionCreated = false;
+
   InitiatePaymentModel? paymentModel;
   Future<void> getSubscriptionPlans() async {
     final subscriptionState =
@@ -107,6 +109,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
       await subscriptionProvider.createSubscription(chosenPlan);
 
+      setState(() {
+        isSubscriptionCreated = true;
+      });
+
+      Navigator.of(context).pop();
       Routemaster.of(context).replace('/homepage');
     } else if (paymentstate.statusCode == 307) {
       final subscriptionProvider =
@@ -115,6 +122,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       chosenPlan['transaction_id'] = paymentstate.data['transaction_id'];
 
       await subscriptionProvider.createSubscription(chosenPlan);
+
+      setState(() {
+        isSubscriptionCreated = true;
+      });
+
+      Navigator.of(context).pop();
+
+      if (paymentstate.data['validation_mode'] == 'redirect') {
+        final encodedURL =
+            Uri.encodeComponent(paymentstate.data['redirect_link']);
+        Routemaster.of(context).push('/webview-complete/$encodedURL');
+      }
     } else {
       showSnackBar(context, paymentstate.error!);
     }
@@ -137,6 +156,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
       await subscriptionProvider.createSubscription(chosenPlan);
 
+      setState(() {
+        isSubscriptionCreated = true;
+      });
+
+      Navigator.of(context).pop();
       Routemaster.of(context).replace('/homepage');
     } else if (paymentState.statusCode == 307) {
       final subscriptionProvider =
@@ -145,6 +169,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       chosenPlan['transaction_id'] = paymentState.data['transaction_id'];
 
       await subscriptionProvider.createSubscription(chosenPlan);
+
+      setState(() {
+        isSubscriptionCreated = true;
+      });
+
+      Navigator.of(context).pop();
+      Routemaster.of(context).replace('/homepage');
     } else {
       showSnackBar(context, paymentState.error!);
     }
@@ -212,6 +243,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
       await subscriptionProvider.createSubscription(chosenPlan);
 
+      setState(() {
+        isSubscriptionCreated = true;
+      });
+
       Routemaster.of(context).replace('/homepage');
     } else {
       showSnackBar(context, paymentState.error!);
@@ -227,6 +262,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     double height = MediaQuery.sizeOf(context).height;
 
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
+    isSubscriptionCreated ? Routemaster.of(context).replace('/homepage') : null;
 
     return SafeArea(
         child: subscriptionState.isLoading || subscriptionPlans.isEmpty
@@ -263,8 +300,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                       child: Text(
                                         'Choose your plan',
                                         style: TextStyle(
-                                            fontSize: scaler.scale(14),
-                                            color: GlobalColors.whiteColor),
+                                          fontSize: scaler.scale(14),
+                                        ),
                                       ),
                                     ),
                                     SizedBox(

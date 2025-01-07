@@ -253,8 +253,7 @@ class _ProfilePicturesComponentState
                           if (snapshot.error != null) {
                             showSnackBar(context, snapshot.error!);
                           } else {
-                            Routemaster.of(context).push(
-                                '/auto-write/Homepage now... find your lover/homepage');
+                            Routemaster.of(context).push('/subscription');
                           }
                         }
                       }),

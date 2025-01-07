@@ -63,6 +63,11 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     children: [
                       const Icon(Icons.location_on),
                       Text('${widget.profile['distance_annot']}'),
+                      const Text(' - '),
+                      widget.profile['home_address'] == null ||
+                              widget.profile['home_address'] == ''
+                          ? const SizedBox.shrink()
+                          : Text('Home: ${widget.profile['home_address']}'),
                     ],
                   )),
             ),

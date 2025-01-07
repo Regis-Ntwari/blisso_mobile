@@ -13,7 +13,7 @@ class SharedPreferencesService {
     } else if (value is String) {
       await prefs.setString(key, value);
     } else {
-      throw Exception('Unsupported data type: ${value.runtimeType}');
+      throw Exception('Unsupported data type: $key ${value.runtimeType}');
     }
   }
 

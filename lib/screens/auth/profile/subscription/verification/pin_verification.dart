@@ -13,14 +13,22 @@ class PinVerification extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Dialog(
       child: Form(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    'Enter the PIN sent to you',
+                    style: TextStyle(color: GlobalColors.primaryColor),
+                  ),
+                ),
                 TextFormField(
                   controller: otpController,
                   maxLength: 4,
@@ -44,8 +52,8 @@ class PinVerification extends ConsumerWidget {
                 ),
                 ButtonLoadingComponent(
                     widget: subscriptionState.isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.black,
+                        ? CircularProgressIndicator(
+                            color: isLightTheme ? Colors.white : Colors.black,
                           )
                         : const Text('Verify'),
                     backgroundColor: GlobalColors.primaryColor,

@@ -47,7 +47,7 @@ class _TargetProfileComponentState
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 5.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Column(
                         children: [
@@ -74,46 +74,64 @@ class _TargetProfileComponentState
                           ]),
                         ],
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Wrap(spacing: 10, children: [
-                            const Text(
-                              'Nickname: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Wrap(spacing: 10, children: [
+                                const Text(
+                                  'Nickname: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(targetProfile.nickname!),
+                              ]),
                             ),
-                            Text(targetProfile.nickname!),
-                          ]),
-                          Wrap(children: [
-                            const Text(
-                              'Language: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10.0),
+                              child: Wrap(children: [
+                                const Text(
+                                  'Language: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(targetProfile.lang!),
+                              ]),
                             ),
-                            Text(targetProfile.lang!),
-                          ]),
-                          Wrap(children: [
-                            const Text(
-                              'Date of Birth: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10.0),
+                              child: Wrap(children: [
+                                const Text(
+                                  'Date of Birth: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(targetProfile.dob!),
+                              ]),
                             ),
-                            Text(targetProfile.dob!),
-                          ]),
-                          Wrap(children: [
-                            const Text(
-                              'Gender: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10.0),
+                              child: Wrap(children: [
+                                const Text(
+                                  'Gender: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(targetProfile.gender!),
+                              ]),
                             ),
-                            Text(targetProfile.gender!),
-                          ]),
-                          Wrap(children: [
-                            const Text(
-                              'Marital Status: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Wrap(children: [
+                                const Text(
+                                  'Marital Status: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(targetProfile.maritalStatus!),
+                              ]),
                             ),
-                            Text(targetProfile.maritalStatus!),
-                          ]),
-                        ],
+                          ],
+                        ),
                       )
                     ],
                   ),

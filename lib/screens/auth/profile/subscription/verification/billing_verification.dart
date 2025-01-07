@@ -26,11 +26,15 @@ class BillingVerification extends ConsumerWidget {
     return Dialog(
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(20),
           child: Form(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Text('Provide your address as verification'),
+                ),
                 TextInputComponent(
                     controller: cityController,
                     labelText: 'City',
