@@ -152,9 +152,11 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                 )),
             Padding(
                 padding: const EdgeInsets.all(10),
-                child: Text(
-                    textAlign: TextAlign.start,
-                    "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")),
+                child: widget.profile['target_lifesnapshots'].length > 0
+                    ? Text(
+                        textAlign: TextAlign.start,
+                        "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")
+                    : const SizedBox.shrink()),
           ])),
     );
   }

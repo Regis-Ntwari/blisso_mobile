@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/snackbar_component.dart';
+import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -18,6 +22,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
   String lastname = '';
   String profilePicture = '';
   String expandedField = '';
+  File? chosenPicture;
   Future<void> getNames() async {
     await SharedPreferencesService.getPreference('firstname').then((value) {
       setState(() {
@@ -43,6 +48,29 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
     final profileState = ref.read(myProfileServiceProviderImpl.notifier);
 
     await profileState.getMyProfile();
+  }
+
+  void updateChosenPicture(File? file) {
+    setState(() {
+      chosenPicture = file;
+    });
+  }
+
+  Future<void> replaceImage(Map<String, dynamic> image) async {
+    print("Hello Me replace");
+    final profileRef = ref.read(myProfileServiceProviderImpl.notifier);
+
+    await profileRef.replaceImage(chosenPicture!, image['id']);
+
+    final profileState = ref.read(myProfileServiceProviderImpl);
+
+    if (profileState.error == null) {
+      Navigator.of(context).pop();
+
+      await profileRef.getMyProfile();
+    } else {
+      showSnackBar(context, profileState.error!);
+    }
   }
 
   @override
@@ -75,14 +103,21 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                           children: [
                             Column(
                               children: [
-                                CircleAvatar(
-                                  backgroundImage: profilePicture == ''
-                                      ? const AssetImage(
-                                          'assets/images/avatar1.jpg')
-                                      : CachedNetworkImageProvider(
-                                          profilePicture,
-                                        ),
-                                  radius: 50,
+                                InkWell(
+                                  onTap: () => showPictureDialog(
+                                      context: context,
+                                      image: {'image_uri': profilePicture},
+                                      isEdit: true,
+                                      savePicture: () {}),
+                                  child: CircleAvatar(
+                                    backgroundImage: profilePicture == ''
+                                        ? const AssetImage(
+                                            'assets/images/avatar1.jpg')
+                                        : CachedNetworkImageProvider(
+                                            profilePicture,
+                                          ),
+                                    radius: 50,
+                                  ),
                                 ),
                                 Text(
                                   '$firstname $lastname',
@@ -163,13 +198,23 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                                     return Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 2.0),
-                                      child: SizedBox(
-                                        height: 100,
-                                        width: 100,
-                                        child: CachedNetworkImage(
-                                            imageUrl: profileState
-                                                    .data['profile_images']
-                                                [index]['image_uri']),
+                                      child: InkWell(
+                                        onTap: () => showPictureDialog(
+                                            context: context,
+                                            image: profileState
+                                                .data['profile_images'][index],
+                                            isEdit: true,
+                                            chosenPicture: chosenPicture,
+                                            updatePicture: updateChosenPicture,
+                                            savePicture: replaceImage),
+                                        child: SizedBox(
+                                          height: 100,
+                                          width: 100,
+                                          child: CachedNetworkImage(
+                                              imageUrl: profileState
+                                                      .data['profile_images']
+                                                  [index]['image_uri']),
+                                        ),
                                       ),
                                     );
                                   },

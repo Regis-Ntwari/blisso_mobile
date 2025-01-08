@@ -6,8 +6,8 @@ class TextInputComponent extends StatelessWidget {
   final String labelText;
   final String hintText;
   final Function validatorFunction;
-  TextInputType? keyboardType;
-  TextInputComponent(
+  final TextInputType? keyboardType;
+  const TextInputComponent(
       {super.key,
       required this.controller,
       required this.labelText,
