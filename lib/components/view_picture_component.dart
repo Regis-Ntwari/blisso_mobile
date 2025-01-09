@@ -1,29 +1,35 @@
 import 'dart:io';
 
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-class ViewPictureComponent extends StatefulWidget {
+class ViewPictureComponent extends ConsumerStatefulWidget {
   final Map<String, dynamic> image;
   final bool isEdit;
   final Function? savePicture;
   final File? chosenPicture;
   final Function? updateChosenPicture;
+  final Function? saveProfilePicture;
   const ViewPictureComponent(
       {super.key,
       required this.image,
       required this.isEdit,
       this.savePicture,
       this.chosenPicture,
-      this.updateChosenPicture});
+      this.updateChosenPicture,
+      this.saveProfilePicture});
 
   @override
-  State<ViewPictureComponent> createState() => _ViewPictureComponentState();
+  ConsumerState<ViewPictureComponent> createState() =>
+      _ViewPictureComponentState();
 }
 
-class _ViewPictureComponentState extends State<ViewPictureComponent> {
+class _ViewPictureComponentState extends ConsumerState<ViewPictureComponent> {
   final ImagePicker _picker = ImagePicker();
 
   File? _chosenPicture;
@@ -71,7 +77,10 @@ class _ViewPictureComponentState extends State<ViewPictureComponent> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.sizeOf(context).width;
+    final profileRef = ref.watch(myProfileServiceProviderImpl);
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Dialog(
+      backgroundColor: Colors.transparent,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -102,18 +111,24 @@ class _ViewPictureComponentState extends State<ViewPictureComponent> {
                 onTap: () {
                   _chosenPicture == null
                       ? _showImagePickerOptions()
-                      : widget.savePicture!(widget.image);
+                      : widget.savePicture == null
+                          ? widget.saveProfilePicture!()
+                          : widget.savePicture!(widget.image);
                 },
                 child: Container(
                   decoration:
                       const BoxDecoration(color: GlobalColors.primaryColor),
                   child: Padding(
                     padding: const EdgeInsets.all(5.0),
-                    child: Icon(
-                      _chosenPicture == null ? Icons.edit : Icons.save,
-                      color: Colors.white,
-                      size: 30,
-                    ),
+                    child: profileRef.isLoading
+                        ? CircularProgressIndicator(
+                            color: isLightTheme ? Colors.white : Colors.black,
+                          )
+                        : Icon(
+                            _chosenPicture == null ? Icons.edit : Icons.check,
+                            color: Colors.white,
+                            size: 30,
+                          ),
                   ),
                 ),
               ),
@@ -130,7 +145,8 @@ void showPictureDialog(
     bool isEdit = false,
     Function? savePicture,
     File? chosenPicture,
-    Function? updatePicture}) {
+    Function? updatePicture,
+    Function? saveProfilePicture}) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -141,6 +157,9 @@ void showPictureDialog(
             isEdit: isEdit,
             savePicture: (Map<String, dynamic> image) {
               savePicture!(image);
+            },
+            saveProfilePicture: (TargetProfileModel model) {
+              saveProfilePicture!(model);
             },
             chosenPicture: chosenPicture,
             updateChosenPicture: (File file) {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blisso_mobile/services/api_service.dart';
 import 'package:blisso_mobile/services/models/api_response.dart';
 import 'package:blisso_mobile/services/models/profile_model.dart';
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 
 class ProfileService {
@@ -53,6 +54,29 @@ class ProfileService {
         endpoint: '/profiles/my/profile/replace/profile-image/$oldId/',
         body: {'image': newImage},
         token: accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> updateProfile(TargetProfileModel myProfile) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postFormDataRequest(
+        endpoint: '/profiles/my/profile/',
+        body: myProfile.toMapNoProfile(),
+        token: accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> updateProfilePicture(
+      Map<String, dynamic> myProfile) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postFormDataRequest(
+        endpoint: '/profiles/my/profile/', body: myProfile, token: accessToken);
 
     return response;
   }

@@ -5,6 +5,7 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
 
 class TargetProfileComponent extends ConsumerStatefulWidget {
@@ -53,8 +54,8 @@ class _TargetProfileComponentState
                       Column(
                         children: [
                           SizedBox(
-                            height: width * 0.4,
-                            width: width * 0.4,
+                            height: width * 0.85,
+                            width: width * 0.85,
                             child: InkWell(
                               onTap: () => showPictureDialog(
                                 context: context,
@@ -62,120 +63,155 @@ class _TargetProfileComponentState
                                   'image_uri': targetProfile.profilePictureUri!
                                 },
                               ),
-                              child: CachedNetworkImage(
-                                  imageUrl: targetProfile.profilePictureUri!,
-                                  fit: BoxFit.cover),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: CachedNetworkImage(
+                                    imageUrl: targetProfile.profilePictureUri!,
+                                    fit: BoxFit.cover),
+                              ),
                             ),
                           ),
-                          Wrap(children: [
-                            Text(
-                              '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
-                              style: TextStyle(
-                                  fontSize: scaler.scale(10),
-                                  color: GlobalColors.secondaryColor),
-                            ),
-                          ]),
-                          Wrap(children: [
-                            Text(
-                              '${targetProfile.user!['email']}',
-                              style: TextStyle(
-                                  fontSize: scaler.scale(10),
-                                  color: GlobalColors.secondaryColor),
-                            ),
-                          ]),
                           SizedBox(
-                            height: height * 0.2,
-                            width: width * 0.8,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: GlobalColors.secondaryColor,
-                                  borderRadius: BorderRadius.circular(5)),
+                            height: height * 0.1,
+                            width: width * 0.85,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 10.0),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Align(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          'About ${targetProfile.nickname}',
-                                          style: TextStyle(
-                                              fontSize: scaler.scale(20),
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                                      style: TextStyle(
+                                          fontSize: scaler.scale(24),
+                                          color: GlobalColors.whiteColor),
+                                    ),
+                                    Text(
+                                      'Feeling ${targetProfile.feeling!}',
+                                      style: TextStyle(
+                                          color: GlobalColors.secondaryColor),
+                                    )
+                                  ]),
+                            ),
+                          ),
+                          SizedBox(
+                            height: height * 0.15,
+                            width: width * 0.85,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: Row(
                                     mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Wrap(
-                                        alignment: WrapAlignment.start,
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(
-                                            Icons.cake,
+                                          Text(
+                                            'Date of Birth',
+                                            style: TextStyle(
+                                                color: GlobalColors
+                                                    .secondaryColor),
                                           ),
-                                          Text('${targetProfile.dob}')
+                                          Text(DateFormat('MMMM d, y').format(
+                                              DateTime.parse(
+                                                  targetProfile.dob!)))
                                         ],
                                       ),
-                                      Wrap(
-                                        alignment: WrapAlignment.start,
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceAround,
-                                              children: [
-                                                Icon(Icons.boy),
-                                                Icon(Icons.girl),
-                                              ]),
-                                          Text('${targetProfile.gender}')
+                                          Text(
+                                            'Gender',
+                                            style: TextStyle(
+                                                color: GlobalColors
+                                                    .secondaryColor),
+                                          ),
+                                          Text(targetProfile.gender!
+                                              .toUpperCase())
                                         ],
                                       )
                                     ],
                                   ),
-                                  Row(
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: Row(
                                     mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Wrap(
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.join_right_rounded),
+                                          Text(
+                                            'Marital Status',
+                                            style: TextStyle(
+                                                color: GlobalColors
+                                                    .secondaryColor),
+                                          ),
                                           Text('${targetProfile.maritalStatus}')
                                         ],
                                       ),
-                                      Wrap(
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.language),
-                                          Text('${targetProfile.lang}')
+                                          Text(
+                                            'Home Address',
+                                            style: TextStyle(
+                                                color: GlobalColors
+                                                    .secondaryColor),
+                                          ),
+                                          Text(targetProfile.homeAddress!
+                                              .toUpperCase())
                                         ],
                                       )
                                     ],
                                   ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Wrap(children: [
-                                        const Icon(Icons.home),
-                                        targetProfile.homeAddress == '' ||
-                                                targetProfile.homeAddress ==
-                                                    null
-                                            ? const Text('Not Said')
-                                            : Text(
-                                                '${targetProfile.homeAddress}')
-                                      ]),
-                                      Wrap(children: [
-                                        const Icon(Icons.check_circle),
-                                        Text('${targetProfile.showMe}')
-                                      ]),
-                                    ],
-                                  )
-                                ],
-                              ),
+                                ),
+                                // Row(
+                                //   mainAxisAlignment:
+                                //       MainAxisAlignment.spaceEvenly,
+                                //   children: [
+                                //     Wrap(
+                                //       children: [
+                                //         const Icon(Icons.join_right_rounded),
+                                //         Text('${targetProfile.maritalStatus}')
+                                //       ],
+                                //     ),
+                                //     Wrap(
+                                //       children: [
+                                //         const Icon(Icons.language),
+                                //         Text('${targetProfile.lang}')
+                                //       ],
+                                //     )
+                                //   ],
+                                // ),
+                                // Row(
+                                //   mainAxisAlignment:
+                                //       MainAxisAlignment.spaceEvenly,
+                                //   children: [
+                                //     Wrap(children: [
+                                //       const Icon(Icons.home),
+                                //       targetProfile.homeAddress == '' ||
+                                //               targetProfile.homeAddress == null
+                                //           ? const Text('Not Said')
+                                //           : Text('${targetProfile.homeAddress}')
+                                //     ]),
+                                //     Wrap(children: [
+                                //       const Icon(Icons.check_circle),
+                                //       Text('${targetProfile.showMe}')
+                                //     ]),
+                                //   ],
+                                // )
+                              ],
                             ),
                           )
                         ],

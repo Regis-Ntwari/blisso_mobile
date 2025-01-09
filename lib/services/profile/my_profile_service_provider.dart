@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -50,6 +51,42 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
 
     try {
       final response = await profileService.replaceImage(newImage, oldImage);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> updateProfile(TargetProfileModel profileModel) async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await profileService.updateProfile(profileModel);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      print(e.toString());
+      state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> updateProfilePicture(
+      TargetProfileModel profileModel, File newImage) async {
+    state = ApiState(isLoading: true);
+
+    try {
+      Map<String, dynamic> profile = profileModel.toMap();
+      profile['profile_pic'] = newImage;
+      final response = await profileService.updateProfilePicture(profile);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);

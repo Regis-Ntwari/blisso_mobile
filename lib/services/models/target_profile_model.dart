@@ -19,58 +19,65 @@ class TargetProfileModel {
   bool? loginCodeEnabled;
   String? homeAddress;
   String? profilePictureUri;
+  String? feeling;
   Map<String, dynamic>? subscription;
   List<dynamic>? lifesnapshots;
   List<dynamic>? targetLifesnapshots;
   List<dynamic>? profileImages;
 
-  TargetProfileModel({
-    this.user,
-    this.id,
-    this.gender,
-    this.lang,
-    this.maritalStatus,
-    this.showMe,
-    this.nickname,
-    this.dob,
-    this.location,
-    this.latitude,
-    this.longitude,
-    this.distanceMeasure,
-    this.pushNotifications,
-    this.hideProfile,
-    this.loginCodeEnabled,
-    this.homeAddress,
-    this.profilePictureUri,
-    this.subscription,
-    this.lifesnapshots,
-    this.targetLifesnapshots,
-    this.profileImages,
-  });
+  TargetProfileModel(
+      {this.user,
+      this.id,
+      this.gender,
+      this.lang,
+      this.maritalStatus,
+      this.showMe,
+      this.nickname,
+      this.dob,
+      this.location,
+      this.latitude,
+      this.longitude,
+      this.distanceMeasure,
+      this.pushNotifications,
+      this.hideProfile,
+      this.loginCodeEnabled,
+      this.homeAddress,
+      this.profilePictureUri,
+      this.subscription,
+      this.lifesnapshots,
+      this.targetLifesnapshots,
+      this.profileImages,
+      this.feeling = 'Lucky \u{1F60A}'});
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'user': user,
-      'id': id,
       'gender': gender,
       'lang': lang,
-      'maritalStatus': maritalStatus,
-      'showMe': showMe,
+      'marital_status': maritalStatus,
+      'show_me': showMe,
       'nickname': nickname,
       'dob': dob,
       'location': location,
       'latitude': latitude,
       'longitude': longitude,
-      'distanceMeasure': distanceMeasure,
-      'pushNotifications': pushNotifications,
-      'hideProfile': hideProfile,
-      'loginCodeEnabled': loginCodeEnabled,
-      'homeAddress': homeAddress,
-      'profilePictureUri': profilePictureUri,
-      'subscription': subscription,
-      'lifesnapshots': lifesnapshots,
-      'targetLifesnapshots': targetLifesnapshots,
-      'profileImages': profileImages,
+      'distance_measure': distanceMeasure,
+      'hide_profile': hideProfile,
+      'home_address': homeAddress
+    };
+  }
+
+  Map<String, dynamic> toMapNoProfile() {
+    return <String, dynamic>{
+      'gender': gender,
+      'lang': lang,
+      'marital_status': maritalStatus,
+      'show_me': showMe,
+      'nickname': nickname,
+      'dob': dob,
+      'location': location,
+      'latitude': latitude,
+      'longitude': longitude,
+      'home_address': homeAddress,
     };
   }
 
