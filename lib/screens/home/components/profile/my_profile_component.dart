@@ -105,7 +105,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
-    double height = MediaQuery.sizeOf(context).height;
     return SafeArea(
       child: Scaffold(
         body: profileState.isLoading || profileState.data == null
@@ -161,8 +160,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                                         Text(
                                           '$firstname $lastname',
                                           style: TextStyle(
-                                              fontSize: scaler.scale(24),
-                                              color: GlobalColors.whiteColor),
+                                              fontSize: scaler.scale(24)),
                                         ),
                                         Text(
                                           '${profileState.data['user']['email']}',
@@ -196,7 +194,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                             width: 30,
                           ),
                           SizedBox(
-                            height: height * 0.15,
                             width: width * 0.85,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +224,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                                     ),
                                     Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Text(
                                           'Gender',
@@ -263,6 +260,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                                       ],
                                     ),
                                     Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Text(
                                           'Home Address',
@@ -272,6 +271,80 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                                         ),
                                         Text(profileState.data['home_address']
                                             .toUpperCase())
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Nickname',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text('${profileState.data['nickname']}')
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Username',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(profileState.data['user']
+                                            ['username'])
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Date Joined',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(
+                                            '${profileState.data['user']['date_joined'].split("T")[0]}')
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Last Login',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(profileState.data['user']
+                                                ['last_login']
+                                            .split("T")[0])
                                       ],
                                     )
                                   ],
@@ -412,6 +485,11 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                           ],
                         ),
                       ),
+                      SwitchListTile(
+                        title: const Text('Hide Profile'),
+                        value: profileState.data['hide_profile'],
+                        onChanged: (value) {},
+                      )
                     ],
                   ),
                 ),

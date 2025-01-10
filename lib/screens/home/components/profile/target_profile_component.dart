@@ -82,8 +82,8 @@ class _TargetProfileComponentState
                                     Text(
                                       '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
                                       style: TextStyle(
-                                          fontSize: scaler.scale(24),
-                                          color: GlobalColors.whiteColor),
+                                        fontSize: scaler.scale(24),
+                                      ),
                                     ),
                                     Text(
                                       'Feeling ${targetProfile.feeling!}',

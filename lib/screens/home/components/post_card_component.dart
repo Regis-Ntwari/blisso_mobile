@@ -33,7 +33,6 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.sizeOf(context).height;
     final targetProfile = ref.read(targetProfileProvider.notifier);
     return SizedBox(
       child: Card(
@@ -63,37 +62,39 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     children: [
                       const Icon(Icons.location_on),
                       Text('${widget.profile['distance_annot']}'),
-                      const Text(' - '),
-                      widget.profile['home_address'] == null ||
-                              widget.profile['home_address'] == ''
-                          ? const SizedBox.shrink()
-                          : Text('Home: ${widget.profile['home_address']}'),
                     ],
                   )),
             ),
             SizedBox(
-              height: height * 0.55,
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (value) {
-                  setState(() {
-                    _currentPage = value;
-                  });
-                },
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  return CachedNetworkImage(
-                    imageUrl: widget.profile['profile_images'][index]
-                        ['image_uri'],
-                    fit: BoxFit.contain,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(
-                        color: GlobalColors.primaryColor,
-                      ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  double imageHeight = constraints.maxWidth;
+                  return SizedBox(
+                    height: imageHeight,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (value) {
+                        setState(() {
+                          _currentPage = value;
+                        });
+                      },
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, index) {
+                        return CachedNetworkImage(
+                          imageUrl: widget.profile['profile_images'][index]
+                              ['image_uri'],
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                              color: GlobalColors.primaryColor,
+                            ),
+                          ),
+                        );
+                      },
+                      itemCount: widget.profile['profile_images'].length,
                     ),
                   );
                 },
-                itemCount: widget.profile['profile_images'].length,
               ),
             ),
             Align(

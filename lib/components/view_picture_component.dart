@@ -87,7 +87,6 @@ class _ViewPictureComponentState extends ConsumerState<ViewPictureComponent> {
           ClipRect(
             child: SizedBox(
               width: width * 0.95,
-              height: width * 0.95,
               child: InteractiveViewer(
                 minScale: 1.0,
                 maxScale: 3.0,
