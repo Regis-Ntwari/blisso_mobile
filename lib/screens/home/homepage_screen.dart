@@ -7,6 +7,7 @@ import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
 
 class HomepageScreen extends ConsumerStatefulWidget {
   const HomepageScreen({super.key});
@@ -224,7 +225,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.chat),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Routemaster.of(context).push('/chat');
+                                        },
                                       ),
                                     ]
                                   ],

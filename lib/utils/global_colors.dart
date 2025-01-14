@@ -5,4 +5,5 @@ class GlobalColors {
   static Color secondaryColor = Colors.grey[700]!;
   static Color whiteColor = Colors.white;
   static const Color lightBackgroundColor = Color(0xFFFAFAFA);
+  static const Color myMessageColor = Color(0xFFfeb9b4);
 }

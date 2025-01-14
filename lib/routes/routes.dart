@@ -9,6 +9,8 @@ import 'package:blisso_mobile/screens/auth/profile/snapshots/target_profile_snap
 import 'package:blisso_mobile/screens/auth/profile/subscription/subscription_screen.dart';
 import 'package:blisso_mobile/screens/auth/profile/subscription/verification/webview_verification.dart';
 import 'package:blisso_mobile/screens/auth/register_screen.dart';
+import 'package:blisso_mobile/screens/chat/chat_screen.dart';
+import 'package:blisso_mobile/screens/chat/chat_view_screen.dart';
 import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
@@ -49,6 +51,11 @@ class Routing {
         child: FavoriteProfileScreen(
             profileUsername: route.pathParameters['username']!)),
     '/webview-complete/:url': (route) => MaterialPage(
-        child: WebviewVerification(url: route.pathParameters['url']!))
+        child: WebviewVerification(url: route.pathParameters['url']!)),
+    '/chat': (_) => const MaterialPage(child: ChatScreen()),
+    '/chat-detail/:username': (route) => MaterialPage(
+            child: ChatViewScreen(
+          username: route.pathParameters['username']!,
+        ))
   });
 }

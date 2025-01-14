@@ -101,8 +101,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         SharedPreferences prefs =
             await SharedPreferencesService.getSharedPreferences();
 
-        debugPrint(prefs.get('is_my_snapshots').toString());
-
         if (prefs.get('is_profile_completed').toString() == 'true') {
           Routemaster.of(context).replace('/homepage');
         } else if (prefs.get('is_target_snapshots').toString() == 'true') {

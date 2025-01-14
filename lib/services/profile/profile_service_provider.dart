@@ -79,6 +79,26 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
       state = ApiState(error: e.toString(), isLoading: false);
     }
   }
+
+  String? getFullName(String username) {
+    for (var profile in state.data) {
+      if (profile['user']['username'] == username) {
+        return profile['user']['first_name'] +
+            ' ' +
+            profile['user']['last_name'];
+      }
+    }
+    return null;
+  }
+
+  String? getProfilePicture(String username) {
+    for (var profile in state.data) {
+      if (profile['user']['username'] == username) {
+        return profile['profile_picture_uri'];
+      }
+    }
+    return null;
+  }
 }
 
 final profileServiceProviderImpl =
