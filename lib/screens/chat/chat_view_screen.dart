@@ -3,6 +3,7 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -94,6 +95,60 @@ class ChatViewScreen extends ConsumerWidget {
     return dateFormat.format(dateTime);
   }
 
+  void _showAttachmentOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo),
+                title: const Text("Choose Gallery"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final picker = ImagePicker();
+                  final pickedFile =
+                      await picker.pickImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    // Handle the selected image
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("Take Picture"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final picker = ImagePicker();
+                  final pickedFile =
+                      await picker.pickImage(source: ImageSource.camera);
+                  if (pickedFile != null) {
+                    // Handle the captured image
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.insert_drive_file),
+                title: const Text("Choose File"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  // final result = await FilePicker.platform.pickFiles();
+                  // if (result != null) {
+                  //   // Handle the selected file
+                  // }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileRef = ref.read(profileServiceProviderImpl.notifier);
@@ -152,7 +207,9 @@ class ChatViewScreen extends ConsumerWidget {
                               ? isLightTheme
                                   ? GlobalColors.myMessageColor
                                   : GlobalColors.primaryColor
-                              : Colors.grey[200],
+                              : isLightTheme
+                                  ? Colors.grey[200]
+                                  : GlobalColors.otherDarkMessageColor,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
@@ -160,10 +217,12 @@ class ChatViewScreen extends ConsumerWidget {
                           children: [
                             Text(
                               isSender ? "You" : fullnames,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
-                                color: Colors.black54,
+                                color: isLightTheme
+                                    ? Colors.black54
+                                    : Colors.white,
                               ),
                             ),
                             const SizedBox(height: 5),
@@ -191,6 +250,11 @@ class ChatViewScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: Row(
                 children: [
+                  IconButton(
+                      onPressed: () {
+                        _showAttachmentOptions(context);
+                      },
+                      icon: const Icon(Icons.attachment)),
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(

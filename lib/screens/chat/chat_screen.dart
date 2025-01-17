@@ -1,8 +1,10 @@
+import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return profileData.data;
   }
+
+  final TextEditingController searchController = TextEditingController();
 
   final _chats = [
     {
@@ -82,6 +86,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ]
     }
   ];
+
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+
+  String formatDate(String dateTimeString) {
+    final DateTime dateTime = DateTime.parse(dateTimeString);
+    final DateTime now = DateTime.now();
+    final DateFormat timeFormat = DateFormat("hh:mm");
+
+    // Check if the date is today
+    if (isSameDay(dateTime, now)) {
+      return 'Today, ${timeFormat.format(dateTime)}';
+    }
+
+    // Check if the date is yesterday
+    final DateTime yesterday = now.subtract(const Duration(days: 1));
+    if (isSameDay(dateTime, yesterday)) {
+      return 'Yesterday, ${timeFormat.format(dateTime)}';
+    }
+
+    // Otherwise, return the date in the format dd/MM/yyyy, hh:mm
+    final DateFormat dateFormat = DateFormat("dd/MM/yyyy, hh:mm");
+    return dateFormat.format(dateTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
@@ -104,6 +136,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: TextInputComponent(
+                controller: searchController,
+                labelText: 'Search for Chat',
+                hintText: 'Enter Name',
+                validatorFunction: () {}),
+          ),
           Expanded(
             child: ListView.builder(
               itemBuilder: (context, index) {
@@ -124,7 +164,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       names!,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(lastMessage['content']!),
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(lastMessage['content']!),
+                        Text(
+                          formatDate(lastMessage['created_at']!),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
