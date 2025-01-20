@@ -1,13 +1,18 @@
+import 'dart:io';
+
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:flutter/foundation.dart' as foundation;
 
-class ChatViewScreen extends ConsumerWidget {
+class ChatViewScreen extends ConsumerStatefulWidget {
   final String username;
   const ChatViewScreen({super.key, required this.username});
 
@@ -68,10 +73,32 @@ class ChatViewScreen extends ConsumerWidget {
     },
   ];
 
+  @override
+  ConsumerState<ChatViewScreen> createState() => _ChatViewScreenState();
+}
+
+class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   bool isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year &&
         date1.month == date2.month &&
         date1.day == date2.day;
+  }
+
+  final TextEditingController messageController = TextEditingController();
+
+  final FocusNode textFocusNode = FocusNode();
+  ValueNotifier<bool> isEmojiPickerVisible = ValueNotifier(false);
+
+  File? pickedImage;
+  File? takenPicture;
+
+  void toggleEmojiPicker() {
+    isEmojiPickerVisible.value = !isEmojiPickerVisible.value;
+    if (isEmojiPickerVisible.value) {
+      textFocusNode.unfocus();
+    } else {
+      textFocusNode.requestFocus();
+    }
   }
 
   String formatDate(String dateTimeString) {
@@ -107,39 +134,33 @@ class ChatViewScreen extends ConsumerWidget {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo),
-                title: const Text("Choose Gallery"),
+                title: const Text("Choose from Gallery"),
                 onTap: () async {
-                  Navigator.pop(context);
                   final picker = ImagePicker();
                   final pickedFile =
                       await picker.pickImage(source: ImageSource.gallery);
                   if (pickedFile != null) {
-                    // Handle the selected image
+                    setState(() {
+                      pickedImage = File(pickedFile.path);
+                    });
+                    _showImageWithCaption(context, pickedImage!);
                   }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text("Take Picture"),
+                title: const Text("Take a Picture"),
                 onTap: () async {
-                  Navigator.pop(context);
+                  // Close the bottom sheet
                   final picker = ImagePicker();
                   final pickedFile =
                       await picker.pickImage(source: ImageSource.camera);
                   if (pickedFile != null) {
-                    // Handle the captured image
+                    setState(() {
+                      takenPicture = File(pickedFile.path);
+                    });
+                    _showImageWithCaption(context, takenPicture!);
                   }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.insert_drive_file),
-                title: const Text("Choose File"),
-                onTap: () async {
-                  Navigator.pop(context);
-                  // final result = await FilePicker.platform.pickFiles();
-                  // if (result != null) {
-                  //   // Handle the selected file
-                  // }
                 },
               ),
             ],
@@ -149,13 +170,95 @@ class ChatViewScreen extends ConsumerWidget {
     );
   }
 
+  void _showImageWithCaption(BuildContext context, File image) {
+    TextEditingController captionController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  // TextButton(
+                  //   onPressed: () {
+                  //     // Handle the submission of the image and caption
+                  //     final caption = captionController.text.trim();
+                  //     print("Image Path: ${image.path}");
+                  //     print("Caption: $caption");
+                  //     Navigator.pop(context); // Close the bottom sheet
+                  //   },
+                  //   child: const Text("Send"),
+                  // ),
+                ],
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Image.file(
+                  image,
+                  height: MediaQuery.sizeOf(context).height * 0.6,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: captionController,
+                        maxLines: 2,
+                        minLines: 1,
+                        decoration: const InputDecoration(
+                          hintText: "Add a caption...",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.send,
+                          color: GlobalColors.primaryColor,
+                        ))
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final profileRef = ref.read(profileServiceProviderImpl.notifier);
 
-    String? fullnames = profileRef.getFullName(username);
+    String? fullnames = profileRef.getFullName(widget.username);
 
-    String? profilePicture = profileRef.getProfilePicture(username);
+    String? profilePicture = profileRef.getProfilePicture(widget.username);
 
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
@@ -183,9 +286,9 @@ class ChatViewScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: messages.length,
+                itemCount: ChatViewScreen.messages.length,
                 itemBuilder: (context, index) {
-                  final message = messages[index];
+                  final message = ChatViewScreen.messages[index];
                   final isSender =
                       message['sender'] == 'niyibizischadrack@gmail.com';
 
@@ -216,7 +319,7 @@ class ChatViewScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isSender ? "You" : fullnames,
+                              isSender ? "Me" : fullnames,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
@@ -246,37 +349,108 @@ class ChatViewScreen extends ConsumerWidget {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Row(
-                children: [
-                  IconButton(
-                      onPressed: () {
-                        _showAttachmentOptions(context);
-                      },
-                      icon: const Icon(Icons.attachment)),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: const BorderSide(color: Colors.grey),
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 15),
+            ValueListenableBuilder<bool>(
+              valueListenable: isEmojiPickerVisible,
+              builder: (context, isVisible, child) {
+                return Column(
+                  children: [
+                    if (isVisible)
+                      SizedBox(
+                          height: 250,
+                          child: EmojiPicker(
+                            onBackspacePressed: () {},
+                            textEditingController:
+                                messageController, // pass here the same [TextEditingController] that is connected to your input field, usually a [TextFormField]
+                            config: Config(
+                              height: 256,
+                              checkPlatformCompatibility: true,
+                              emojiViewConfig: EmojiViewConfig(
+                                backgroundColor: isLightTheme
+                                    ? GlobalColors.lightBackgroundColor
+                                    : Colors.black,
+                                // Issue: https://github.com/flutter/flutter/issues/28894
+                                emojiSizeMax: 28 *
+                                    (foundation.defaultTargetPlatform ==
+                                            TargetPlatform.iOS
+                                        ? 1.20
+                                        : 1.0),
+                              ),
+                              viewOrderConfig: const ViewOrderConfig(
+                                top: EmojiPickerItem.searchBar,
+                                middle: EmojiPickerItem.categoryBar,
+                                bottom: EmojiPickerItem.emojiView,
+                              ),
+                              skinToneConfig: const SkinToneConfig(),
+                              categoryViewConfig: CategoryViewConfig(
+                                  indicatorColor: GlobalColors.primaryColor,
+                                  iconColorSelected: GlobalColors.primaryColor,
+                                  backgroundColor: isLightTheme
+                                      ? GlobalColors.lightBackgroundColor
+                                      : Colors.black),
+                              bottomActionBarConfig: BottomActionBarConfig(
+                                  enabled: false,
+                                  buttonColor: GlobalColors.primaryColor,
+                                  backgroundColor: isLightTheme
+                                      ? GlobalColors.lightBackgroundColor
+                                      : Colors.black),
+                              searchViewConfig: SearchViewConfig(
+                                  backgroundColor: isLightTheme
+                                      ? GlobalColors.lightBackgroundColor
+                                      : Colors.black),
+                            ),
+                          )),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 2, vertical: 5),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: toggleEmojiPicker,
+                            icon: isVisible
+                                ? const Icon(Icons.keyboard)
+                                : const Icon(Icons.emoji_emotions_outlined),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.attachment),
+                            onPressed: () => _showAttachmentOptions(context),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              maxLines: 4,
+                              minLines: 1,
+                              textInputAction: TextInputAction.newline,
+                              controller: messageController,
+                              focusNode: textFocusNode,
+                              decoration: const InputDecoration(
+                                hintText: 'Type a message...',
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 15),
+                              ),
+                              onTap: () {
+                                isEmojiPickerVisible.value = false;
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              // Send message logic
+                              final message = messageController.text.trim();
+                              if (message.isNotEmpty) {
+                                messageController.clear();
+                              }
+                            },
+                            icon: const Icon(Icons.send,
+                                color: GlobalColors.primaryColor),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      // Add functionality to send a message
-                    },
-                    icon: const Icon(Icons.send,
-                        color: GlobalColors.primaryColor),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
           ],
         ),

@@ -49,6 +49,7 @@ dependencies:
   flutter_native_splash: ^2.4.3
   webview_flutter: ^4.10.0
   file_picker: ^8.1.7
+  emoji_picker_flutter: ^4.2.0
 
 dev_dependencies:
   flutter_test:

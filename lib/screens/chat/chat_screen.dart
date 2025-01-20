@@ -1,8 +1,11 @@
+import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/text_input_component.dart';
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
@@ -25,67 +28,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return profileData.data;
   }
 
-  final TextEditingController searchController = TextEditingController();
+  late List<dynamic> _chats;
 
-  final _chats = [
-    {
-      "niyibizischadrack05@gmail.com": [
-        {
-          "message_id": "678411084e42a3d29f83637b",
-          "content": "How are you doing there?",
-          "sender": "ishimwehope@gmail.com",
-          "receiver": "niyibizischadrack@gmail.com",
-          "sender_receiver":
-              "ishimwehope@gmail.com_niyibizischadrack@gmail.com",
-          "created_at": "2025-01-12T18:59:20.114Z"
-        },
-        {
-          "message_id": "678410f94e42a3d29f836379",
-          "content": "Good morning Schadrack!",
-          "sender": "ishimwehope@gmail.com",
-          "receiver": "niyibizischadrack@gmail.com",
-          "sender_receiver":
-              "ishimwehope@gmail.com_niyibizischadrack@gmail.com",
-          "created_at": "2025-01-12T18:59:05.666Z"
-        },
-        {
-          "message_id": "678410d24e42a3d29f836377",
-          "content": "Good morning Hope!",
-          "sender": "niyibizischadrack@gmail.com",
-          "receiver": "ishimwehope@gmail.com",
-          "sender_receiver":
-              "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
-          "created_at": "2025-01-12T18:58:26.283Z"
-        }
-      ]
-    },
-    {
-      "regis.ntwari.danny@gmail.com": [
-        {
-          "message_id": "678410b14e42a3d29f836375",
-          "content": "Good morning Georges!",
-          "sender": "niyibizischadrack@gmail.com",
-          "receiver": "nishimwegeorges@gmail.com",
-          "sender_receiver":
-              "niyibizischadrack@gmail.com_nishimwegeorges@gmail.com",
-          "created_at": "2025-01-12T18:57:53.704Z"
-        }
-      ]
-    },
-    {
-      "atrack1998@gmail.com": [
-        {
-          "message_id": "678410844e42a3d29f836373",
-          "content": "Good morning Williams!",
-          "sender": "niyibizischadrack@gmail.com",
-          "receiver": "williamspeterson@gmail.com",
-          "sender_receiver":
-              "niyibizischadrack@gmail.com_williamspeterson@gmail.com",
-          "created_at": "2025-01-12T18:57:08.162Z"
-        }
-      ]
-    }
-  ];
+  void getAllChats() async {
+    final chatRef = ref.read(chatServiceProviderImpl.notifier);
+
+    await chatRef.getMessages();
+
+    final chats = ref.read(chatServiceProviderImpl);
+
+    setState(() {
+      _chats = chats.data;
+    });
+  }
+
+  final TextEditingController searchController = TextEditingController();
 
   bool isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year &&
@@ -115,9 +72,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getAllChats();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileRef = ref.read(profileServiceProviderImpl.notifier);
+    final chatRef = ref.read(chatServiceProviderImpl);
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
@@ -134,54 +100,66 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               fontWeight: FontWeight.bold),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: TextInputComponent(
-                controller: searchController,
-                labelText: 'Search for Chat',
-                hintText: 'Enter Name',
-                validatorFunction: () {}),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemBuilder: (context, index) {
-                String username = _chats[index].keys.first;
-                Map<String, String> lastMessage = _chats[index].values.first[0];
-                String? names = profileRef.getFullName(username);
-                String? profilePicture = profileRef.getProfilePicture(username);
-                return InkWell(
-                  onTap: () {
-                    Routemaster.of(context).push('/chat-detail/$username');
-                  },
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage:
-                          CachedNetworkImageProvider(profilePicture!),
-                    ),
-                    title: Text(
-                      names!,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(lastMessage['content']!),
-                        Text(
-                          formatDate(lastMessage['created_at']!),
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      ],
+      body: chatRef.isLoading
+          ? const LoadingScreen()
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.search),
+                      hintText: 'Search for chats...',
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
                     ),
                   ),
-                );
-              },
-              itemCount: _chats.length,
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemBuilder: (context, index) {
+                      String username = _chats[index].keys.first;
+                      Map<String, String> lastMessage =
+                          _chats[index].values.first[0];
+                      String? names = profileRef.getFullName(username);
+                      String? profilePicture =
+                          profileRef.getProfilePicture(username);
+                      return InkWell(
+                        onTap: () {
+                          Routemaster.of(context)
+                              .push('/chat-detail/$username');
+                        },
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage:
+                                CachedNetworkImageProvider(profilePicture!),
+                          ),
+                          title: Text(
+                            names!,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(lastMessage['content']!),
+                              Text(
+                                formatDate(lastMessage['created_at']!),
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    itemCount: _chats.length,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       floatingActionButton: InkWell(
           onTap: () {},
           child: Container(
