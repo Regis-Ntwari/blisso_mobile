@@ -30,7 +30,6 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
       });
       final response = chatService.getMessages(username!);
 
-      print(response);
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {

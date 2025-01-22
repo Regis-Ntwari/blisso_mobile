@@ -180,7 +180,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                     elevation: 5,
                     floating: true,
                     snap: true,
-                    expandedHeight: isSearchVisible ? 140 : 60,
+                    expandedHeight: isSearchVisible ? 120 : 60,
                     automaticallyImplyLeading: false,
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
@@ -241,8 +241,11 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                                   const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Row(
                                 children: [
-                                  SizedBox(
+                                  Container(
                                     height: 50,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(60)),
                                     child: DropdownButton<String>(
                                       value: searchAttribute,
                                       items: <String>[
@@ -266,17 +269,28 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: TextField(
-                                      controller: searchValue,
-                                      onChanged: (value) => _onSearchChange(),
-                                      decoration: InputDecoration(
-                                        hintText:
-                                            'Search by $searchAttribute...',
-                                        border: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                              color: GlobalColors.primaryColor),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                          color: isLightTheme
+                                              ? Colors.grey[100]
+                                              : Colors.grey[900],
                                           borderRadius:
-                                              BorderRadius.circular(8.0),
+                                              BorderRadius.circular(60)),
+                                      child: TextField(
+                                        maxLines: 1,
+                                        controller: searchValue,
+                                        onChanged: (value) => _onSearchChange(),
+                                        decoration: InputDecoration(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 5, horizontal: 15),
+                                          hintText:
+                                              'Search by $searchAttribute...',
+                                          border: OutlineInputBorder(
+                                            borderSide: BorderSide.none,
+                                            borderRadius:
+                                                BorderRadius.circular(60.0),
+                                          ),
                                         ),
                                       ),
                                     ),

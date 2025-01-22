@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
-import 'package:file_picker/file_picker.dart';
+// import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,8 +64,7 @@ class ChatViewScreen extends ConsumerStatefulWidget {
     },
     {
       "message_id": "678410f94e42a3d29f836379",
-      "content":
-          "I'm doing great! How about you?... you are very good I see... You have a lot of work to do",
+      "content": "I'm ",
       "sender": "niyibizischadrack@gmail.com",
       "receiver": "ishimwehope@gmail.com",
       "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
@@ -89,6 +88,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   final FocusNode textFocusNode = FocusNode();
   ValueNotifier<bool> isEmojiPickerVisible = ValueNotifier(false);
 
+  bool isVoice = true;
+
   File? pickedImage;
   File? takenPicture;
 
@@ -106,18 +107,15 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     final DateTime now = DateTime.now();
     final DateFormat timeFormat = DateFormat("hh:mm");
 
-    // Check if the date is today
     if (isSameDay(dateTime, now)) {
       return 'Today, ${timeFormat.format(dateTime)}';
     }
 
-    // Check if the date is yesterday
     final DateTime yesterday = now.subtract(const Duration(days: 1));
     if (isSameDay(dateTime, yesterday)) {
       return 'Yesterday, ${timeFormat.format(dateTime)}';
     }
 
-    // Otherwise, return the date in the format dd/MM/yyyy, hh:mm
     final DateFormat dateFormat = DateFormat("dd/MM/yyyy, hh:mm");
     return dateFormat.format(dateTime);
   }
@@ -180,74 +178,82 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     // Handle the submission of the image and caption
+                      //     final caption = captionController.text.trim();
+                      //     print("Image Path: ${image.path}");
+                      //     print("Caption: $caption");
+                      //     Navigator.pop(context); // Close the bottom sheet
+                      //   },
+                      //   child: const Text("Send"),
+                      // ),
+                    ],
                   ),
-                  // TextButton(
-                  //   onPressed: () {
-                  //     // Handle the submission of the image and caption
-                  //     final caption = captionController.text.trim();
-                  //     print("Image Path: ${image.path}");
-                  //     print("Caption: $caption");
-                  //     Navigator.pop(context); // Close the bottom sheet
-                  //   },
-                  //   child: const Text("Send"),
-                  // ),
-                ],
-              ),
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Image.file(
-                  image,
-                  height: MediaQuery.sizeOf(context).height * 0.6,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: captionController,
-                        maxLines: 2,
-                        minLines: 1,
-                        decoration: const InputDecoration(
-                          hintText: "Add a caption...",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                        ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Flexible(
+                      child: Image.file(
+                        image,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                    IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.send,
-                          color: GlobalColors.primaryColor,
-                        ))
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: captionController,
+                            maxLines: 2,
+                            minLines: 1,
+                            decoration: const InputDecoration(
+                              hintText: "Add a caption...",
+                              border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(60)),
+                                  borderSide: BorderSide.none),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 10),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.send,
+                              color: GlobalColors.primaryColor,
+                            ))
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
+            ),
+          );
+        });
       },
     );
   }
@@ -265,6 +271,18 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
+
+          leadingWidth: 20,
+          leading: Container(
+            margin: const EdgeInsets.only(left: 1, right: 3),
+            child: IconButton(
+              onPressed: () {
+                Routemaster.of(context).replace('/chat');
+              },
+              icon: const Icon(Icons.keyboard_arrow_left),
+            ),
+          ),
           title: Row(
             children: [
               CircleAvatar(
@@ -275,12 +293,15 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                   child: Text(fullnames!)),
             ],
           ),
-          leading: IconButton(
-            onPressed: () {
-              Routemaster.of(context).replace('/chat');
-            },
-            icon: const Icon(Icons.keyboard_arrow_left),
-          ),
+          // leading: Padding(
+          //   padding: const EdgeInsets.only(left: 5.0),
+          //   child: IconButton(
+          //     onPressed: () {
+          //       Routemaster.of(context).replace('/chat');
+          //     },
+          //     icon: const Icon(Icons.keyboard_arrow_left),
+          //   ),
+          // ),
         ),
         body: Column(
           children: [
@@ -328,13 +349,16 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                     : Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 3),
                             Text(
                               message['content']!,
-                              style: const TextStyle(fontSize: 16),
+                              style: const TextStyle(fontSize: 14),
                             ),
-                            Align(
-                              alignment: Alignment.bottomRight,
+                            // const Divider(
+                            //   height: 1,
+                            // ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5.0),
                               child: Text(
                                 formatDate(message['created_at']!),
                                 textAlign: TextAlign.end,
@@ -359,6 +383,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                           height: 250,
                           child: EmojiPicker(
                             onBackspacePressed: () {},
+                            onEmojiSelected: (category, emoji) {},
                             textEditingController:
                                 messageController, // pass here the same [TextEditingController] that is connected to your input field, usually a [TextFormField]
                             config: Config(
@@ -415,35 +440,60 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                             onPressed: () => _showAttachmentOptions(context),
                           ),
                           Expanded(
-                            child: TextField(
-                              maxLines: 4,
-                              minLines: 1,
-                              textInputAction: TextInputAction.newline,
-                              controller: messageController,
-                              focusNode: textFocusNode,
-                              decoration: const InputDecoration(
-                                hintText: 'Type a message...',
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.grey),
-                                ),
-                                contentPadding:
-                                    EdgeInsets.symmetric(horizontal: 15),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(60),
+                                color: isLightTheme
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                               ),
-                              onTap: () {
-                                isEmojiPickerVisible.value = false;
-                              },
+                              child: TextField(
+                                maxLines: 4,
+                                minLines: 1,
+                                textInputAction: TextInputAction.newline,
+                                controller: messageController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    isVoice = value.isEmpty;
+                                  });
+                                },
+                                focusNode: textFocusNode,
+                                decoration: InputDecoration(
+                                  hintText: 'Type a message...',
+                                  border: OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                      borderRadius: BorderRadius.circular(60)),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 15),
+                                ),
+                                onTap: () {
+                                  isEmojiPickerVisible.value = false;
+                                },
+                              ),
                             ),
                           ),
-                          IconButton(
-                            onPressed: () {
-                              // Send message logic
-                              final message = messageController.text.trim();
-                              if (message.isNotEmpty) {
-                                messageController.clear();
-                              }
-                            },
-                            icon: const Icon(Icons.send,
-                                color: GlobalColors.primaryColor),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 5.0),
+                            child: Container(
+                              height: 50,
+                              width: 50,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(50),
+                                color: GlobalColors.primaryColor,
+                              ),
+                              child: IconButton(
+                                onPressed: () {
+                                  final message = messageController.text.trim();
+                                  if (message.isNotEmpty) {
+                                    messageController.clear();
+                                  }
+                                },
+                                icon: Icon(
+                                  color: Colors.white,
+                                  isVoice ? Icons.mic : Icons.send,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

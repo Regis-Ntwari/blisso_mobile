@@ -1,11 +1,9 @@
 import 'package:blisso_mobile/components/loading_component.dart';
-import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
@@ -28,7 +26,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return profileData.data;
   }
 
-  late List<dynamic> _chats;
+  List<dynamic> _chats = [];
 
   void getAllChats() async {
     final chatRef = ref.read(chatServiceProviderImpl.notifier);
@@ -55,20 +53,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final DateTime now = DateTime.now();
     final DateFormat timeFormat = DateFormat("hh:mm");
 
-    // Check if the date is today
     if (isSameDay(dateTime, now)) {
       return 'Today, ${timeFormat.format(dateTime)}';
     }
 
-    // Check if the date is yesterday
     final DateTime yesterday = now.subtract(const Duration(days: 1));
     if (isSameDay(dateTime, yesterday)) {
       return 'Yesterday, ${timeFormat.format(dateTime)}';
     }
 
-    // Otherwise, return the date in the format dd/MM/yyyy, hh:mm
     final DateFormat dateFormat = DateFormat("dd/MM/yyyy, hh:mm");
     return dateFormat.format(dateTime);
+  }
+
+  void chooseChat(String username) {
+    for (Map<String, dynamic> chat in _chats) {
+      if (chat.containsKey(username)) {
+        print(chat[username]);
+      }
+    }
+    Routemaster.of(context).push('/chat-detail/$username');
   }
 
   @override
@@ -81,6 +85,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileRef = ref.read(profileServiceProviderImpl.notifier);
     final chatRef = ref.read(chatServiceProviderImpl);
@@ -106,15 +111,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.search),
-                      hintText: 'Search for chats...',
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(60),
+                      color: isLightTheme ? Colors.grey[100] : Colors.grey[900],
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Search for chats...',
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 1, horizontal: 15),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(60)),
+                            borderSide: BorderSide.none),
                       ),
                     ),
                   ),
@@ -123,16 +133,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: ListView.builder(
                     itemBuilder: (context, index) {
                       String username = _chats[index].keys.first;
-                      Map<String, String> lastMessage =
+                      Map<String, Object> lastMessage =
                           _chats[index].values.first[0];
                       String? names = profileRef.getFullName(username);
                       String? profilePicture =
                           profileRef.getProfilePicture(username);
                       return InkWell(
-                        onTap: () {
-                          Routemaster.of(context)
-                              .push('/chat-detail/$username');
-                        },
+                        onTap: () => chooseChat(username),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundImage:
@@ -145,9 +152,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(lastMessage['content']!),
+                              Text(lastMessage['content'].toString()),
                               Text(
-                                formatDate(lastMessage['created_at']!),
+                                formatDate(
+                                    lastMessage['created_at'].toString()),
                                 style: const TextStyle(fontSize: 10),
                               ),
                             ],

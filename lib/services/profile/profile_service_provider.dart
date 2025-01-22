@@ -88,7 +88,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
             profile['user']['last_name'];
       }
     }
-    return null;
+    return 'Unknown User';
   }
 
   String? getProfilePicture(String username) {
@@ -97,7 +97,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
         return profile['profile_picture_uri'];
       }
     }
-    return null;
+    return 'https://images.unsplash.com/photo-1711560707076-d50fbf8a3a26?q=80&w=1512';
   }
 }
 
