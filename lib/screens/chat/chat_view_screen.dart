@@ -6,8 +6,10 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/foundation.dart' as foundation;
@@ -120,48 +122,157 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     return dateFormat.format(dateTime);
   }
 
+  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  bool _isRecording = false;
+
+  Future<void> _initializeRecorder() async {
+    await Permission.microphone.request();
+    if (await Permission.microphone.isGranted) {
+      await _recorder.openRecorder();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Microphone permission is required")),
+      );
+    }
+  }
+
+  Future<void> _startRecording() async {
+    Directory tempDir = Directory.systemTemp;
+    String path = "${tempDir.path}/recording.aac";
+    await _recorder.startRecorder(toFile: path);
+    setState(() {
+      _isRecording = true;
+    });
+  }
+
+  Future<void> _stopRecording() async {
+    String? path = await _recorder.stopRecorder();
+    setState(() {
+      _isRecording = false;
+    });
+
+    if (path != null) {
+      // Send or handle the recorded audio file
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Audio saved at $path")),
+      );
+    }
+  }
+
   void _showAttachmentOptions(BuildContext context) {
+    double width = MediaQuery.sizeOf(context).width;
     showModalBottomSheet(
+      constraints: BoxConstraints(maxHeight: 400, maxWidth: width * 0.8),
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
         return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo),
-                title: const Text("Choose from Gallery"),
-                onTap: () async {
-                  final picker = ImagePicker();
-                  final pickedFile =
-                      await picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    setState(() {
-                      pickedImage = File(pickedFile.path);
-                    });
-                    _showImageWithCaption(context, pickedImage!);
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("Take a Picture"),
-                onTap: () async {
-                  // Close the bottom sheet
-                  final picker = ImagePicker();
-                  final pickedFile =
-                      await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    setState(() {
-                      takenPicture = File(pickedFile.path);
-                    });
-                    _showImageWithCaption(context, takenPicture!);
-                  }
-                },
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () {},
+                          child: const CircleAvatar(
+                            child: Icon(Icons.file_copy),
+                          ),
+                        ),
+                        const Text('Document')
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () {},
+                          child: const CircleAvatar(
+                            child: Icon(Icons.video_collection),
+                          ),
+                        ),
+                        const Text('Video')
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () {},
+                          child: const CircleAvatar(
+                            child: Icon(Icons.audio_file),
+                          ),
+                        ),
+                        const Text('Audio')
+                      ],
+                    ),
+                    // ListTile(
+                    //   leading: const Icon(Icons.photo),
+                    //   title: const Text("Choose from Gallery"),
+                    //   onTap: () async {
+                    //     final picker = ImagePicker();
+                    //     final pickedFile =
+                    //         await picker.pickImage(source: ImageSource.gallery);
+                    //     if (pickedFile != null) {
+                    //       setState(() {
+                    //         pickedImage = File(pickedFile.path);
+                    //       });
+                    //       _showImageWithCaption(context, pickedImage!);
+                    //     }
+                    //   },
+                    // ),
+                    // ListTile(
+                    //   leading: const Icon(Icons.camera_alt),
+                    //   title: const Text("Take a Picture"),
+                    //   onTap: () async {
+                    //     // Close the bottom sheet
+                    //     final picker = ImagePicker();
+                    //     final pickedFile =
+                    //         await picker.pickImage(source: ImageSource.camera);
+                    //     if (pickedFile != null) {
+                    //       setState(() {
+                    //         takenPicture = File(pickedFile.path);
+                    //       });
+                    //       _showImageWithCaption(context, takenPicture!);
+                    //     }
+                    //   },
+                    // ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () {},
+                          child: const CircleAvatar(
+                            child: Icon(Icons.photo),
+                          ),
+                        ),
+                        const Text('Photo')
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () {},
+                          child: const CircleAvatar(
+                            child: Icon(Icons.camera_alt),
+                          ),
+                        ),
+                        const Text('Take Picture')
+                      ],
+                    )
+                  ],
+                )
+              ],
+            ),
           ),
         );
       },
@@ -256,6 +367,12 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
         });
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeRecorder();
   }
 
   @override
@@ -393,7 +510,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                 backgroundColor: isLightTheme
                                     ? GlobalColors.lightBackgroundColor
                                     : Colors.black,
-                                // Issue: https://github.com/flutter/flutter/issues/28894
                                 emojiSizeMax: 28 *
                                     (foundation.defaultTargetPlatform ==
                                             TargetPlatform.iOS
@@ -481,18 +597,33 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                 borderRadius: BorderRadius.circular(50),
                                 color: GlobalColors.primaryColor,
                               ),
-                              child: IconButton(
-                                onPressed: () {
-                                  final message = messageController.text.trim();
-                                  if (message.isNotEmpty) {
-                                    messageController.clear();
-                                  }
-                                },
-                                icon: Icon(
-                                  color: Colors.white,
-                                  isVoice ? Icons.mic : Icons.send,
-                                ),
-                              ),
+                              child: isVoice
+                                  ? GestureDetector(
+                                      onLongPress: _startRecording,
+                                      onLongPressUp: _stopRecording,
+                                      child: CircleAvatar(
+                                        backgroundColor: _isRecording
+                                            ? GlobalColors.primaryColor
+                                            : GlobalColors.whiteColor,
+                                        child: Icon(Icons.mic,
+                                            color: _isRecording
+                                                ? Colors.white
+                                                : GlobalColors.primaryColor),
+                                      ),
+                                    )
+                                  : IconButton(
+                                      onPressed: () {
+                                        final message =
+                                            messageController.text.trim();
+                                        if (message.isNotEmpty) {
+                                          messageController.clear();
+                                        }
+                                      },
+                                      icon: Icon(
+                                        color: Colors.white,
+                                        isVoice ? Icons.mic : Icons.send,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
