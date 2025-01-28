@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
-// import 'package:file_picker/file_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -162,7 +162,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   void _showAttachmentOptions(BuildContext context) {
     double width = MediaQuery.sizeOf(context).width;
     showModalBottomSheet(
-      constraints: BoxConstraints(maxHeight: 400, maxWidth: width * 0.8),
+      constraints: BoxConstraints(maxHeight: 200, maxWidth: width * 0.8),
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -181,76 +181,17 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                     Column(
                       children: [
                         InkWell(
-                          onTap: () {},
-                          child: const CircleAvatar(
-                            child: Icon(Icons.file_copy),
-                          ),
-                        ),
-                        const Text('Document')
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () {},
-                          child: const CircleAvatar(
-                            child: Icon(Icons.video_collection),
-                          ),
-                        ),
-                        const Text('Video')
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () {},
-                          child: const CircleAvatar(
-                            child: Icon(Icons.audio_file),
-                          ),
-                        ),
-                        const Text('Audio')
-                      ],
-                    ),
-                    // ListTile(
-                    //   leading: const Icon(Icons.photo),
-                    //   title: const Text("Choose from Gallery"),
-                    //   onTap: () async {
-                    //     final picker = ImagePicker();
-                    //     final pickedFile =
-                    //         await picker.pickImage(source: ImageSource.gallery);
-                    //     if (pickedFile != null) {
-                    //       setState(() {
-                    //         pickedImage = File(pickedFile.path);
-                    //       });
-                    //       _showImageWithCaption(context, pickedImage!);
-                    //     }
-                    //   },
-                    // ),
-                    // ListTile(
-                    //   leading: const Icon(Icons.camera_alt),
-                    //   title: const Text("Take a Picture"),
-                    //   onTap: () async {
-                    //     // Close the bottom sheet
-                    //     final picker = ImagePicker();
-                    //     final pickedFile =
-                    //         await picker.pickImage(source: ImageSource.camera);
-                    //     if (pickedFile != null) {
-                    //       setState(() {
-                    //         takenPicture = File(pickedFile.path);
-                    //       });
-                    //       _showImageWithCaption(context, takenPicture!);
-                    //     }
-                    //   },
-                    // ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () {},
+                          onTap: () async {
+                            final picker = ImagePicker();
+                            final pickedFile = await picker.pickImage(
+                                source: ImageSource.gallery);
+                            if (pickedFile != null) {
+                              setState(() {
+                                pickedImage = File(pickedFile.path);
+                              });
+                              _showImageWithCaption(context, pickedImage!);
+                            }
+                          },
                           child: const CircleAvatar(
                             child: Icon(Icons.photo),
                           ),
@@ -261,9 +202,118 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                     Column(
                       children: [
                         InkWell(
-                          onTap: () {},
+                          onTap: () async {
+                            final picker = ImagePicker();
+                            final pickedFile = await picker.pickVideo(
+                                source: ImageSource.gallery);
+                            if (pickedFile != null) {
+                              setState(() {
+                                pickedImage = File(pickedFile.path);
+                              });
+                              _showImageWithCaption(context, pickedImage!);
+                            }
+                          },
+                          child: CircleAvatar(
+                            backgroundColor: GlobalColors.secondaryColor,
+                            child: const Icon(Icons.video_collection),
+                          ),
+                        ),
+                        const Text('Video')
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () async {
+                            FilePickerResult? result = await FilePicker.platform
+                                .pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['mp3', 'wav', 'mp4']);
+
+                            if (result != null) {
+                              File files = File(result.files.single.path!);
+                              print(files.path);
+                              PlatformFile file = result.files.first;
+
+                              print(file.name);
+                              print(file.bytes);
+                              print(file.size);
+                              print(file.extension);
+                              print(file.path);
+                            } else {
+                              // User canceled the picker
+                            }
+                          },
+                          child: CircleAvatar(
+                            backgroundColor: Colors.green[700],
+                            child: const Icon(Icons.audio_file),
+                          ),
+                        ),
+                        const Text('Audio')
+                      ],
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () async {
+                            FilePickerResult? result = await FilePicker.platform
+                                .pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: [
+                                  'pdf',
+                                  'doc',
+                                  'docx',
+                                  'pptx',
+                                  'ppt',
+                                  'xlsx',
+                                  'xls',
+                                  'xml',
+                                ]);
+
+                            if (result != null) {
+                              File files = File(result.files.single.path!);
+                              print(files.path);
+                              PlatformFile file = result.files.first;
+
+                              print(file.name);
+                              print(file.bytes);
+                              print(file.size);
+                              print(file.extension);
+                              print(file.path);
+                            } else {
+                              // User canceled the picker
+                            }
+                          },
                           child: const CircleAvatar(
-                            child: Icon(Icons.camera_alt),
+                            backgroundColor: GlobalColors.primaryColor,
+                            child: Icon(Icons.file_copy),
+                          ),
+                        ),
+                        const Text('Document')
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () async {
+                            final picker = ImagePicker();
+                            final pickedFile = await picker.pickImage(
+                                source: ImageSource.camera);
+                            if (pickedFile != null) {
+                              setState(() {
+                                takenPicture = File(pickedFile.path);
+                              });
+                              _showImageWithCaption(context, takenPicture!);
+                            }
+                          },
+                          child: CircleAvatar(
+                            backgroundColor: Colors.blue[700],
+                            child: const Icon(Icons.camera_alt),
                           ),
                         ),
                         const Text('Take Picture')
@@ -389,7 +439,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-
           leadingWidth: 20,
           leading: Container(
             margin: const EdgeInsets.only(left: 1, right: 3),
@@ -410,15 +459,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                   child: Text(fullnames!)),
             ],
           ),
-          // leading: Padding(
-          //   padding: const EdgeInsets.only(left: 5.0),
-          //   child: IconButton(
-          //     onPressed: () {
-          //       Routemaster.of(context).replace('/chat');
-          //     },
-          //     icon: const Icon(Icons.keyboard_arrow_left),
-          //   ),
-          // ),
         ),
         body: Column(
           children: [
@@ -471,9 +511,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                               message['content']!,
                               style: const TextStyle(fontSize: 14),
                             ),
-                            // const Divider(
-                            //   height: 1,
-                            // ),
                             Padding(
                               padding: const EdgeInsets.only(top: 5.0),
                               child: Text(
@@ -500,9 +537,12 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                           height: 250,
                           child: EmojiPicker(
                             onBackspacePressed: () {},
-                            onEmojiSelected: (category, emoji) {},
-                            textEditingController:
-                                messageController, // pass here the same [TextEditingController] that is connected to your input field, usually a [TextFormField]
+                            onEmojiSelected: (category, emoji) {
+                              setState(() {
+                                isVoice = false;
+                              });
+                            },
+                            textEditingController: messageController,
                             config: Config(
                               height: 256,
                               checkPlatformCompatibility: true,
@@ -635,31 +675,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
             ),
           ],
         ),
-        // bottomSheet: Padding(
-        //   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        //   child: Row(
-        //     children: [
-        //       Expanded(
-        //         child: TextField(
-        //           decoration: InputDecoration(
-        //             hintText: 'Type a message...',
-        //             border: OutlineInputBorder(
-        //               borderRadius: BorderRadius.circular(30),
-        //               borderSide: const BorderSide(color: Colors.grey),
-        //             ),
-        //             contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-        //           ),
-        //         ),
-        //       ),
-        //       IconButton(
-        //         onPressed: () {
-        //           // Add functionality to send a message
-        //         },
-        //         icon: const Icon(Icons.send, color: GlobalColors.primaryColor),
-        //       ),
-        //     ],
-        //   ),
-        // ),
       ),
     );
   }

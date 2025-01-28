@@ -74,7 +74,6 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
         state = ApiState(data: response.result, isLoading: false);
       }
     } catch (e) {
-      print(e.toString());
       state = ApiState(error: e.toString(), isLoading: false);
     }
   }

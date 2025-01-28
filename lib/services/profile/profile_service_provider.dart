@@ -81,6 +81,9 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
   }
 
   String? getFullName(String username) {
+    if (state.data == null) {
+      return 'Unknown User';
+    }
     for (var profile in state.data) {
       if (profile['user']['username'] == username) {
         return profile['user']['first_name'] +
@@ -92,6 +95,9 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
   }
 
   String? getProfilePicture(String username) {
+    if (state.data == null) {
+      return 'https://images.unsplash.com/photo-1711560707076-d50fbf8a3a26?q=80&w=1512';
+    }
     for (var profile in state.data) {
       if (profile['user']['username'] == username) {
         return profile['profile_picture_uri'];
