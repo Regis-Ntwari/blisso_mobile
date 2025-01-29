@@ -22,7 +22,7 @@ import 'package:routemaster/routemaster.dart';
 
 class Routing {
   static final routes = RouteMap(routes: {
-    '/': (_) => const MaterialPage(child: ChatScreen()),
+    '/': (_) => const MaterialPage(child: SplashScreen()),
     '/welcome': (_) => const MaterialPage(child: WelcomeScreen()),
     '/register/:type': (route) => MaterialPage(
         child: RegisterScreen(type: route.pathParameters['type']!)),

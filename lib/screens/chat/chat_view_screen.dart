@@ -439,14 +439,20 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          leadingWidth: 20,
-          leading: Container(
-            margin: const EdgeInsets.only(left: 1, right: 3),
-            child: IconButton(
-              onPressed: () {
-                Routemaster.of(context).replace('/chat');
-              },
-              icon: const Icon(Icons.keyboard_arrow_left),
+          leadingWidth: 25,
+          leading: Align(
+            alignment: Alignment.center,
+            child: Container(
+              alignment: Alignment.center,
+              child: IconButton(
+                onPressed: () {
+                  Routemaster.of(context).replace('/chat');
+                },
+                icon: const Icon(
+                  Icons.keyboard_arrow_left,
+                  size: 20,
+                ),
+              ),
             ),
           ),
           title: Row(
