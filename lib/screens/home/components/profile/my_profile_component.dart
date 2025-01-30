@@ -133,8 +133,9 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
                                 savePicture: updateProfilePicture),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
-                              child: CachedNetworkImage(
-                                imageUrl: profilePicture,
+                              child: Image(
+                                image: CachedNetworkImageProvider(
+                                    profileState.data['profile_picture_uri']),
                                 fit: BoxFit.cover,
                               ),
                             ),

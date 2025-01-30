@@ -3,6 +3,7 @@ import 'dart:convert';
 
 class ChatMessageModel {
   String? messageId;
+  final String action;
   final String sender;
   final String receiver;
   final String content;
@@ -11,6 +12,7 @@ class ChatMessageModel {
   bool isFileIncluded;
   String? senderReceiver;
   final String createdAt;
+  String? parentId;
 
   ChatMessageModel(
       {required this.sender,
@@ -21,6 +23,8 @@ class ChatMessageModel {
       this.messageId,
       required this.isFileIncluded,
       required this.createdAt,
+      required this.action,
+      this.parentId,
       this.senderReceiver});
 
   ChatMessageModel copyWith(
@@ -30,8 +34,10 @@ class ChatMessageModel {
       String? contentFile,
       String? contentFileType,
       bool? isFileIncluded,
+      String? action,
       String? createdAt,
       String? messageId,
+      String? parentId,
       String? senderReceiver}) {
     return ChatMessageModel(
         sender: sender ?? this.sender,
@@ -42,6 +48,8 @@ class ChatMessageModel {
         isFileIncluded: isFileIncluded ?? this.isFileIncluded,
         createdAt: createdAt ?? this.createdAt,
         senderReceiver: senderReceiver ?? this.senderReceiver,
+        action: action ?? this.action,
+        parentId: parentId ?? this.parentId,
         messageId: messageId ?? this.messageId);
   }
 
@@ -54,6 +62,8 @@ class ChatMessageModel {
       'content_file_type': contentFileType,
       'is_file_included': isFileIncluded,
       'created_at': createdAt,
+      'action': action,
+      'paarent_id': parentId
     };
   }
 
@@ -70,6 +80,8 @@ class ChatMessageModel {
         isFileIncluded: map['is_file_included'] as bool,
         createdAt: map['created_at'] as String,
         senderReceiver: map['sender_receiver'],
+        action: map['action'],
+        parentId: map['paarent_id'],
         messageId: map['message_id']);
   }
 

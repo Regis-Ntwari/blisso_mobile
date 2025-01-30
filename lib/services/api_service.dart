@@ -40,7 +40,8 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse> getData(String endpoint, String token) async {
+  Future<ApiResponse> getData(String endpoint, String token,
+      {bool isChat = false}) async {
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token'
@@ -48,10 +49,17 @@ class ApiService {
 
     dynamic configs = await loadVariables();
 
+    dynamic response;
+
     try {
-      final response = await http.get(
-          Uri.parse("${configs['BACKEND_URL']}/$endpoint"),
-          headers: headers);
+      if (!isChat) {
+        response = await http.get(
+            Uri.parse("${configs['BACKEND_URL']}/$endpoint"),
+            headers: headers);
+      } else {
+        response = await http.get(Uri.parse("${configs['CHAT_URL']}/$endpoint"),
+            headers: headers);
+      }
 
       return _processRequest(response);
     } catch (e) {
@@ -63,10 +71,17 @@ class ApiService {
   Future<ApiResponse> postData(
       {required String endpoint,
       required Map<String, dynamic> body,
-      String? token}) async {
+      String? token,
+      bool isChat = false}) async {
     try {
       dynamic configs = await loadVariables();
-      final url = Uri.parse("${configs['BACKEND_URL']}/$endpoint");
+
+      dynamic url;
+      if (!isChat) {
+        url = Uri.parse("${configs['BACKEND_URL']}/$endpoint");
+      } else {
+        url = Uri.parse("${configs['CHAT_URL']}/$endpoint");
+      }
       final headers = {
         'Content-Type': 'application/json',
       };
@@ -75,7 +90,6 @@ class ApiService {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      debugPrint(jsonEncode(body));
       final response =
           await http.post(url, headers: headers, body: jsonEncode(body));
 

@@ -169,14 +169,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       padding: const EdgeInsets.all(30),
                       child: CircleAvatar(
                         radius: 100,
-                        backgroundImage:
-                            profilePicture == null || profilePicture == ''
-                                ? const AssetImage(
-                                    'assets/images/avatar1.jpg',
-                                  )
-                                : CachedNetworkImageProvider(
-                                    profilePicture!,
-                                  ),
+                        backgroundImage: profilePicture == null
+                            ? const AssetImage('assets/images/avatar1.jpg')
+                            : CachedNetworkImageProvider(
+                                profilePicture!,
+                              ),
                       ),
                     ),
                     isCodeClicked

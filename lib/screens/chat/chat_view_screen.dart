@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +35,7 @@ class ChatViewScreen extends ConsumerStatefulWidget {
       "message_id": "678410f94e42a3d29f836379",
       "content":
           "I'm doing great! How about you?... you are very good I see... You have a lot of work to do",
-      "sender": "niyibizischadrack@gmail.com",
+      "sender": "regis.ntwari.danny@gmail.com",
       "receiver": "ishimwehope@gmail.com",
       "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
       "created_at": "2025-01-12T19:00:05.666Z"
@@ -50,7 +53,7 @@ class ChatViewScreen extends ConsumerStatefulWidget {
       "message_id": "678410f94e42a3d29f836379",
       "content":
           "I'm doing great! How about you?... you are very good I see... You have a lot of work to do",
-      "sender": "niyibizischadrack@gmail.com",
+      "sender": "regis.ntwari.danny@gmail.com",
       "receiver": "ishimwehope@gmail.com",
       "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
       "created_at": "2025-01-12T19:00:05.666Z"
@@ -67,7 +70,7 @@ class ChatViewScreen extends ConsumerStatefulWidget {
     {
       "message_id": "678410f94e42a3d29f836379",
       "content": "I'm ",
-      "sender": "niyibizischadrack@gmail.com",
+      "sender": "regis.ntwari.danny@gmail.com",
       "receiver": "ishimwehope@gmail.com",
       "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
       "created_at": "2025-01-13T19:00:05.666Z"
@@ -357,16 +360,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      // TextButton(
-                      //   onPressed: () {
-                      //     // Handle the submission of the image and caption
-                      //     final caption = captionController.text.trim();
-                      //     print("Image Path: ${image.path}");
-                      //     print("Caption: $caption");
-                      //     Navigator.pop(context); // Close the bottom sheet
-                      //   },
-                      //   child: const Text("Send"),
-                      // ),
                     ],
                   ),
                   const Divider(height: 1),
@@ -419,10 +412,32 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     );
   }
 
+  String? username;
+  Future<void> getMyUsername() async {
+    await SharedPreferencesService.getPreference('username').then((use) {
+      setState(() {
+        username = use;
+      });
+    });
+  }
+
+  Future<void> sendMessage(String message) async {
+    ChatMessageModel messageModel = ChatMessageModel(
+        sender: username!,
+        receiver: widget.username,
+        action: 'CREATED',
+        content: message,
+        isFileIncluded: false,
+        createdAt: DateTime.now().toUtc().toIso8601String());
+  }
+
   @override
   void initState() {
     super.initState();
     _initializeRecorder();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getMyUsername();
+    });
   }
 
   @override
@@ -466,221 +481,239 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
             ],
           ),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: ChatViewScreen.messages.length,
-                itemBuilder: (context, index) {
-                  final message = ChatViewScreen.messages[index];
-                  final isSender =
-                      message['sender'] == 'niyibizischadrack@gmail.com';
-
-                  return Padding(
-                    padding: isSender
-                        ? const EdgeInsets.only(
-                            top: 10.0, bottom: 10.0, left: 40.0, right: 10)
-                        : const EdgeInsets.only(
-                            top: 10.0, bottom: 10.0, left: 10.0, right: 40),
-                    child: Align(
-                      alignment: isSender
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 15.0),
-                        decoration: BoxDecoration(
-                          color: isSender
-                              ? isLightTheme
-                                  ? GlobalColors.myMessageColor
-                                  : GlobalColors.primaryColor
-                              : isLightTheme
-                                  ? Colors.grey[200]
-                                  : GlobalColors.otherDarkMessageColor,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isSender ? "Me" : fullnames,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: isLightTheme
-                                    ? Colors.black54
-                                    : Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              message['content']!,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: Text(
-                                formatDate(message['created_at']!),
-                                textAlign: TextAlign.end,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: isEmojiPickerVisible,
-              builder: (context, isVisible, child) {
-                return Column(
-                  children: [
-                    if (isVisible)
-                      SizedBox(
-                          height: 250,
-                          child: EmojiPicker(
-                            onBackspacePressed: () {},
-                            onEmojiSelected: (category, emoji) {
-                              setState(() {
-                                isVoice = false;
-                              });
-                            },
-                            textEditingController: messageController,
-                            config: Config(
-                              height: 256,
-                              checkPlatformCompatibility: true,
-                              emojiViewConfig: EmojiViewConfig(
-                                backgroundColor: isLightTheme
-                                    ? GlobalColors.lightBackgroundColor
-                                    : Colors.black,
-                                emojiSizeMax: 28 *
-                                    (foundation.defaultTargetPlatform ==
-                                            TargetPlatform.iOS
-                                        ? 1.20
-                                        : 1.0),
-                              ),
-                              viewOrderConfig: const ViewOrderConfig(
-                                top: EmojiPickerItem.searchBar,
-                                middle: EmojiPickerItem.categoryBar,
-                                bottom: EmojiPickerItem.emojiView,
-                              ),
-                              skinToneConfig: const SkinToneConfig(),
-                              categoryViewConfig: CategoryViewConfig(
-                                  indicatorColor: GlobalColors.primaryColor,
-                                  iconColorSelected: GlobalColors.primaryColor,
-                                  backgroundColor: isLightTheme
-                                      ? GlobalColors.lightBackgroundColor
-                                      : Colors.black),
-                              bottomActionBarConfig: BottomActionBarConfig(
-                                  enabled: false,
-                                  buttonColor: GlobalColors.primaryColor,
-                                  backgroundColor: isLightTheme
-                                      ? GlobalColors.lightBackgroundColor
-                                      : Colors.black),
-                              searchViewConfig: SearchViewConfig(
-                                  backgroundColor: isLightTheme
-                                      ? GlobalColors.lightBackgroundColor
-                                      : Colors.black),
-                            ),
-                          )),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 2, vertical: 5),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: toggleEmojiPicker,
-                            icon: isVisible
-                                ? const Icon(Icons.keyboard)
-                                : const Icon(Icons.emoji_emotions_outlined),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.attachment),
-                            onPressed: () => _showAttachmentOptions(context),
-                          ),
-                          Expanded(
+        body: username == null
+            ? const LoadingScreen()
+            : Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: ChatViewScreen.messages.length,
+                      itemBuilder: (context, index) {
+                        final message = ChatViewScreen.messages[index];
+                        final isSender = message['sender'] == username;
+                        return Padding(
+                          padding: isSender
+                              ? const EdgeInsets.only(
+                                  top: 10.0,
+                                  bottom: 10.0,
+                                  left: 40.0,
+                                  right: 10)
+                              : const EdgeInsets.only(
+                                  top: 10.0,
+                                  bottom: 10.0,
+                                  left: 10.0,
+                                  right: 40),
+                          child: Align(
+                            alignment: isSender
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
                             child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10.0, horizontal: 15.0),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(60),
-                                color: isLightTheme
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
+                                color: isSender
+                                    ? isLightTheme
+                                        ? GlobalColors.myMessageColor
+                                        : GlobalColors.primaryColor
+                                    : isLightTheme
+                                        ? Colors.grey[200]
+                                        : GlobalColors.otherDarkMessageColor,
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              child: TextField(
-                                maxLines: 4,
-                                minLines: 1,
-                                textInputAction: TextInputAction.newline,
-                                controller: messageController,
-                                onChanged: (value) {
-                                  setState(() {
-                                    isVoice = value.isEmpty;
-                                  });
-                                },
-                                focusNode: textFocusNode,
-                                decoration: InputDecoration(
-                                  hintText: 'Type a message...',
-                                  border: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.circular(60)),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                ),
-                                onTap: () {
-                                  isEmojiPickerVisible.value = false;
-                                },
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 5.0),
-                            child: Container(
-                              height: 50,
-                              width: 50,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(50),
-                                color: GlobalColors.primaryColor,
-                              ),
-                              child: isVoice
-                                  ? GestureDetector(
-                                      onLongPress: _startRecording,
-                                      onLongPressUp: _stopRecording,
-                                      child: CircleAvatar(
-                                        backgroundColor: _isRecording
-                                            ? GlobalColors.primaryColor
-                                            : GlobalColors.whiteColor,
-                                        child: Icon(Icons.mic,
-                                            color: _isRecording
-                                                ? Colors.white
-                                                : GlobalColors.primaryColor),
-                                      ),
-                                    )
-                                  : IconButton(
-                                      onPressed: () {
-                                        final message =
-                                            messageController.text.trim();
-                                        if (message.isNotEmpty) {
-                                          messageController.clear();
-                                        }
-                                      },
-                                      icon: Icon(
-                                        color: Colors.white,
-                                        isVoice ? Icons.mic : Icons.send,
-                                      ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isSender ? "Me" : fullnames,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: isLightTheme
+                                          ? Colors.black54
+                                          : Colors.white,
                                     ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    message['content']!,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 5.0),
+                                    child: Text(
+                                      formatDate(message['created_at']!),
+                                      textAlign: TextAlign.end,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: isEmojiPickerVisible,
+                    builder: (context, isVisible, child) {
+                      return Column(
+                        children: [
+                          if (isVisible)
+                            SizedBox(
+                                height: 250,
+                                child: EmojiPicker(
+                                  onBackspacePressed: () {},
+                                  onEmojiSelected: (category, emoji) {
+                                    setState(() {
+                                      isVoice = false;
+                                    });
+                                  },
+                                  textEditingController: messageController,
+                                  config: Config(
+                                    height: 256,
+                                    checkPlatformCompatibility: true,
+                                    emojiViewConfig: EmojiViewConfig(
+                                      backgroundColor: isLightTheme
+                                          ? GlobalColors.lightBackgroundColor
+                                          : Colors.black,
+                                      emojiSizeMax: 28 *
+                                          (foundation.defaultTargetPlatform ==
+                                                  TargetPlatform.iOS
+                                              ? 1.20
+                                              : 1.0),
+                                    ),
+                                    viewOrderConfig: const ViewOrderConfig(
+                                      top: EmojiPickerItem.searchBar,
+                                      middle: EmojiPickerItem.categoryBar,
+                                      bottom: EmojiPickerItem.emojiView,
+                                    ),
+                                    skinToneConfig: const SkinToneConfig(),
+                                    categoryViewConfig: CategoryViewConfig(
+                                        indicatorColor:
+                                            GlobalColors.primaryColor,
+                                        iconColorSelected:
+                                            GlobalColors.primaryColor,
+                                        backgroundColor: isLightTheme
+                                            ? GlobalColors.lightBackgroundColor
+                                            : Colors.black),
+                                    bottomActionBarConfig:
+                                        BottomActionBarConfig(
+                                            enabled: false,
+                                            buttonColor:
+                                                GlobalColors.primaryColor,
+                                            backgroundColor: isLightTheme
+                                                ? GlobalColors
+                                                    .lightBackgroundColor
+                                                : Colors.black),
+                                    searchViewConfig: SearchViewConfig(
+                                        backgroundColor: isLightTheme
+                                            ? GlobalColors.lightBackgroundColor
+                                            : Colors.black),
+                                  ),
+                                )),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 2, vertical: 5),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  onPressed: toggleEmojiPicker,
+                                  icon: isVisible
+                                      ? const Icon(Icons.keyboard)
+                                      : const Icon(
+                                          Icons.emoji_emotions_outlined),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.attachment),
+                                  onPressed: () =>
+                                      _showAttachmentOptions(context),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(60),
+                                      color: isLightTheme
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                    ),
+                                    child: TextField(
+                                      maxLines: 4,
+                                      minLines: 1,
+                                      textInputAction: TextInputAction.newline,
+                                      controller: messageController,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          isVoice = value.isEmpty;
+                                        });
+                                      },
+                                      focusNode: textFocusNode,
+                                      decoration: InputDecoration(
+                                        hintText: 'Type a message...',
+                                        border: OutlineInputBorder(
+                                            borderSide: BorderSide.none,
+                                            borderRadius:
+                                                BorderRadius.circular(60)),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 15),
+                                      ),
+                                      onTap: () {
+                                        isEmojiPickerVisible.value = false;
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 5.0),
+                                  child: Container(
+                                    height: 50,
+                                    width: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      color: GlobalColors.primaryColor,
+                                    ),
+                                    child: isVoice
+                                        ? GestureDetector(
+                                            onLongPress: _startRecording,
+                                            onLongPressUp: _stopRecording,
+                                            child: CircleAvatar(
+                                              backgroundColor: _isRecording
+                                                  ? GlobalColors.primaryColor
+                                                  : GlobalColors.whiteColor,
+                                              child: Icon(Icons.mic,
+                                                  color: _isRecording
+                                                      ? Colors.white
+                                                      : GlobalColors
+                                                          .primaryColor),
+                                            ),
+                                          )
+                                        : IconButton(
+                                            onPressed: () {
+                                              final message =
+                                                  messageController.text.trim();
+                                              sendMessage(message);
+
+                                              if (message.isNotEmpty) {
+                                                messageController.clear();
+                                              }
+                                            },
+                                            icon: Icon(
+                                              color: Colors.white,
+                                              isVoice ? Icons.mic : Icons.send,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
       ),
     );
   }
