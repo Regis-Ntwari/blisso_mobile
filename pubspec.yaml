@@ -52,6 +52,7 @@ dependencies:
   emoji_picker_flutter: ^4.2.0
   permission_handler: ^11.3.1
   flutter_sound: ^9.19.1
+  web_socket_channel: ^3.0.2
 
 dev_dependencies:
   flutter_test:

@@ -130,41 +130,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    itemBuilder: (context, index) {
-                      String username = _chats[index].keys.first;
-                      Map<String, Object> lastMessage =
-                          _chats[index].values.first[0];
-                      String? names = profileRef.getFullName(username);
-                      String? profilePicture =
-                          profileRef.getProfilePicture(username);
-                      return InkWell(
-                        onTap: () => chooseChat(username),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage:
-                                CachedNetworkImageProvider(profilePicture!),
+                  child: _chats.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No chats yet',
+                            style:
+                                TextStyle(color: GlobalColors.secondaryColor),
                           ),
-                          title: Text(
-                            names!,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(lastMessage['content'].toString()),
-                              Text(
-                                formatDate(
-                                    lastMessage['created_at'].toString()),
-                                style: const TextStyle(fontSize: 10),
+                        )
+                      : ListView.builder(
+                          itemBuilder: (context, index) {
+                            String username = _chats[index].keys.first;
+                            Map<String, Object> lastMessage =
+                                _chats[index].values.first[0];
+                            String? profilePicture =
+                                profileRef.getProfilePicture(username);
+                            return InkWell(
+                              onTap: () => chooseChat(username),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundImage: CachedNetworkImageProvider(
+                                      profilePicture!),
+                                ),
+                                title: Text(
+                                  username,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(lastMessage['content'].toString()),
+                                    Text(
+                                      formatDate(
+                                          lastMessage['created_at'].toString()),
+                                      style: const TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
+                            );
+                          },
+                          itemCount: _chats.length,
                         ),
-                      );
-                    },
-                    itemCount: _chats.length,
-                  ),
                 ),
               ],
             ),
