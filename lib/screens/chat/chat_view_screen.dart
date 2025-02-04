@@ -460,7 +460,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          leadingWidth: 25,
+          leadingWidth: 40,
           leading: Align(
             alignment: Alignment.center,
             child: Container(
