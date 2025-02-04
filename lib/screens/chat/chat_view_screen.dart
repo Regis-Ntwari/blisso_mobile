@@ -432,12 +432,26 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     return fullname;
   }
 
+  final ScrollController scrollController = ScrollController();
+
+  void scrollToBottom() {
+    if (scrollController.hasClients) {
+      print(scrollController.position.maxScrollExtent);
+      scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 50),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _initializeRecorder();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getMyUsername();
+      scrollToBottom();
     });
     messageControllerNotifier.value = messageController;
   }
@@ -447,6 +461,10 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
     final chatRef = ref.watch(chatServiceProviderImpl);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToBottom();
+    });
 
     dynamic messages;
 
@@ -525,6 +543,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                 children: [
                   Expanded(
                     child: ListView.builder(
+                      controller: scrollController,
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
                         final message = messages![index];
@@ -532,15 +551,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                         return Padding(
                           padding: isSender
                               ? const EdgeInsets.only(
-                                  top: 10.0,
-                                  bottom: 10.0,
-                                  left: 40.0,
-                                  right: 10)
+                                  top: 1.5, bottom: 1.5, left: 40.0, right: 10)
                               : const EdgeInsets.only(
-                                  top: 10.0,
-                                  bottom: 10.0,
-                                  left: 10.0,
-                                  right: 40),
+                                  top: 1.5, bottom: 1.5, left: 10.0, right: 40),
                           child: Align(
                             alignment: isSender
                                 ? Alignment.centerRight
@@ -556,28 +569,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                     : isLightTheme
                                         ? Colors.grey[200]
                                         : GlobalColors.otherDarkMessageColor,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  FutureBuilder<String>(
-                                    future: Future(
-                                        () => getChatFullName(widget.username)),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const Text('Loading...');
-                                      } else if (snapshot.hasError ||
-                                          !snapshot.hasData) {
-                                        return const Text('Unknown User');
-                                      } else {
-                                        return Text(
-                                          isSender ? "Me" : snapshot.data!,
-                                        );
-                                      }
-                                    },
-                                  ),
                                   // Text(
                                   //   isSender ? "Me" : fullnames!,
                                   //   style: TextStyle(
@@ -591,14 +587,17 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                   const SizedBox(height: 3),
                                   Text(
                                     message['content']!,
-                                    style: const TextStyle(fontSize: 14),
+                                    textAlign: TextAlign.justify,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.only(top: 5.0),
                                     child: Text(
                                       formatDate(message['created_at']!),
                                       textAlign: TextAlign.end,
-                                      style: const TextStyle(fontSize: 12),
+                                      style: const TextStyle(fontSize: 9),
                                     ),
                                   )
                                 ],
@@ -698,7 +697,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                           messageControllerNotifier,
                                       builder: (context, controller, child) {
                                         return TextField(
-                                          maxLines: 4,
+                                          maxLines: 3,
                                           minLines: 1,
                                           textInputAction:
                                               TextInputAction.newline,
@@ -759,6 +758,10 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
                                               if (message.isNotEmpty) {
                                                 messageController.clear();
+                                                WidgetsBinding.instance
+                                                    .addPostFrameCallback((_) {
+                                                  scrollToBottom();
+                                                });
                                               }
                                             },
                                             icon: Icon(

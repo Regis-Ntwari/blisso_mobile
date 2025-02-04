@@ -205,7 +205,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(lastMessage['content'].toString()),
+                                    Text(lastMessage['content']
+                                                .toString()
+                                                .length >
+                                            30
+                                        ? '${lastMessage['content'].toString().characters.take(30)}...'
+                                        : lastMessage['content'].toString()),
                                     Text(
                                       formatDate(
                                           lastMessage['created_at'].toString()),
