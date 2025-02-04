@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,21 +8,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class WebSocketNotifier extends StateNotifier<String> {
   final WebSocketService _webSocketService;
 
-  WebSocketNotifier(this._webSocketService) : super('');
+  WebSocketNotifier(this._webSocketService, this.ref) : super('');
 
-  void connect() {
-    _webSocketService.connect();
+  final Ref ref;
+
+  Future<void> connect() async {
+    await _webSocketService.connect();
   }
 
   void sendMessage(ChatMessageModel messageModel) {
     _webSocketService.sendMessage(messageModel);
-    state = 'Sent:';
+    ref.read(chatServiceProviderImpl.notifier).addMessage(messageModel.toMap());
+
+    state = 'Sent: ${messageModel.toMap()}';
   }
 
   void listenToMessages() {
     _webSocketService.messageStream.listen((message) {
-      state = 'Received: $message';
+      ref
+          .read(chatServiceProviderImpl.notifier)
+          .addMessageFromListen(jsonDecode(message));
     });
+    state = 'Received message ';
   }
 
   @override
@@ -36,5 +46,5 @@ final webSocketServiceProvider = Provider<WebSocketService>((ref) {
 final webSocketNotifierProvider =
     StateNotifierProvider<WebSocketNotifier, String>((ref) {
   final webSocketService = ref.watch(webSocketServiceProvider);
-  return WebSocketNotifier(webSocketService);
+  return WebSocketNotifier(webSocketService, ref);
 });

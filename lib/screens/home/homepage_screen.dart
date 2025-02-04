@@ -4,6 +4,7 @@ import 'package:blisso_mobile/screens/home/components/home_component.dart';
 import 'package:blisso_mobile/screens/home/components/search/search_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
+import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,14 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
     });
   }
 
+  Future<void> initializeSocket() async {
+    final webSocketState = ref.read(webSocketNotifierProvider.notifier);
+
+    await webSocketState.connect();
+
+    webSocketState.listenToMessages();
+  }
+
   Future<void> refetchProfiles() async {
     getProfiles();
   }
@@ -46,7 +55,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
   @override
   void initState() {
     super.initState();
-
+    initializeSocket();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getProfiles();
     });

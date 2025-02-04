@@ -1,6 +1,7 @@
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
+import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -26,18 +27,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return profileData.data;
   }
 
-  List<dynamic> _chats = [];
-
   void getAllChats() async {
-    final chatRef = ref.read(chatServiceProviderImpl.notifier);
+    final chatRef = ref.watch(chatServiceProviderImpl.notifier);
 
     await chatRef.getMessages();
-
-    final chats = ref.read(chatServiceProviderImpl);
-
-    setState(() {
-      _chats = chats.data;
-    });
   }
 
   final TextEditingController searchController = TextEditingController();
@@ -67,7 +60,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void chooseChat(String username) {
-    for (Map<String, dynamic> chat in _chats) {
+    final chatRef = ref.read(chatServiceProviderImpl);
+    for (Map<dynamic, dynamic> chat in chatRef.data) {
       if (chat.containsKey(username)) {
         print(chat[username]);
       }
@@ -75,11 +69,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Routemaster.of(context).push('/chat-detail/$username');
   }
 
+  Future<String> getChatFullName(String username) async {
+    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+
+    String fullname = await allUserRef.getFullName(username);
+
+    return fullname;
+  }
+
+  Future<String> getChatProfilePicture(String username) async {
+    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+
+    String fullname = await allUserRef.getProfilePicture(username);
+
+    return fullname;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      getAllChats();
+      Future(() => getAllChats());
     });
   }
 
@@ -87,8 +97,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     TextScaler scaler = MediaQuery.textScalerOf(context);
-    final profileRef = ref.read(profileServiceProviderImpl.notifier);
-    final chatRef = ref.read(chatServiceProviderImpl);
+    final chatRef = ref.watch(chatServiceProviderImpl);
+
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
@@ -130,7 +140,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
                 Expanded(
-                  child: _chats.isEmpty
+                  child: chatRef.data.isEmpty
                       ? Center(
                           child: Text(
                             'No chats yet',
@@ -140,22 +150,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         )
                       : ListView.builder(
                           itemBuilder: (context, index) {
-                            String username = _chats[index].keys.first;
-                            Map<String, Object> lastMessage =
-                                _chats[index].values.first[0];
-                            String? profilePicture =
-                                profileRef.getProfilePicture(username);
+                            String username = chatRef.data[index].keys.first;
+                            Map<String, dynamic> lastMessage =
+                                chatRef.data[index][username]![
+                                    chatRef.data[index][username]!.length - 1];
                             return InkWell(
                               onTap: () => chooseChat(username),
                               child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(
-                                      profilePicture!),
+                                leading: FutureBuilder<String>(
+                                  future: Future(
+                                      () => getChatProfilePicture(username)),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const CircleAvatar(
+                                        backgroundColor: Colors.grey,
+                                        child: Icon(Icons.person,
+                                            color: Colors.white),
+                                      );
+                                    } else if (snapshot.hasError ||
+                                        !snapshot.hasData) {
+                                      return const CircleAvatar(
+                                        backgroundColor: Colors.grey,
+                                        child: Icon(Icons.person,
+                                            color: Colors.white),
+                                      );
+                                    } else {
+                                      return CircleAvatar(
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                                snapshot.data!),
+                                      );
+                                    }
+                                  },
                                 ),
-                                title: Text(
-                                  username,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                title: FutureBuilder<String>(
+                                  future:
+                                      Future(() => getChatFullName(username)),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Text('----');
+                                    } else if (snapshot.hasError ||
+                                        !snapshot.hasData) {
+                                      return const Text('Unknown User');
+                                    } else {
+                                      return Text(
+                                        snapshot.data!,
+                                      );
+                                    }
+                                  },
                                 ),
                                 subtitle: Row(
                                   mainAxisAlignment:
@@ -172,7 +216,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ),
                             );
                           },
-                          itemCount: _chats.length,
+                          itemCount: chatRef.data.length,
                         ),
                 ),
               ],

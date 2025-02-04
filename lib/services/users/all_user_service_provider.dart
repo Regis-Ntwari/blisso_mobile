@@ -8,6 +8,21 @@ class AllUserServiceProvider extends StateNotifier<ApiState> {
 
   AllUserServiceProvider({required this.allUserService}) : super(ApiState());
 
+  Future<String> getFullName(String username) async {
+    if (state.data == null) {
+      await getAllUsers();
+    }
+
+    return state.data[username]['full_name'];
+  }
+
+  Future<String> getProfilePicture(String username) async {
+    if (state.data == null) {
+      await getAllUsers();
+    }
+    return state.data[username]['profile_picture_uri'];
+  }
+
   Future<void> getAllUsers() async {
     state = ApiState(isLoading: true);
 

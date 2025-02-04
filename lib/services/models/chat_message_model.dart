@@ -55,6 +55,7 @@ class ChatMessageModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'message_id': messageId,
       'sender': sender,
       'receiver': receiver,
       'content': content,
@@ -63,7 +64,7 @@ class ChatMessageModel {
       'is_file_included': isFileIncluded,
       'created_at': createdAt,
       'action': action,
-      'paarent_id': parentId
+      'parent_id': parentId
     };
   }
 
@@ -81,7 +82,7 @@ class ChatMessageModel {
         createdAt: map['created_at'] as String,
         senderReceiver: map['sender_receiver'],
         action: map['action'],
-        parentId: map['paarent_id'],
+        parentId: map['parent_id'],
         messageId: map['message_id']);
   }
 

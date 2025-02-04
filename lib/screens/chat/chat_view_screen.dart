@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
-import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
+import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -21,67 +24,13 @@ class ChatViewScreen extends ConsumerStatefulWidget {
   final String username;
   const ChatViewScreen({super.key, required this.username});
 
-  static final messages = [
-    {
-      "message_id": "678411084e42a3d29f83637b",
-      "content":
-          "How are you doing there? I am okay and well. We should meet these times and work together",
-      "sender": "ishimwehope@gmail.com",
-      "receiver": "niyibizischadrack@gmail.com",
-      "sender_receiver": "ishimwehope@gmail.com_niyibizischadrack@gmail.com",
-      "created_at": "2025-01-12T18:59:20.114Z"
-    },
-    {
-      "message_id": "678410f94e42a3d29f836379",
-      "content":
-          "I'm doing great! How about you?... you are very good I see... You have a lot of work to do",
-      "sender": "regis.ntwari.danny@gmail.com",
-      "receiver": "ishimwehope@gmail.com",
-      "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
-      "created_at": "2025-01-12T19:00:05.666Z"
-    },
-    {
-      "message_id": "678411084e42a3d29f83637b",
-      "content":
-          "How are you doing there? I am okay and well. We should meet these times and work together",
-      "sender": "ishimwehope@gmail.com",
-      "receiver": "niyibizischadrack@gmail.com",
-      "sender_receiver": "ishimwehope@gmail.com_niyibizischadrack@gmail.com",
-      "created_at": "2025-01-12T18:59:20.114Z"
-    },
-    {
-      "message_id": "678410f94e42a3d29f836379",
-      "content":
-          "I'm doing great! How about you?... you are very good I see... You have a lot of work to do",
-      "sender": "regis.ntwari.danny@gmail.com",
-      "receiver": "ishimwehope@gmail.com",
-      "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
-      "created_at": "2025-01-12T19:00:05.666Z"
-    },
-    {
-      "message_id": "678411084e42a3d29f83637b",
-      "content":
-          "How are you doing there? I am okay and well. We should meet these times and work together",
-      "sender": "ishimwehope@gmail.com",
-      "receiver": "niyibizischadrack@gmail.com",
-      "sender_receiver": "ishimwehope@gmail.com_niyibizischadrack@gmail.com",
-      "created_at": "2025-01-13T18:59:20.114Z"
-    },
-    {
-      "message_id": "678410f94e42a3d29f836379",
-      "content": "I'm ",
-      "sender": "regis.ntwari.danny@gmail.com",
-      "receiver": "ishimwehope@gmail.com",
-      "sender_receiver": "niyibizischadrack@gmail.com_ishimwehope@gmail.com",
-      "created_at": "2025-01-13T19:00:05.666Z"
-    },
-  ];
-
   @override
   ConsumerState<ChatViewScreen> createState() => _ChatViewScreenState();
 }
 
 class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
+  dynamic messages;
+
   bool isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year &&
         date1.month == date2.month &&
@@ -89,6 +38,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   }
 
   final TextEditingController messageController = TextEditingController();
+
+  final ValueNotifier<TextEditingController> messageControllerNotifier =
+      ValueNotifier<TextEditingController>(TextEditingController());
 
   final FocusNode textFocusNode = FocusNode();
   ValueNotifier<bool> isEmojiPickerVisible = ValueNotifier(false);
@@ -421,14 +373,63 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     });
   }
 
-  Future<void> sendMessage(String message) async {
+  String generateRandomString(int length) {
+    final random = Random();
+    const availableChars =
+        'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+    final randomString = List.generate(length, (index) {
+      final randomIndex = random.nextInt(availableChars.length);
+      return availableChars[randomIndex];
+    }).join();
+
+    return randomString;
+  }
+
+  String generate12ByteHexFromTimestamp(DateTime dateTime) {
+    // Convert DateTime to Unix timestamp in milliseconds
+    int timestamp = dateTime.millisecondsSinceEpoch;
+
+    // Convert timestamp (8 bytes) to hex
+    String hexTimestamp = timestamp.toRadixString(16).padLeft(16, '0');
+
+    // Generate 4 random bytes (8 hex characters)
+    final random = Random();
+    String randomHex = List.generate(
+        4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+
+    // Combine timestamp + random bytes (12 bytes = 24 hex characters)
+    return hexTimestamp + randomHex;
+  }
+
+  Future<void> sendTextMessage(String message) async {
     ChatMessageModel messageModel = ChatMessageModel(
+        messageId: generate12ByteHexFromTimestamp(DateTime.now()),
         sender: username!,
         receiver: widget.username,
-        action: 'CREATED',
+        action: 'created',
         content: message,
         isFileIncluded: false,
         createdAt: DateTime.now().toUtc().toIso8601String());
+
+    final messageRef = ref.read(webSocketNotifierProvider.notifier);
+
+    messageRef.sendMessage(messageModel);
+  }
+
+  Future<String> getChatFullName(String username) async {
+    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+
+    String fullname = await allUserRef.getFullName(username);
+
+    return fullname;
+  }
+
+  Future<String> getChatProfilePicture(String username) async {
+    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+
+    String fullname = await allUserRef.getProfilePicture(username);
+
+    return fullname;
   }
 
   @override
@@ -438,17 +439,22 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getMyUsername();
     });
+    messageControllerNotifier.value = messageController;
   }
 
   @override
   Widget build(BuildContext context) {
-    final profileRef = ref.read(profileServiceProviderImpl.notifier);
-
-    String? fullnames = profileRef.getFullName(widget.username);
-
-    String? profilePicture = profileRef.getProfilePicture(widget.username);
-
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
+    final chatRef = ref.watch(chatServiceProviderImpl);
+
+    dynamic messages;
+
+    for (var chat in chatRef.data) {
+      if (chat.containsKey(widget.username)) {
+        messages = chat[widget.username];
+      }
+    }
 
     return SafeArea(
       child: Scaffold(
@@ -472,12 +478,44 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
           ),
           title: Row(
             children: [
-              CircleAvatar(
-                backgroundImage: CachedNetworkImageProvider(profilePicture!),
+              FutureBuilder<String>(
+                future: Future(() => getChatProfilePicture(widget.username)),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircleAvatar(
+                      backgroundColor: Colors.grey,
+                      child: Icon(Icons.person, color: Colors.white),
+                    );
+                  } else if (snapshot.hasError || !snapshot.hasData) {
+                    return const CircleAvatar(
+                      backgroundColor: Colors.grey,
+                      child: Icon(Icons.person, color: Colors.white),
+                    );
+                  } else {
+                    return CircleAvatar(
+                      backgroundImage:
+                          CachedNetworkImageProvider(snapshot.data!),
+                    );
+                  }
+                },
               ),
               Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: Text(fullnames!)),
+                padding: const EdgeInsets.only(left: 5),
+                child: FutureBuilder<String>(
+                  future: Future(() => getChatFullName(widget.username)),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Text('Loading...');
+                    } else if (snapshot.hasError || !snapshot.hasData) {
+                      return const Text('Unknown User');
+                    } else {
+                      return Text(
+                        snapshot.data!,
+                      );
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -487,9 +525,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                 children: [
                   Expanded(
                     child: ListView.builder(
-                      itemCount: ChatViewScreen.messages.length,
+                      itemCount: messages.length,
                       itemBuilder: (context, index) {
-                        final message = ChatViewScreen.messages[index];
+                        final message = messages![index];
                         final isSender = message['sender'] == username;
                         return Padding(
                           padding: isSender
@@ -523,16 +561,33 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    isSender ? "Me" : fullnames,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                      color: isLightTheme
-                                          ? Colors.black54
-                                          : Colors.white,
-                                    ),
+                                  FutureBuilder<String>(
+                                    future: Future(
+                                        () => getChatFullName(widget.username)),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const Text('Loading...');
+                                      } else if (snapshot.hasError ||
+                                          !snapshot.hasData) {
+                                        return const Text('Unknown User');
+                                      } else {
+                                        return Text(
+                                          isSender ? "Me" : snapshot.data!,
+                                        );
+                                      }
+                                    },
                                   ),
+                                  // Text(
+                                  //   isSender ? "Me" : fullnames!,
+                                  //   style: TextStyle(
+                                  //     fontWeight: FontWeight.bold,
+                                  //     fontSize: 12,
+                                  //     color: isLightTheme
+                                  //         ? Colors.black54
+                                  //         : Colors.white,
+                                  //   ),
+                                  // ),
                                   const SizedBox(height: 3),
                                   Text(
                                     message['content']!,
@@ -637,29 +692,37 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                           ? Colors.grey[100]
                                           : Colors.grey[900],
                                     ),
-                                    child: TextField(
-                                      maxLines: 4,
-                                      minLines: 1,
-                                      textInputAction: TextInputAction.newline,
-                                      controller: messageController,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isVoice = value.isEmpty;
-                                        });
-                                      },
-                                      focusNode: textFocusNode,
-                                      decoration: InputDecoration(
-                                        hintText: 'Type a message...',
-                                        border: OutlineInputBorder(
-                                            borderSide: BorderSide.none,
-                                            borderRadius:
-                                                BorderRadius.circular(60)),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 15),
-                                      ),
-                                      onTap: () {
-                                        isEmojiPickerVisible.value = false;
+                                    child: ValueListenableBuilder<
+                                        TextEditingController>(
+                                      valueListenable:
+                                          messageControllerNotifier,
+                                      builder: (context, controller, child) {
+                                        return TextField(
+                                          maxLines: 4,
+                                          minLines: 1,
+                                          textInputAction:
+                                              TextInputAction.newline,
+                                          controller: messageController,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              isVoice = value.isEmpty;
+                                            });
+                                          },
+                                          focusNode: textFocusNode,
+                                          decoration: InputDecoration(
+                                            hintText: 'Type a message...',
+                                            border: OutlineInputBorder(
+                                                borderSide: BorderSide.none,
+                                                borderRadius:
+                                                    BorderRadius.circular(60)),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 15),
+                                          ),
+                                          onTap: () {
+                                            isEmojiPickerVisible.value = false;
+                                          },
+                                        );
                                       },
                                     ),
                                   ),
@@ -692,7 +755,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                             onPressed: () {
                                               final message =
                                                   messageController.text.trim();
-                                              sendMessage(message);
+                                              sendTextMessage(message);
 
                                               if (message.isNotEmpty) {
                                                 messageController.clear();

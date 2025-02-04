@@ -1,6 +1,5 @@
 import 'package:blisso_mobile/services/api_state.dart';
 import 'package:blisso_mobile/services/chat/chat_service.dart';
-import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,40 +12,85 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     state = ApiState(isLoading: true);
 
     try {
-      final allUsersState = ref.read(allUserServiceProviderImpl);
-
-      dynamic users;
-      if (allUsersState.data == null) {
-        await ref.read(allUserServiceProviderImpl.notifier).getAllUsers();
-        users = ref.read(allUserServiceProviderImpl).data;
-      } else {
-        users = allUsersState.data;
-      }
-
-      print(users);
       final chatService = ref.read(chatServiceProvider);
       final messages = await chatService.getAllMyMessages();
 
-      if (!StatusCodes.codes.contains(messages.statusCode) ||
-          !StatusCodes.codes.contains(users.statusCode)) {
+      if (!StatusCodes.codes.contains(messages.statusCode)) {
         state = ApiState(isLoading: false, error: messages.errorMessage);
       } else {
-        List<Map<String, List<dynamic>>> updatedMessages =
-            messages.result.map((messageMap) {
-          return messageMap.map((email, messageList) {
-            String fullName = users.result[email]?["full_name"] ?? email;
-            return MapEntry(fullName, messageList);
-          });
-        }).toList();
-
-        state = ApiState(
-            isLoading: false,
-            data: updatedMessages,
-            statusCode: messages.statusCode);
+        try {
+          state = ApiState(
+              isLoading: false,
+              data: messages.result,
+              statusCode: messages.statusCode);
+        } catch (e) {}
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());
     }
+  }
+
+  void addMessage(dynamic message) {
+    List<Map<String, dynamic>> updatedChats =
+        List.from(state.data); // Create a new list copy
+
+    bool isUpdated = false;
+
+    for (var chat in updatedChats) {
+      if (chat.containsKey(message['receiver'])) {
+        chat[message['receiver']] = List.from(chat[message['receiver']]!)
+          ..add(message);
+        isUpdated = true;
+        break;
+      }
+    }
+
+    if (!isUpdated) {
+      updatedChats.add({
+        message['receiver']: [message]
+      });
+    }
+
+    state = ApiState(isLoading: false, data: updatedChats);
+  }
+
+  void addMessageFromListen(dynamic message) {
+    print(message);
+    List<Map<String, dynamic>> updatedChats =
+        List.from(state.data); // Create a new list copy
+
+    bool isUpdated = false;
+
+    for (var chat in updatedChats) {
+      if (chat.containsKey(message['sender'])) {
+        chat[message['sender']] = List.from(chat[message['sender']]!)
+          ..add(message);
+        isUpdated = true;
+        break;
+      }
+    }
+
+    if (!isUpdated) {
+      updatedChats.add({
+        message['sender']: [message]
+      });
+    }
+
+    state = ApiState(isLoading: false, data: updatedChats);
+  }
+
+  Future<List<dynamic>> getUserMessages(String username) async {
+    if (state.data == null) {
+      await getMessages();
+    }
+
+    for (var chat in state.data) {
+      if (chat.containsKey(username)) {
+        return chat[username];
+      }
+    }
+
+    return [];
   }
 }
 
