@@ -299,16 +299,16 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                         return Padding(
                           padding: isSender
                               ? const EdgeInsets.only(
-                                  top: 1.5, bottom: 1.5, left: 40.0, right: 10)
+                                  top: 1.5, bottom: 1.5, left: 80.0, right: 10)
                               : const EdgeInsets.only(
-                                  top: 1.5, bottom: 1.5, left: 10.0, right: 40),
+                                  top: 1.5, bottom: 1.5, left: 10.0, right: 80),
                           child: Align(
                             alignment: isSender
                                 ? Alignment.centerRight
                                 : Alignment.centerLeft,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 10.0, horizontal: 15.0),
+                                  vertical: 5.0, horizontal: 10.0),
                               decoration: BoxDecoration(
                                 color: isSender
                                     ? isLightTheme
