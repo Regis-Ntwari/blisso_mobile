@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:blisso_mobile/services/models/api_response.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
@@ -18,8 +17,10 @@ class ApiService {
   }
 
   Future<ApiResponse> _processRequest(Response response) async {
-    final data = response.body;
-    final decodedData = jsonDecode(data);
+    final Uint8List bodyBytes = response.bodyBytes;
+    final String utf8DecodedBody = utf8.decode(bodyBytes);
+
+    final decodedData = jsonDecode(utf8DecodedBody);
 
     try {
       if (StatusCodes.codes.contains(decodedData['status_code'])) {
@@ -33,7 +34,6 @@ class ApiService {
             statusCode: decodedData['status_code']);
       }
     } catch (e) {
-      debugPrint(' test process request ${e.toString()}');
       return ApiResponse.failure(
           errorMessage: decodedData['message'],
           statusCode: decodedData['status_code']);

@@ -16,7 +16,8 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with AutomaticKeepAliveClientMixin {
   dynamic getUserFromUsername(String username) async {
     final profileRef = ref.read(profileServiceProviderImpl.notifier);
 
@@ -63,10 +64,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatRef = ref.read(chatServiceProviderImpl);
     for (Map<dynamic, dynamic> chat in chatRef.data) {
       if (chat.containsKey(username)) {
-        print(chat[username]);
+        Routemaster.of(context).push('/chat-detail/$username');
       }
     }
-    Routemaster.of(context).push('/chat-detail/$username');
   }
 
   Future<String> getChatFullName(String username) async {
@@ -88,14 +88,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    //getAllChats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future(() => getAllChats());
+      if (ref.read(chatServiceProviderImpl).data == null) {
+        Future(() => getAllChats()); // Fetch only if data is null
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final chatRef = ref.watch(chatServiceProviderImpl);
@@ -243,4 +245,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           )),
     ));
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
