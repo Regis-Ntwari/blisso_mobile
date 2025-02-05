@@ -2,18 +2,17 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/screens/chat/attachments/attachment_modal.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:routemaster/routemaster.dart';
@@ -114,256 +113,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     }
   }
 
-  void _showAttachmentOptions(BuildContext context) {
-    double width = MediaQuery.sizeOf(context).width;
-    showModalBottomSheet(
-      constraints: BoxConstraints(maxHeight: 200, maxWidth: width * 0.8),
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            final picker = ImagePicker();
-                            final pickedFile = await picker.pickImage(
-                                source: ImageSource.gallery);
-                            if (pickedFile != null) {
-                              setState(() {
-                                pickedImage = File(pickedFile.path);
-                              });
-                              _showImageWithCaption(context, pickedImage!);
-                            }
-                          },
-                          child: const CircleAvatar(
-                            child: Icon(Icons.photo),
-                          ),
-                        ),
-                        const Text('Photo')
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            final picker = ImagePicker();
-                            final pickedFile = await picker.pickVideo(
-                                source: ImageSource.gallery);
-                            if (pickedFile != null) {
-                              setState(() {
-                                pickedImage = File(pickedFile.path);
-                              });
-                              _showImageWithCaption(context, pickedImage!);
-                            }
-                          },
-                          child: CircleAvatar(
-                            backgroundColor: GlobalColors.secondaryColor,
-                            child: const Icon(Icons.video_collection),
-                          ),
-                        ),
-                        const Text('Video')
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            FilePickerResult? result = await FilePicker.platform
-                                .pickFiles(
-                                    type: FileType.custom,
-                                    allowedExtensions: ['mp3', 'wav', 'mp4']);
-
-                            if (result != null) {
-                              File files = File(result.files.single.path!);
-                              print(files.path);
-                              PlatformFile file = result.files.first;
-
-                              print(file.name);
-                              print(file.bytes);
-                              print(file.size);
-                              print(file.extension);
-                              print(file.path);
-                            } else {
-                              // User canceled the picker
-                            }
-                          },
-                          child: CircleAvatar(
-                            backgroundColor: Colors.green[700],
-                            child: const Icon(Icons.audio_file),
-                          ),
-                        ),
-                        const Text('Audio')
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            FilePickerResult? result = await FilePicker.platform
-                                .pickFiles(
-                                    type: FileType.custom,
-                                    allowedExtensions: [
-                                  'pdf',
-                                  'doc',
-                                  'docx',
-                                  'pptx',
-                                  'ppt',
-                                  'xlsx',
-                                  'xls',
-                                  'xml',
-                                ]);
-
-                            if (result != null) {
-                              File files = File(result.files.single.path!);
-                              print(files.path);
-                              PlatformFile file = result.files.first;
-
-                              print(file.name);
-                              print(file.bytes);
-                              print(file.size);
-                              print(file.extension);
-                              print(file.path);
-                            } else {
-                              // User canceled the picker
-                            }
-                          },
-                          child: const CircleAvatar(
-                            backgroundColor: GlobalColors.primaryColor,
-                            child: Icon(Icons.file_copy),
-                          ),
-                        ),
-                        const Text('Document')
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            final picker = ImagePicker();
-                            final pickedFile = await picker.pickImage(
-                                source: ImageSource.camera);
-                            if (pickedFile != null) {
-                              setState(() {
-                                takenPicture = File(pickedFile.path);
-                              });
-                              _showImageWithCaption(context, takenPicture!);
-                            }
-                          },
-                          child: CircleAvatar(
-                            backgroundColor: Colors.blue[700],
-                            child: const Icon(Icons.camera_alt),
-                          ),
-                        ),
-                        const Text('Take Picture')
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showImageWithCaption(BuildContext context, File image) {
-    TextEditingController captionController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Flexible(
-                      child: Image.file(
-                        image,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: captionController,
-                            maxLines: 2,
-                            minLines: 1,
-                            decoration: const InputDecoration(
-                              hintText: "Add a caption...",
-                              border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(60)),
-                                  borderSide: BorderSide.none),
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 10),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.send,
-                              color: GlobalColors.primaryColor,
-                            ))
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-      },
-    );
-  }
-
   String? username;
   Future<void> getMyUsername() async {
     await SharedPreferencesService.getPreference('username').then((use) {
@@ -436,7 +185,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   void scrollToBottom() {
     if (scrollController.hasClients) {
-      print(scrollController.position.maxScrollExtent);
       scrollController.animateTo(
         scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 50),
@@ -574,16 +322,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Text(
-                                  //   isSender ? "Me" : fullnames!,
-                                  //   style: TextStyle(
-                                  //     fontWeight: FontWeight.bold,
-                                  //     fontSize: 12,
-                                  //     color: isLightTheme
-                                  //         ? Colors.black54
-                                  //         : Colors.white,
-                                  //   ),
-                                  // ),
                                   const SizedBox(height: 3),
                                   Text(
                                     message['content']!,
@@ -681,7 +419,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.attachment),
                                   onPressed: () =>
-                                      _showAttachmentOptions(context),
+                                      showAttachmentOptions(context),
                                 ),
                                 Expanded(
                                   child: Container(

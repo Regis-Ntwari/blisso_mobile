@@ -88,6 +88,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    //getAllChats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future(() => getAllChats());
     });
@@ -140,7 +141,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
                 Expanded(
-                  child: chatRef.data.isEmpty
+                  child: chatRef.data == null || chatRef.data.isEmpty
                       ? Center(
                           child: Text(
                             'No chats yet',
