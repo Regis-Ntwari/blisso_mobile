@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:blisso_mobile/screens/chat/attachments/file_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/image_modal.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,7 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AttachmentModal extends StatefulWidget {
-  const AttachmentModal({super.key});
+  final String sender;
+  final String receiver;
+  const AttachmentModal(
+      {super.key, required this.sender, required this.receiver});
 
   @override
   State<AttachmentModal> createState() => _AttachmentModalState();
@@ -40,7 +44,8 @@ class _AttachmentModalState extends State<AttachmentModal> {
                           setState(() {
                             pickedImage = File(pickedFile.path);
                           });
-                          showImageWithCaption(context, pickedImage!);
+                          showImageWithCaption(context, pickedImage!,
+                              widget.sender, widget.receiver);
                         }
                       },
                       child: const CircleAvatar(
@@ -61,7 +66,8 @@ class _AttachmentModalState extends State<AttachmentModal> {
                           setState(() {
                             pickedImage = File(pickedFile.path);
                           });
-                          showImageWithCaption(context, pickedImage!);
+                          showImageWithCaption(context, pickedImage!,
+                              widget.sender, widget.receiver);
                         }
                       },
                       child: CircleAvatar(
@@ -78,6 +84,8 @@ class _AttachmentModalState extends State<AttachmentModal> {
                       onTap: () async {
                         FilePickerResult? result = await FilePicker.platform
                             .pickFiles(
+                                withData: true,
+                                allowMultiple: false,
                                 type: FileType.custom,
                                 allowedExtensions: ['mp3', 'wav', 'mp4']);
 
@@ -115,6 +123,8 @@ class _AttachmentModalState extends State<AttachmentModal> {
                         FilePickerResult? result = await FilePicker.platform
                             .pickFiles(
                                 type: FileType.custom,
+                                withData: true,
+                                allowMultiple: false,
                                 allowedExtensions: [
                               'pdf',
                               'doc',
@@ -127,17 +137,12 @@ class _AttachmentModalState extends State<AttachmentModal> {
                             ]);
 
                         if (result != null) {
-                          File files = File(result.files.single.path!);
-                          print(files.path);
                           PlatformFile file = result.files.first;
 
-                          print(file.name);
-                          print(file.bytes);
-                          print(file.size);
-                          print(file.extension);
-                          print(file.path);
+                          showFileModal(
+                              context, widget.sender, widget.receiver, file);
                         } else {
-                          // User canceled the picker
+                          Navigator.of(context).pop();
                         }
                       },
                       child: const CircleAvatar(
@@ -159,7 +164,8 @@ class _AttachmentModalState extends State<AttachmentModal> {
                           setState(() {
                             takenPicture = File(pickedFile.path);
                           });
-                          showImageWithCaption(context, takenPicture!);
+                          showImageWithCaption(context, takenPicture!,
+                              widget.sender, widget.receiver);
                         }
                       },
                       child: CircleAvatar(
@@ -179,7 +185,8 @@ class _AttachmentModalState extends State<AttachmentModal> {
   }
 }
 
-void showAttachmentOptions(BuildContext context) {
+void showAttachmentOptions(
+    BuildContext context, String sender, String receiver) {
   double width = MediaQuery.sizeOf(context).width;
   showModalBottomSheet(
     constraints: BoxConstraints(maxHeight: 200, maxWidth: width * 0.8),
@@ -188,7 +195,10 @@ void showAttachmentOptions(BuildContext context) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return const AttachmentModal();
+      return AttachmentModal(
+        sender: sender,
+        receiver: receiver,
+      );
     },
   );
 }

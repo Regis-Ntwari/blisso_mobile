@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/attachment_modal.dart';
+import 'package:blisso_mobile/screens/chat/utils/message_view.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -323,13 +324,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 3),
-                                  Text(
-                                    message['content']!,
-                                    textAlign: TextAlign.justify,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
-                                  ),
+                                  MessageView(message: message),
                                   Padding(
                                     padding: const EdgeInsets.only(top: 5.0),
                                     child: Text(
@@ -418,8 +413,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.attachment),
-                                  onPressed: () =>
-                                      showAttachmentOptions(context),
+                                  onPressed: () => showAttachmentOptions(
+                                      context, username!, widget.username),
                                 ),
                                 Expanded(
                                   child: Container(

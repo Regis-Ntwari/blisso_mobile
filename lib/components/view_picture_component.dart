@@ -76,7 +76,6 @@ class _ViewPictureComponentState extends ConsumerState<ViewPictureComponent> {
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.sizeOf(context).width;
     final profileRef = ref.watch(myProfileServiceProviderImpl);
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Dialog(
@@ -86,7 +85,7 @@ class _ViewPictureComponentState extends ConsumerState<ViewPictureComponent> {
         children: [
           ClipRect(
             child: SizedBox(
-              width: width * 0.95,
+              width: double.infinity,
               child: InteractiveViewer(
                 minScale: 1.0,
                 maxScale: 3.0,
