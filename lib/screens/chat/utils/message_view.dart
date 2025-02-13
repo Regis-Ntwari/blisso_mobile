@@ -7,56 +7,13 @@ import 'package:blisso_mobile/screens/utils/video_player.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:get_thumbnail_video/index.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
-import 'package:get_thumbnail_video/video_thumbnail.dart';
 
 class MessageView extends StatelessWidget {
   final dynamic message;
   const MessageView({super.key, required this.message});
-
-  Future<String?> generateThumbnailFile(Uint8List bytes) async {
-    try {
-      Directory tempDir = await getTemporaryDirectory();
-      String videoPath = '${tempDir.path}/temp_video.mp4';
-      File videoFile = File(videoPath);
-      await videoFile.writeAsBytes(bytes);
-
-      // Step 2: Generate a thumbnail
-      XFile? thumbPath = await VideoThumbnail.thumbnailFile(
-        video: videoPath,
-        thumbnailPath: tempDir.path,
-        imageFormat: ImageFormat.JPEG,
-        maxHeight: 200, // Set thumbnail size
-        quality: 75,
-      );
-
-      return thumbPath.path;
-    } catch (e) {
-      debugPrint("Error generating thumbnail: $e");
-      return null;
-    }
-  }
-
-  Future<String?> generateThumbnailNetwork(String url) async {
-    try {
-      final thumbnail = await VideoThumbnail.thumbnailFile(
-        video: url,
-        thumbnailPath: (await getTemporaryDirectory()).path,
-        imageFormat: ImageFormat.JPEG,
-        maxHeight:
-            100, // specify the height of the thumbnail, let the width auto-scaled to keep the source aspect ratio
-        quality: 75,
-      );
-
-      return thumbnail.path;
-    } catch (e) {
-      debugPrint("Error generating thumbnail: $e");
-      return null;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
