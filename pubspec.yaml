@@ -58,7 +58,6 @@ dependencies:
   dio: ^5.8.0+1
   video_player: ^2.9.2
   chewie: ^1.10.0
-  get_thumbnail_video: ^0.7.3
 
 dev_dependencies:
   flutter_test:
