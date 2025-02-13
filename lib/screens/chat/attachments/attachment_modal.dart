@@ -1,25 +1,68 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:blisso_mobile/screens/chat/attachments/file_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/image_modal.dart';
+import 'package:blisso_mobile/services/models/chat_message_model.dart';
+import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-class AttachmentModal extends StatefulWidget {
+class AttachmentModal extends ConsumerStatefulWidget {
   final String sender;
   final String receiver;
   const AttachmentModal(
       {super.key, required this.sender, required this.receiver});
 
   @override
-  State<AttachmentModal> createState() => _AttachmentModalState();
+  ConsumerState<AttachmentModal> createState() => _AttachmentModalState();
 }
 
-class _AttachmentModalState extends State<AttachmentModal> {
+class _AttachmentModalState extends ConsumerState<AttachmentModal> {
   File? pickedImage;
   File? takenPicture;
+
+  String generate12ByteHexFromTimestamp(DateTime dateTime) {
+    int timestamp = dateTime.millisecondsSinceEpoch;
+
+    String hexTimestamp = timestamp.toRadixString(16).padLeft(16, '0');
+
+    final random = Random();
+    String randomHex = List.generate(
+        4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+
+    return hexTimestamp + randomHex;
+  }
+
+  void sendMessage(File file) async {
+    String extension = file.path.split('.').last;
+    try {
+      List<int> bytes = file.readAsBytesSync();
+      String base64Bytes = base64Encode(bytes);
+      ChatMessageModel messageModel = ChatMessageModel(
+          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+          contentFileType: 'video/$extension',
+          contentFile: base64Bytes,
+          sender: widget.sender,
+          receiver: widget.receiver,
+          action: 'created',
+          content: '',
+          isFileIncluded: true,
+          createdAt: DateTime.now().toUtc().toIso8601String());
+
+      final messageRef = ref.read(webSocketNotifierProvider.notifier);
+
+      messageRef.sendMessage(messageModel);
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +106,13 @@ class _AttachmentModalState extends State<AttachmentModal> {
                         final pickedFile =
                             await picker.pickVideo(source: ImageSource.gallery);
                         if (pickedFile != null) {
-                          setState(() {
-                            pickedImage = File(pickedFile.path);
-                          });
-                          showImageWithCaption(context, pickedImage!,
+                          // setState(() {
+                          //   pickedImage = File(pickedFile.path);
+                          // });
+                          showImageWithCaption(context, File(pickedFile.path),
                               widget.sender, widget.receiver);
+
+                          sendMessage(File(pickedFile.path));
                         }
                       },
                       child: CircleAvatar(
@@ -87,7 +132,10 @@ class _AttachmentModalState extends State<AttachmentModal> {
                                 withData: true,
                                 allowMultiple: false,
                                 type: FileType.custom,
-                                allowedExtensions: ['mp3', 'wav', 'mp4']);
+                                allowedExtensions: [
+                              'mp3',
+                              'wav',
+                            ]);
 
                         if (result != null) {
                           File files = File(result.files.single.path!);

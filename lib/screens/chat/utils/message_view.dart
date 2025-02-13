@@ -3,16 +3,60 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blisso_mobile/components/view_picture_component.dart';
+import 'package:blisso_mobile/screens/utils/video_player.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:get_thumbnail_video/index.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:get_thumbnail_video/video_thumbnail.dart';
 
 class MessageView extends StatelessWidget {
   final dynamic message;
   const MessageView({super.key, required this.message});
+
+  Future<String?> generateThumbnailFile(Uint8List bytes) async {
+    try {
+      Directory tempDir = await getTemporaryDirectory();
+      String videoPath = '${tempDir.path}/temp_video.mp4';
+      File videoFile = File(videoPath);
+      await videoFile.writeAsBytes(bytes);
+
+      // Step 2: Generate a thumbnail
+      XFile? thumbPath = await VideoThumbnail.thumbnailFile(
+        video: videoPath,
+        thumbnailPath: tempDir.path,
+        imageFormat: ImageFormat.JPEG,
+        maxHeight: 200, // Set thumbnail size
+        quality: 75,
+      );
+
+      return thumbPath.path;
+    } catch (e) {
+      debugPrint("Error generating thumbnail: $e");
+      return null;
+    }
+  }
+
+  Future<String?> generateThumbnailNetwork(String url) async {
+    try {
+      final thumbnail = await VideoThumbnail.thumbnailFile(
+        video: url,
+        thumbnailPath: (await getTemporaryDirectory()).path,
+        imageFormat: ImageFormat.JPEG,
+        maxHeight:
+            100, // specify the height of the thumbnail, let the width auto-scaled to keep the source aspect ratio
+        quality: 75,
+      );
+
+      return thumbnail.path;
+    } catch (e) {
+      debugPrint("Error generating thumbnail: $e");
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,28 +106,34 @@ class MessageView extends StatelessWidget {
 
                       // Download file
                       try {
-                        print("Downloading file to: $savePath");
+                        debugPrint("Downloading file to: $savePath");
                         await Dio()
                             .download(message['content_file_url'], savePath);
 
                         // Check if the file exists
                         if (await File(savePath).exists()) {
-                          print("File downloaded successfully at $savePath");
+                          debugPrint(
+                              "File downloaded successfully at $savePath");
 
                           final result = await OpenFilex.open(savePath);
 
-                          print(result.type);
-                          print(result.message);
+                          debugPrint(result.type.toString());
+                          debugPrint(result.message);
                         } else {
-                          print("File not found at $savePath");
+                          debugPrint("File not found at $savePath");
                         }
                       } catch (e) {
-                        print("Error downloading file: $e");
+                        debugPrint("Error downloading file: $e");
                       }
                     },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [Icon(Icons.file_copy), Text('document')],
+                    child: Column(
+                      children: [
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [Icon(Icons.file_copy), Text('document')],
+                        ),
+                        Text(message['content'])
+                      ],
                     ),
                   )
                 : InkWell(
@@ -91,23 +141,36 @@ class MessageView extends StatelessWidget {
                       Directory tempDir = await getTemporaryDirectory();
                       String tempFilePath =
                           '${tempDir.path}/${DateTime.now()}.${message['content_file_type'].toString().split('/')[1]}';
-                      print(tempFilePath);
                       File tempFile = File(tempFilePath);
                       await tempFile
                           .writeAsBytes(base64Decode(message['content_file']));
                       await OpenFilex.open(tempFilePath);
                     },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [Icon(Icons.file_copy), Text('document')],
+                    child: Column(
+                      children: [
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [Icon(Icons.file_copy), Text('document')],
+                        ),
+                        message['content'] == ''
+                            ? const SizedBox.shrink()
+                            : Padding(
+                                padding: const EdgeInsets.only(top: 1.0),
+                                child: Text(message['content']),
+                              )
+                      ],
                     ),
                   )
-            : Text(
-                message['content']!,
-                textAlign: TextAlign.justify,
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
-              );
+            : message['content_file_type'].toString().startsWith('video/')
+                ? VideoPlayer(
+                    message: message,
+                  )
+                : Text(
+                    message['content']!,
+                    textAlign: TextAlign.justify,
+                    style: const TextStyle(
+                      fontSize: 14,
+                    ),
+                  );
   }
 }

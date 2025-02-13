@@ -17,7 +17,8 @@ class HomepageScreen extends ConsumerStatefulWidget {
   ConsumerState<HomepageScreen> createState() => _HomepageScreenState();
 }
 
-class _HomepageScreenState extends ConsumerState<HomepageScreen> {
+class _HomepageScreenState extends ConsumerState<HomepageScreen>
+    with AutomaticKeepAliveClientMixin {
   bool isSearchVisible = false;
 
   int _selectedScreenIndex = 0;
@@ -28,12 +29,17 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
 
   dynamic profiles;
 
+  @override
+  bool get wantKeepAlive => true;
+
   Future<void> getProfiles() async {
     final state = ref.read(profileServiceProviderImpl.notifier);
 
-    await state.getAllProfiles();
+    if (ref.read(profileServiceProviderImpl).data == null) {
+      await state.getAllProfiles();
+    }
 
-    final profilesState = ref.watch(profileServiceProviderImpl);
+    final profilesState = ref.read(profileServiceProviderImpl);
 
     setState(() {
       profiles = profilesState.data;
@@ -57,7 +63,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
     super.initState();
     initializeSocket();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      getProfiles();
+      if (profiles == null) {
+        getProfiles();
+      }
     });
   }
 
@@ -117,6 +125,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     final profilesState = ref.watch(profileServiceProviderImpl);
@@ -179,7 +188,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen> {
         selectedIconTheme:
             const IconThemeData(color: GlobalColors.primaryColor),
       ),
-      body: profilesState.isLoading || profilesState.data == null
+      body: profilesState.isLoading
           ? const LoadingScreen()
           : SafeArea(
               child: CustomScrollView(

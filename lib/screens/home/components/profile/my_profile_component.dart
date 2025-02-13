@@ -20,7 +20,8 @@ class MyProfileComponent extends ConsumerStatefulWidget {
   ConsumerState<MyProfileComponent> createState() => _MyProfileComponentState();
 }
 
-class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
+class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
+    with AutomaticKeepAliveClientMixin {
   String firstname = '';
   String lastname = '';
   String profilePicture = '';
@@ -96,12 +97,18 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent> {
     super.initState();
     getNames();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      fetchMyProfile();
+      if (ref.read(myProfileServiceProviderImpl).data == null) {
+        fetchMyProfile();
+      }
     });
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
