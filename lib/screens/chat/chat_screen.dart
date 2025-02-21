@@ -168,8 +168,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                         ConnectionState.waiting) {
                                       return const CircleAvatar(
                                         backgroundColor: Colors.grey,
-                                        child: Icon(Icons.person,
-                                            color: Colors.white),
+                                        child: CircularProgressIndicator(
+                                          color: GlobalColors.primaryColor,
+                                        ),
                                       );
                                     } else if (snapshot.hasError ||
                                         !snapshot.hasData) {
@@ -193,7 +194,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
-                                      return const Text('----');
+                                      return const Text('Loading...');
                                     } else if (snapshot.hasError ||
                                         !snapshot.hasData) {
                                       return const Text('Unknown User');
