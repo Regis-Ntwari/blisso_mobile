@@ -153,22 +153,41 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   }
 
   Future<void> sendTextMessage(String message) async {
-    ChatMessageModel messageModel = ChatMessageModel(
-        messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-        parentId: replyMessage != null
-            ? replyMessage['message_id']
-            : '000000000000000000000000',
-        parentContent: replyMessage != null ? replyMessage['content'] : '',
-        sender: username!,
-        receiver: widget.username,
-        action: 'created',
-        content: message,
-        isFileIncluded: false,
-        createdAt: DateTime.now().toUtc().toIso8601String());
+    ChatMessageModel messageModel;
+    if (editMessage == null) {
+      messageModel = ChatMessageModel(
+          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+          parentId: replyMessage != null
+              ? replyMessage['message_id']
+              : '000000000000000000000000',
+          parentContent: replyMessage != null ? replyMessage['content'] : '',
+          sender: username!,
+          receiver: widget.username,
+          action: 'created',
+          content: message,
+          isFileIncluded: false,
+          createdAt: DateTime.now().toUtc().toIso8601String());
+    } else {
+      messageModel = ChatMessageModel(
+          messageId: editMessage['message_id'],
+          parentId: editMessage['parent_id'],
+          parentContent: editMessage['parent_content'],
+          sender: editMessage['sender'],
+          receiver: editMessage['receiver'],
+          action: 'edited',
+          content: message,
+          isFileIncluded: editMessage['is_file_included'],
+          createdAt: editMessage['created_at']);
+    }
 
     final messageRef = ref.read(webSocketNotifierProvider.notifier);
 
     messageRef.sendMessage(messageModel);
+
+    setState(() {
+      editMessage = null;
+      replyMessage = null;
+    });
   }
 
   Future<void> deleteTextMessage(dynamic deletedMessage) async {
@@ -237,6 +256,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     chatProfilePicture = await getChatProfilePicture(widget.username);
     setState(() {}); // Trigger a rebuild with loaded data
   }
+
+  dynamic editMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +341,14 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                         context,
                                         () =>
                                             deleteTextMessage(selectedMessage),
-                                        () {})
+                                        () {
+                                        messageController.text =
+                                            selectedMessage['content'];
+                                        Navigator.of(context).pop();
+                                        setState(() {
+                                          editMessage = selectedMessage;
+                                        });
+                                      })
                                     : null;
                               },
                               onHorizontalDragUpdate: (details) {

@@ -28,7 +28,10 @@ class _MessageOptionState extends State<MessageOption> {
                 ),
               ),
               InkWell(
-                onTap: () => widget.onDelete(),
+                onTap: () {
+                  widget.onDelete();
+                  Navigator.of(context).pop();
+                },
                 child: const ListTile(
                   leading: Icon(Icons.delete),
                   title: Text('Delete'),
