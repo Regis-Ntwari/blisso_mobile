@@ -14,6 +14,7 @@ class ChatMessageModel {
   String? senderReceiver;
   final String createdAt;
   String? parentId;
+  String? parentContent;
 
   ChatMessageModel(
       {required this.sender,
@@ -27,6 +28,7 @@ class ChatMessageModel {
       required this.action,
       this.contentFile,
       this.parentId,
+      this.parentContent,
       this.senderReceiver});
 
   ChatMessageModel copyWith(
@@ -41,7 +43,8 @@ class ChatMessageModel {
       String? createdAt,
       String? messageId,
       String? parentId,
-      String? senderReceiver}) {
+      String? senderReceiver,
+      String? parentContent}) {
     return ChatMessageModel(
         sender: sender ?? this.sender,
         receiver: receiver ?? this.receiver,
@@ -54,7 +57,8 @@ class ChatMessageModel {
         senderReceiver: senderReceiver ?? this.senderReceiver,
         action: action ?? this.action,
         parentId: parentId ?? this.parentId,
-        messageId: messageId ?? this.messageId);
+        messageId: messageId ?? this.messageId,
+        parentContent: parentContent ?? this.parentContent);
   }
 
   Map<String, dynamic> toMap() {
@@ -69,7 +73,8 @@ class ChatMessageModel {
       'content_file': contentFile,
       'created_at': createdAt,
       'action': action,
-      'parent_id': parentId
+      'parent_id': parentId,
+      'parent_content': parentContent
     };
   }
 
@@ -80,19 +85,20 @@ class ChatMessageModel {
         content: map['content'] as String,
         contentFileUrl: map['content_file_url'] != null
             ? map['content_file_url'] as String
-            : null,
+            : '',
         contentFileType: map['content_file_type'] != null
             ? map['content_file_type'] as String
-            : null,
+            : '',
         contentFile: map['content_file_type'] != null
             ? map['content_file_type'] as String
-            : null,
+            : '',
         isFileIncluded: map['is_file_included'] as bool,
         createdAt: map['created_at'] as String,
         senderReceiver: map['sender_receiver'],
         action: map['action'],
         parentId: map['parent_id'],
-        messageId: map['message_id']);
+        messageId: map['message_id'],
+        parentContent: map['parent_content']);
   }
 
   String toJson() => json.encode(toMap());

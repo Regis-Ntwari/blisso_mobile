@@ -31,21 +31,62 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
   }
 
   void addMessage(dynamic message) {
+    // List<Map<String, dynamic>> updatedChats =
+    //     List.from(state.data); // Create a new list copy
+
+    // bool isUpdated = false;
+
+    // for (var chat in updatedChats) {
+    //   if (chat.containsKey(message['receiver'])) {
+    //     chat[message['receiver']] = List.from(chat[message['receiver']]!)
+    //       ..add(message);
+    //     isUpdated = true;
+    //     break;
+    //   }
+    // }
+
+    // if (!isUpdated) {
+    //   updatedChats.add({
+    //     message['receiver']: [message]
+    //   });
+    // }
+
+    // state = ApiState(isLoading: false, data: updatedChats);
+
     List<Map<String, dynamic>> updatedChats =
-        List.from(state.data); // Create a new list copy
+        List.from(state.data); // Copy list
 
     bool isUpdated = false;
 
     for (var chat in updatedChats) {
       if (chat.containsKey(message['receiver'])) {
-        chat[message['receiver']] = List.from(chat[message['receiver']]!)
-          ..add(message);
-        isUpdated = true;
+        List messages = List.from(chat[message['receiver']]!);
+
+        if (message['action'] == 'edited') {
+          for (int i = 0; i < messages.length; i++) {
+            if (messages[i]['message_id'] == message['message_id']) {
+              messages[i] = message;
+              isUpdated = true;
+              break;
+            }
+          }
+        } else if (message['action'] == 'deleted') {
+          messages
+              .removeWhere((msg) => msg['message_id'] == message['message_id']);
+          isUpdated = true;
+        } else {
+          messages.add(message);
+          isUpdated = true;
+        }
+
+        chat[message['receiver']] = messages;
         break;
       }
     }
 
-    if (!isUpdated) {
+    if (!isUpdated &&
+        message['action'] != 'edited' &&
+        message['action'] != 'deleted') {
       updatedChats.add({
         message['receiver']: [message]
       });
@@ -55,22 +96,62 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
   }
 
   void addMessageFromListen(dynamic message) {
-    print(message);
+    // List<Map<String, dynamic>> updatedChats =
+    //     List.from(state.data); // Create a new list copy
+
+    // bool isUpdated = false;
+
+    // for (var chat in updatedChats) {
+    //   if (chat.containsKey(message['sender'])) {
+    //     chat[message['sender']] = List.from(chat[message['sender']]!)
+    //       ..add(message);
+    //     isUpdated = true;
+    //     break;
+    //   }
+    // }
+
+    // if (!isUpdated) {
+    //   updatedChats.add({
+    //     message['sender']: [message]
+    //   });
+    // }
+
+    // state = ApiState(isLoading: false, data: updatedChats);
+
     List<Map<String, dynamic>> updatedChats =
-        List.from(state.data); // Create a new list copy
+        List.from(state.data); // Copy list
 
     bool isUpdated = false;
 
     for (var chat in updatedChats) {
       if (chat.containsKey(message['sender'])) {
-        chat[message['sender']] = List.from(chat[message['sender']]!)
-          ..add(message);
-        isUpdated = true;
+        List messages = List.from(chat[message['sender']]!);
+
+        if (message['action'] == 'edited') {
+          for (int i = 0; i < messages.length; i++) {
+            if (messages[i]['message_id'] == message['message_id']) {
+              messages[i] = message;
+              isUpdated = true;
+              break;
+            }
+          }
+        } else if (message['action'] == 'deleted') {
+          messages
+              .removeWhere((msg) => msg['message_id'] == message['message_id']);
+          isUpdated = true;
+        } else {
+          messages.add(message);
+          isUpdated = true;
+        }
+
+        chat[message['sender']] = messages;
         break;
       }
     }
 
-    if (!isUpdated) {
+    if (!isUpdated &&
+        message['action'] != 'edited' &&
+        message['action'] != 'deleted') {
       updatedChats.add({
         message['sender']: [message]
       });

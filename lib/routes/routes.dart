@@ -16,6 +16,7 @@ import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
 import 'package:blisso_mobile/screens/utils/autowrite_screen.dart';
+import 'package:blisso_mobile/screens/utils/video_player_screen.dart';
 import 'package:blisso_mobile/screens/welcome/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
@@ -56,6 +57,11 @@ class Routing {
     '/chat-detail/:username': (route) => MaterialPage(
             child: ChatViewScreen(
           username: route.pathParameters['username']!,
+        )),
+    '/video-player': (route) => MaterialPage(
+            child: VideoPlayerScreen(
+          videoUrl: route.queryParameters['videoUrl'],
+          bytes: route.queryParameters['bytes'],
         ))
   });
 }
