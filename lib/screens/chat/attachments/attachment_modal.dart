@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:blisso_mobile/screens/chat/attachments/audio_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/file_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/image_modal.dart';
+import 'package:blisso_mobile/screens/chat/attachments/video_modal.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -109,10 +111,13 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                           // setState(() {
                           //   pickedImage = File(pickedFile.path);
                           // });
-                          showImageWithCaption(context, File(pickedFile.path),
-                              widget.sender, widget.receiver);
+                          // showImageWithCaption(context, File(pickedFile.path),
+                          //     widget.sender, widget.receiver);
 
-                          sendMessage(File(pickedFile.path));
+                          //sendMessage(File(pickedFile.path));
+
+                          ShowVideoWithCaption(context, File(pickedFile.path),
+                              widget.sender, widget.receiver);
                         }
                       },
                       child: CircleAvatar(
@@ -138,15 +143,10 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                             ]);
 
                         if (result != null) {
-                          File files = File(result.files.single.path!);
-                          print(files.path);
                           PlatformFile file = result.files.first;
 
-                          print(file.name);
-                          print(file.bytes);
-                          print(file.size);
-                          print(file.extension);
-                          print(file.path);
+                          ShowAudioWithCaption(context, File(file.path!),
+                              widget.sender, widget.receiver);
                         } else {
                           // User canceled the picker
                         }

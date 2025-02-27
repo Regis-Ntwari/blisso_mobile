@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,9 +5,9 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 
 class VideoPlayer extends StatefulWidget {
-  final dynamic message;
+  final File videoFile;
 
-  const VideoPlayer({super.key, required this.message});
+  const VideoPlayer({super.key, required this.videoFile});
 
   @override
   State<VideoPlayer> createState() => _VideoPlayerWidgetState();
@@ -17,7 +16,6 @@ class VideoPlayer extends StatefulWidget {
 class _VideoPlayerWidgetState extends State<VideoPlayer> {
   VideoPlayerController? _controller;
   ChewieController? _chewieController;
-  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -28,10 +26,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayer> {
   @override
   void didUpdateWidget(covariant VideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    if (widget.message['content_file_url'] !=
-            oldWidget.message['content_file_url'] ||
-        widget.message['content_file'] != oldWidget.message['content_file']) {
+    if (widget.videoFile.path != oldWidget.videoFile.path) {
       _disposeControllers();
       _initializeVideo();
     }
@@ -39,93 +34,43 @@ class _VideoPlayerWidgetState extends State<VideoPlayer> {
 
   Future<void> _initializeVideo() async {
     try {
-      if (widget.message['content_file_url'] != null &&
-          widget.message['content_file_url'].toString().startsWith('https')) {
-        _controller = VideoPlayerController.networkUrl(
-          Uri.parse(widget.message['content_file_url']),
-        );
-      } else if (widget.message['content_file'] != null) {
-        // Decode and save video bytes as a temporary file
-        debugPrint("In else if");
-        String tempPath =
-            '${(await Directory.systemTemp.createTemp()).path}/temp_video.mp4';
-        File tempFile = File(tempPath);
-        await tempFile
-            .writeAsBytes(base64Decode(widget.message['content_file']!));
-        _controller = VideoPlayerController.file(tempFile);
-      } else {
-        debugPrint("In Else");
-        return; // No valid video source
-      }
-
+      _controller = VideoPlayerController.file(widget.videoFile);
       await _controller!.initialize();
+      _chewieController = ChewieController(
+        videoPlayerController: _controller!,
+        autoPlay: false,
+        looping: false,
+        showControls: true,
+      );
 
-      setState(() {
-        _chewieController = ChewieController(
-          videoPlayerController: _controller!,
-          autoPlay: false,
-          looping: false,
-          showControls: false,
-        );
-      });
+      setState(() {});
     } catch (e) {
       debugPrint("Error initializing video: $e");
     }
   }
 
   void _disposeControllers() {
-    // _controller?.dispose();
-    // _chewieController?.dispose();
+    _controller?.dispose();
+    _chewieController?.dispose();
+    _controller = null;
+    _chewieController = null;
   }
 
   @override
   void dispose() {
-    // _disposeControllers();
+    _disposeControllers();
     super.dispose();
-  }
-
-  void _togglePlayPause() {
-    if (_controller == null) return;
-
-    setState(() {
-      if (_controller!.value.isPlaying) {
-        _controller!.pause();
-        _isPlaying = false;
-      } else {
-        _controller!.play();
-        _isPlaying = true;
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        _chewieController == null) {
+    if (_controller == null || !_controller!.value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _chewieController = ChewieController(
-            videoPlayerController: _controller!,
-            autoPlay: false,
-            looping: false,
-            showControls: true,
-          );
-        });
-      },
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AspectRatio(
-            aspectRatio: _controller!.value.aspectRatio,
-            child: Chewie(controller: _chewieController!),
-          ),
-        ],
-      ),
+    return AspectRatio(
+      aspectRatio: _controller!.value.aspectRatio,
+      child: Chewie(controller: _chewieController!),
     );
   }
 }

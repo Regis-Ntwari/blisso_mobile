@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blisso_mobile/components/view_picture_component.dart';
+import 'package:blisso_mobile/screens/utils/audio_player.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -132,45 +133,69 @@ class MessageView extends StatelessWidget {
                   )
             : message['content_file_type'].toString().startsWith('video/')
                 ? message['content_file_url'].toString().startsWith('https')
-                    ? InkWell(
-                        onTap: () {
-                          Routemaster.of(context).push(
-                              '/video-player?videoUrl=${Uri.encodeComponent(message['content_file_url'])}&bytes=${Uri.encodeComponent(message['content'])}');
-                        },
-                        child: Container(
-                          height: 300,
-                          color: Colors.black,
-                          child: const Align(
-                            alignment: Alignment.center,
-                            child: Icon(Icons.play_arrow,
-                                color: Colors.white, size: 30),
-                          ),
-                        ),
-                      )
-                    : InkWell(
-                        onTap: () {
-                          Routemaster.of(context).push(
-                              '/video-player?videoUrl=${Uri.encodeComponent(message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(message['content_file'])}');
-                        },
-                        child: Container(
-                          height: 300,
-                          color: Colors.black,
-                          child: const Align(
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 30,
+                    ? Wrap(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              Routemaster.of(context).push(
+                                  '/video-player?videoUrl=${Uri.encodeComponent(message['content_file_url'])}&bytes=${Uri.encodeComponent(message['content'])}');
+                            },
+                            child: Container(
+                              height: 300,
+                              color: Colors.black,
+                              child: const Align(
+                                alignment: Alignment.center,
+                                child: Icon(Icons.play_arrow,
+                                    color: Colors.white, size: 30),
+                              ),
                             ),
                           ),
-                        ),
+                          Text(
+                            message['content']!,
+                            textAlign: TextAlign.justify,
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          )
+                        ],
                       )
-                : Text(
-                    message['content']!,
-                    textAlign: TextAlign.justify,
-                    style: const TextStyle(
-                      fontSize: 14,
-                    ),
-                  );
+                    : Wrap(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              Routemaster.of(context).push(
+                                  '/video-player?videoUrl=${Uri.encodeComponent(message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(message['content_file'])}');
+                            },
+                            child: Container(
+                              height: 300,
+                              color: Colors.black,
+                              child: const Align(
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            message['content']!,
+                            textAlign: TextAlign.justify,
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          )
+                        ],
+                      )
+                : message['content_file_type'].toString().startsWith('audio/')
+                    ? AudioPlayer(message: message)
+                    : Text(
+                        message['content']!,
+                        textAlign: TextAlign.justify,
+                        style: const TextStyle(
+                          fontSize: 14,
+                        ),
+                      );
   }
 }

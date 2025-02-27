@@ -2,29 +2,27 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:blisso_mobile/screens/utils/video_player.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:routemaster/routemaster.dart';
 
-class VideoModal extends ConsumerStatefulWidget {
+class AudioModal extends ConsumerStatefulWidget {
+  final File audio;
   final String sender;
   final String receiver;
-  final File video;
-  const VideoModal(
+  const AudioModal(
       {super.key,
+      required this.audio,
       required this.sender,
-      required this.receiver,
-      required this.video});
+      required this.receiver});
 
   @override
-  ConsumerState<VideoModal> createState() => _VideoModalState();
+  ConsumerState<AudioModal> createState() => _AudioModalState();
 }
 
-class _VideoModalState extends ConsumerState<VideoModal> {
+class _AudioModalState extends ConsumerState<AudioModal> {
   TextEditingController captionController = TextEditingController();
 
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
@@ -40,13 +38,13 @@ class _VideoModalState extends ConsumerState<VideoModal> {
   }
 
   void sendMessage() async {
-    String extension = widget.video.path.split('.').last;
+    String extension = widget.audio.path.split('.').last;
     try {
-      List<int> bytes = widget.video.readAsBytesSync();
+      List<int> bytes = widget.audio.readAsBytesSync();
       String base64Bytes = base64Encode(bytes);
       ChatMessageModel messageModel = ChatMessageModel(
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-          contentFileType: 'video/$extension',
+          contentFileType: 'audio/$extension',
           contentFile: base64Bytes,
           sender: widget.sender,
           receiver: widget.receiver,
@@ -88,7 +86,18 @@ class _VideoModalState extends ConsumerState<VideoModal> {
                 ],
               ),
               const Divider(height: 1),
-              VideoPlayer(videoFile: widget.video),
+              InkWell(
+                onTap: () {},
+                child: Container(
+                  height: 100,
+                  color: Colors.black,
+                  child: const Align(
+                    alignment: Alignment.center,
+                    child:
+                        Icon(Icons.play_arrow, color: Colors.white, size: 30),
+                  ),
+                ),
+              ),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 10),
@@ -126,8 +135,8 @@ class _VideoModalState extends ConsumerState<VideoModal> {
   }
 }
 
-void ShowVideoWithCaption(
-    BuildContext context, File video, String sender, String receiver) {
+void ShowAudioWithCaption(
+    BuildContext context, File audio, String sender, String receiver) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -135,8 +144,8 @@ void ShowVideoWithCaption(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return VideoModal(
-        video: video,
+      return AudioModal(
+        audio: audio,
         sender: sender,
         receiver: receiver,
       );

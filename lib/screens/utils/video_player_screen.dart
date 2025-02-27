@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:routemaster/routemaster.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -72,7 +71,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           backgroundColor: Colors.black,
           leading: IconButton(
             onPressed: () {
-              Routemaster.of(context).pop();
+              Navigator.of(context).pop();
             },
             icon: const Icon(Icons.keyboard_arrow_left),
             color: Colors.white,

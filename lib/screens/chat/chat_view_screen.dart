@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -95,7 +96,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   Future<void> _startRecording() async {
     Directory tempDir = Directory.systemTemp;
     String path = "${tempDir.path}/recording.aac";
-    await _recorder.startRecorder(toFile: path);
+    await _recorder.startRecorder(toFile: path, codec: Codec.aacADTS);
     setState(() {
       _isRecording = true;
     });
@@ -108,10 +109,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     });
 
     if (path != null) {
-      // Send or handle the recorded audio file
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Audio saved at $path")),
-      );
+      sendVoiceMessage(path);
     }
   }
 
@@ -188,6 +186,33 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       editMessage = null;
       replyMessage = null;
     });
+  }
+
+  Future<void> sendVoiceMessage(String path) async {
+    String extension = path.split('.').last;
+    File file = File(path);
+    try {
+      List<int> bytes = file.readAsBytesSync();
+      String base64Bytes = base64Encode(bytes);
+      ChatMessageModel messageModel = ChatMessageModel(
+          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+          contentFileType: 'audio/$extension',
+          contentFile: base64Bytes,
+          sender: username!,
+          receiver: widget.username,
+          action: 'created',
+          content: '',
+          isFileIncluded: true,
+          createdAt: DateTime.now().toUtc().toIso8601String());
+
+      final messageRef = ref.read(webSocketNotifierProvider.notifier);
+
+      messageRef.sendMessage(messageModel);
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   Future<void> deleteTextMessage(dynamic deletedMessage) async {
@@ -479,7 +504,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                         width: double.infinity,
                                         padding: const EdgeInsets.symmetric(
                                             vertical: 10, horizontal: 10),
-                                        color: Colors.grey[300],
+                                        color: isLightTheme
+                                            ? Colors.grey[300]
+                                            : Colors.grey[800],
                                         child: Stack(
                                           alignment: Alignment.center,
                                           children: [
@@ -546,51 +573,60 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                           context, username!, widget.username),
                                     ),
                                     Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(60),
-                                          color: isLightTheme
-                                              ? Colors.grey[100]
-                                              : Colors.grey[900],
-                                        ),
-                                        child: ValueListenableBuilder<
-                                            TextEditingController>(
-                                          valueListenable:
-                                              messageControllerNotifier,
-                                          builder:
-                                              (context, controller, child) {
-                                            return TextField(
-                                              maxLines: 3,
-                                              minLines: 1,
-                                              textInputAction:
-                                                  TextInputAction.newline,
-                                              controller: messageController,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  isVoice = value.isEmpty;
-                                                });
-                                              },
-                                              focusNode: textFocusNode,
-                                              decoration: InputDecoration(
-                                                hintText: 'Type a message...',
-                                                border: OutlineInputBorder(
-                                                    borderSide: BorderSide.none,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            60)),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 15),
+                                      child: _isRecording
+                                          ? const Text('Recording...')
+                                          : Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(60),
+                                                color: isLightTheme
+                                                    ? Colors.grey[100]
+                                                    : Colors.grey[900],
                                               ),
-                                              onTap: () {
-                                                isEmojiPickerVisible.value =
-                                                    false;
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ),
+                                              child: ValueListenableBuilder<
+                                                  TextEditingController>(
+                                                valueListenable:
+                                                    messageControllerNotifier,
+                                                builder: (context, controller,
+                                                    child) {
+                                                  return TextField(
+                                                    maxLines: 3,
+                                                    minLines: 1,
+                                                    textInputAction:
+                                                        TextInputAction.newline,
+                                                    controller:
+                                                        messageController,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        isVoice = value.isEmpty;
+                                                      });
+                                                    },
+                                                    focusNode: textFocusNode,
+                                                    decoration: InputDecoration(
+                                                      hintText:
+                                                          'Type a message...',
+                                                      border:
+                                                          OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide
+                                                                      .none,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          60)),
+                                                      contentPadding:
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 15),
+                                                    ),
+                                                    onTap: () {
+                                                      isEmojiPickerVisible
+                                                          .value = false;
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.only(left: 5.0),
