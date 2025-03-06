@@ -158,7 +158,21 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
           parentId: replyMessage != null
               ? replyMessage['message_id']
               : '000000000000000000000000',
-          parentContent: replyMessage != null ? replyMessage['content'] : '',
+          parentContent: replyMessage != null
+              ? replyMessage['content_file_type']
+                      .toString()
+                      .startsWith('image/')
+                  ? 'image'
+                  : replyMessage['content_file_type']
+                          .toString()
+                          .startsWith('video/')
+                      ? 'video'
+                      : replyMessage['content_file_type']
+                              .toString()
+                              .startsWith('audio/')
+                          ? 'audio'
+                          : replyMessage['content']
+              : '',
           sender: username!,
           receiver: widget.username,
           action: 'created',
@@ -209,7 +223,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
       messageRef.sendMessage(messageModel);
 
-      Navigator.of(context).pop();
+      //Navigator.of(context).pop();
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -253,6 +267,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     }
   }
 
+  final Map<String, GlobalKey> _messageKeys = {};
   @override
   void initState() {
     super.initState();
@@ -270,6 +285,22 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   double dragDistance = 0;
 
   Map<int, double> dragDistances = {};
+
+  void _scrollToParent(String parentId) {
+    final key = _messageKeys[parentId];
+    if (key != null) {
+      // Find the context of the widget using the key
+      final context = key.currentContext;
+      if (context != null) {
+        // Scroll to the widget
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
 
   String? chatFullName;
   String? chatProfilePicture;
@@ -299,6 +330,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     for (var chat in chatRef.data) {
       if (chat.containsKey(widget.username)) {
         messages = chat[widget.username];
+        // for (var message in messages) {
+        //   _messageKeys[message['message_id']] = GlobalKey();
+        // }
       }
     }
 
@@ -415,7 +449,10 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      MessageView(message: message),
+                                      MessageView(
+                                        message: message,
+                                        scrollToParent: _scrollToParent,
+                                      ),
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(top: 5.0),
