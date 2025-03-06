@@ -211,6 +211,24 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       ChatMessageModel messageModel = ChatMessageModel(
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'audio/$extension',
+          parentId: replyMessage != null
+              ? replyMessage['message_id']
+              : '000000000000000000000000',
+          parentContent: replyMessage != null
+              ? replyMessage['content_file_type']
+                      .toString()
+                      .startsWith('image/')
+                  ? 'image'
+                  : replyMessage['content_file_type']
+                          .toString()
+                          .startsWith('video/')
+                      ? 'video'
+                      : replyMessage['content_file_type']
+                              .toString()
+                              .startsWith('audio/')
+                          ? 'audio'
+                          : replyMessage['content']
+              : '',
           contentFile: base64Bytes,
           sender: username!,
           receiver: widget.username,
