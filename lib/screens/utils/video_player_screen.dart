@@ -7,6 +7,7 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class VideoPlayerScreen extends StatefulWidget {
   final String? videoUrl;
@@ -48,10 +49,41 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
   }
 
-  void _initializeVideoFromUrl(String videoUrl) {
-    _videoPlayerController =
-        VideoPlayerController.networkUrl(Uri.parse(videoUrl));
-    _videoPlayerController!.initialize().then((_) => _createChewieController());
+  void _initializeVideoFromUrl(String videoUrl) async {
+    // Use Application Documents Directory for persistent storage
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final videoDir = Directory('${appDocDir.path}/video');
+
+    // Create "video" folder if it doesn't exist
+    if (!await videoDir.exists()) {
+      await videoDir.create(recursive: true);
+    }
+
+    final fileName = widget.videoUrl?.split('/').last;
+    final filePath = '${videoDir.path}/$fileName';
+    final file = File(filePath);
+
+    if (await file.exists()) {
+      // Play from local file
+      _videoPlayerController = VideoPlayerController.file(file);
+    } else {
+      // Download video
+      final response = await http.get(Uri.parse(widget.videoUrl!));
+      if (response.statusCode == 200) {
+        await file.writeAsBytes(response.bodyBytes);
+        _videoPlayerController = VideoPlayerController.file(file);
+      } else {
+        throw Exception("Failed to download video");
+      }
+    }
+
+    // Initialize player and create Chewie controller
+    await _videoPlayerController!.initialize();
+    _createChewieController();
+    setState(() {});
+    // _videoPlayerController =
+    //     VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+    // _videoPlayerController!.initialize().then((_) => _createChewieController());
   }
 
   void _createChewieController() {

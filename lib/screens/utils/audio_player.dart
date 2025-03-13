@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class AudioPlayer extends StatefulWidget {
   final dynamic message;
@@ -24,6 +27,8 @@ class _AudioPlayerState extends State<AudioPlayer> {
   }
 
   Future<void> _playAudio() async {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final audioDir = Directory('${appDocDir.path}/audio');
     if (widget.message['content_file'] != null) {
       await _player!.startPlayer(
           fromDataBuffer: base64Decode(widget.message['content_file']!),
@@ -31,21 +36,74 @@ class _AudioPlayerState extends State<AudioPlayer> {
             setState(() => isPlaying = false);
           });
     } else if (widget.message['content_file_url'] != null ||
-        widget.message['content_file_url'] == '') {
-      await _player!.startPlayer(
-          fromURI: widget.message['content_file_url']!,
+        !(widget.message['content_file_url'] == '')) {
+      final fileName = widget.message['content_file_url']!.split('/').last;
+      final filePath = '${audioDir.path}/$fileName';
+      final file = File(filePath);
+
+      if (!await audioDir.exists()) {
+        await audioDir.create(recursive: true);
+      }
+
+      if (await file.exists()) {
+        // Play from local file
+        await _player!.startPlayer(
+          fromDataBuffer: file.readAsBytesSync(),
           whenFinished: () {
             setState(() => isPlaying = false);
-          });
+          },
+        );
+      } else {
+        // Download audio and save it
+        final response =
+            await http.get(Uri.parse(widget.message['content_file_url']!));
+        if (response.statusCode == 200) {
+          await file.writeAsBytes(response.bodyBytes);
+          await _player!.startPlayer(
+            fromDataBuffer: file.readAsBytesSync(),
+            whenFinished: () {
+              setState(() => isPlaying = false);
+            },
+          );
+        } else {
+          throw Exception("Failed to download audio");
+        }
+      }
     }
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _listenAudioProgress();
+    });
     setState(() => isPlaying = true);
 
-    _playerSubscription = _player?.onProgress!.listen((event) {
-      setState(() {
-        sliderValue = event.position.inMilliseconds.toDouble();
-        audioDuration = event.duration.inMilliseconds.toDouble();
-      });
+    // Listen for progress updates
+    // _player?.onProgress?.listen((event) {
+    //   setState(() {
+    //     sliderValue = event.position.inMilliseconds.toDouble();
+    //     audioDuration = event.duration.inMilliseconds.toDouble();
+    //   });
+    // });
+  }
+
+  void _listenAudioProgress() {
+    debugPrint("Starting to listen for audio progress...");
+
+    _playerSubscription?.cancel();
+    _playerSubscription = _player?.dispositionStream()?.listen((event) {
+      debugPrint("Progress Event Received!");
+      if (mounted) {
+        debugPrint("Updating UI...");
+        setState(() {
+          sliderValue = event.position.inMilliseconds.toDouble();
+          audioDuration = event.duration.inMilliseconds.toDouble();
+          debugPrint("Slider Value: $sliderValue, Duration: $audioDuration");
+        });
+      }
     });
+
+    if (_playerSubscription == null) {
+      debugPrint("dispositionStream() is not emitting events!");
+    }
   }
 
   Future<void> _pauseAudio() async {
@@ -70,12 +128,13 @@ class _AudioPlayerState extends State<AudioPlayer> {
   @override
   void dispose() {
     super.dispose();
-    _player!.closePlayer();
     _playerSubscription?.cancel();
+    _player!.closePlayer();
   }
 
   @override
   Widget build(BuildContext context) {
+    print(sliderValue);
     return Row(
       children: [
         IconButton(
@@ -85,12 +144,10 @@ class _AudioPlayerState extends State<AudioPlayer> {
             child: Slider(
           value: sliderValue,
           onChanged: (value) {
-            setState(() {
-              sliderValue = value;
-            });
+            setState(() => sliderValue = value);
           },
-          onChangeEnd: (value) {
-            _player!.seekToPlayer(Duration(milliseconds: value.toInt()));
+          onChangeEnd: (value) async {
+            await _player!.seekToPlayer(Duration(milliseconds: value.toInt()));
           },
           min: 0.0,
           max: audioDuration > 0 ? audioDuration : 1.0,

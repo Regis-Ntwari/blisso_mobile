@@ -27,18 +27,22 @@ class _MessageViewState extends State<MessageView> {
   String? username;
   Future<void> getMyUsername() async {
     await SharedPreferencesService.getPreference('username').then((use) {
-      setState(() {
-        username = use;
-      });
+      if (mounted) {
+        setState(() {
+          username = use;
+        });
+      }
     });
   }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getMyUsername();
-    });
+    if (username == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        getMyUsername();
+      });
+    }
   }
 
   @override
