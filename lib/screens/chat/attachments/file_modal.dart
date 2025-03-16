@@ -50,6 +50,7 @@ class _FileModalState extends ConsumerState<FileModal> {
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'file/$extension',
           contentFile: base64Bytes,
+          parentId: '000000000000000000000000',
           sender: widget.sender,
           receiver: widget.receiver,
           action: 'created',

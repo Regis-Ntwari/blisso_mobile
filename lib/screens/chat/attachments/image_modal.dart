@@ -47,6 +47,7 @@ class _ImageModalState extends ConsumerState<ImageModal> {
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'image/$extension',
           contentFile: base64Bytes,
+          parentId: '000000000000000000000000',
           sender: widget.sender,
           receiver: widget.receiver,
           action: 'created',

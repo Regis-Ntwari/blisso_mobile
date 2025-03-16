@@ -48,6 +48,7 @@ class _AudioModalState extends ConsumerState<AudioModal> {
           contentFile: base64Bytes,
           sender: widget.sender,
           receiver: widget.receiver,
+          parentId: '000000000000000000000000',
           action: 'created',
           content: captionController.text,
           isFileIncluded: true,

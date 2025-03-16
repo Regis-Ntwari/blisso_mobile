@@ -47,6 +47,7 @@ class _VideoModalState extends ConsumerState<VideoModal> {
       ChatMessageModel messageModel = ChatMessageModel(
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'video/$extension',
+          parentId: '000000000000000000000000',
           contentFile: base64Bytes,
           sender: widget.sender,
           receiver: widget.receiver,

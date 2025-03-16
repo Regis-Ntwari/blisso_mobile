@@ -49,6 +49,7 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'video/$extension',
           contentFile: base64Bytes,
+          parentId: '000000000000000000000000',
           sender: widget.sender,
           receiver: widget.receiver,
           action: 'created',
