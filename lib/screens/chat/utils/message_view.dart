@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:blisso_mobile/components/view_picture_bytes_component.dart';
 import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/screens/utils/audio_player.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -111,6 +112,11 @@ class _MessageViewState extends State<MessageView> {
                         )
                       : const SizedBox.shrink(),
                   InkWell(
+                    onTap: () {
+                      showPictureBytesDialog(
+                          context: context,
+                          image: widget.message['content_file']);
+                    },
                     child: Image.memory(Uint8List.fromList(
                         base64Decode(widget.message['content_file']))),
                   ),

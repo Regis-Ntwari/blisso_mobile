@@ -59,7 +59,7 @@ class _ShortStoryPlayerState extends State<ShortStoryPlayer> {
               )
             : SizedBox.expand(
                 child: FittedBox(
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   child: SizedBox(
                     width: _controller.value.size.width,
                     height: _controller.value.size.height,
