@@ -15,16 +15,23 @@ class _ExploreComponentState extends State<ExploreComponent> {
       id: '1',
       username: 'user1',
       videoUrl:
-          'https://d500.d2mefast.net/tb/f/fc/benson_boone_beautiful_things_official_music_video_h264_51110.mp4',
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
       description: 'Check out this cool video!',
     ),
     ShortStoryModel(
       id: '2',
       username: 'user2',
-      videoUrl: 'https://d500.d2mefast.net/tb/3/c4/squabble_up_h264_51181.mp4',
+      videoUrl:
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
       description: 'Amazing view from the mountains!',
     ),
-    // Add more videos here
+    ShortStoryModel(
+      id: '3',
+      username: 'user3',
+      videoUrl:
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+      description: 'Amazing view!',
+    ),
   ];
   @override
   Widget build(BuildContext context) {

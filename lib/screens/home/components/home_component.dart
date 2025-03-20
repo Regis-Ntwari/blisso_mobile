@@ -17,30 +17,48 @@ class HomeComponent extends StatefulWidget {
 class _HomeComponentState extends State<HomeComponent> {
   final ScrollController _scrollController = ScrollController();
 
-  List<dynamic> statuses = [
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1460472178825-e5240623afd5',
-      'type': 'photo',
-      'username': 'Regis Ntwari',
-      'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
-    },
-    {
-      'imageUrl':
-          'https://images.unsplash.com/photo-1583121274602-3e2820c69888',
-      'type': 'photo',
-      'username': 'Schadrack Niyibizi',
-      'profile':
-          'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
-    },
-    {
-      'imageUrl':
-          'https://plus.unsplash.com/premium_photo-1664297441375-d8c1928bf88f',
-      'type': 'video',
-      'username': 'You',
-      'profile': 'https://images.unsplash.com/photo-1491349174775-aaafddd81942'
-    }
-  ];
+  Map<String, List<dynamic>> statuses = {
+    'rex90danny@gmail.com': [
+      {
+        'url': 'https://images.unsplash.com/photo-1460472178825-e5240623afd5',
+        'type': 'image',
+        'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
+      },
+      {
+        'url': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888',
+        'type': 'image',
+        'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
+      },
+      {
+        'url':
+            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b',
+        'type': 'image',
+        'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
+      },
+    ],
+    'schadrackniyibizi@gmail.com': [
+      {
+        'url': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888',
+        'type': 'image',
+        'profile':
+            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
+      },
+      {
+        'url':
+            'https://plus.unsplash.com/premium_photo-1664297441375-d8c1928bf88f',
+        'type': 'image',
+        'profile':
+            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
+      },
+      {
+        'url':
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        'type': 'video',
+        'profile':
+            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
+      }
+    ]
+  };
 
   @override
   Widget build(BuildContext context) {

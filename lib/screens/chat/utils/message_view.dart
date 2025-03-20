@@ -17,8 +17,12 @@ import 'package:routemaster/routemaster.dart';
 class MessageView extends StatefulWidget {
   final dynamic message;
   final Function scrollToParent;
+  final String username;
   const MessageView(
-      {super.key, required this.message, required this.scrollToParent});
+      {super.key,
+      required this.message,
+      required this.scrollToParent,
+      required this.username});
 
   @override
   State<MessageView> createState() => _MessageViewState();
@@ -283,7 +287,7 @@ class _MessageViewState extends State<MessageView> {
                           InkWell(
                             onTap: () {
                               Routemaster.of(context).push(
-                                  '/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
+                                  '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
                             },
                             child: Container(
                               height: 300,
@@ -331,7 +335,7 @@ class _MessageViewState extends State<MessageView> {
                           InkWell(
                             onTap: () {
                               Routemaster.of(context).push(
-                                  '/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
+                                  '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
                             },
                             child: Container(
                               height: 300,

@@ -12,6 +12,7 @@ import 'package:blisso_mobile/screens/auth/register_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_view_screen.dart';
 import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
+import 'package:blisso_mobile/screens/home/components/stories/view_story_component.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
@@ -58,10 +59,12 @@ class Routing {
             child: ChatViewScreen(
           username: route.pathParameters['username']!,
         )),
-    '/video-player': (route) => MaterialPage(
+    '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
           videoUrl: route.queryParameters['videoUrl'],
           bytes: route.queryParameters['bytes'],
-        ))
+        )),
+    '/homepage/view-story': (_) =>
+        const MaterialPage(child: ViewStoryComponent()),
   });
 }

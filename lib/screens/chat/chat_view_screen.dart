@@ -470,6 +470,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                       MessageView(
                                         message: message,
                                         scrollToParent: _scrollToParent,
+                                        username: widget.username,
                                       ),
                                       Padding(
                                         padding:
