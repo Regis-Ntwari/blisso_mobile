@@ -61,6 +61,7 @@ class Routing {
         )),
     '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
+          username: route.pathParameters['username'],
           videoUrl: route.queryParameters['videoUrl'],
           bytes: route.queryParameters['bytes'],
         )),

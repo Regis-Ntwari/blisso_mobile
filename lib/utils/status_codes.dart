@@ -1,3 +1,3 @@
 class StatusCodes {
-  static List<int> codes = [200, 201, 307];
+  static List<int> codes = [200, 201, 307, 204];
 }

@@ -63,6 +63,11 @@ class UserServiceProvider extends StateNotifier<ApiState> {
         SharedPreferencesService.setPreference(
             'firstname', response.result['first_name']);
 
+        if (response.result['nickname'] != null) {
+          SharedPreferencesService.setPreference(
+              'nickname', response.result['nickname']);
+        }
+
         SharedPreferencesService.setPreference(
             'lastname', response.result['last_name']);
 

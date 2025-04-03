@@ -1,69 +1,59 @@
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/home/components/post_card_component.dart';
 import 'package:blisso_mobile/screens/home/components/short_status_component.dart';
+import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeComponent extends StatefulWidget {
+class HomeComponent extends ConsumerStatefulWidget {
   final List<dynamic>? profiles;
   final Function refetch;
   const HomeComponent(
       {super.key, required this.profiles, required this.refetch});
 
   @override
-  State<HomeComponent> createState() => _HomeComponentState();
+  ConsumerState<HomeComponent> createState() => _HomeComponentState();
 }
 
-class _HomeComponentState extends State<HomeComponent> {
+class _HomeComponentState extends ConsumerState<HomeComponent> {
   final ScrollController _scrollController = ScrollController();
 
-  Map<String, List<dynamic>> statuses = {
-    'rex90danny@gmail.com': [
-      {
-        'url': 'https://images.unsplash.com/photo-1460472178825-e5240623afd5',
-        'type': 'image',
-        'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
-      },
-      {
-        'url': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888',
-        'type': 'image',
-        'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
-      },
-      {
-        'url':
-            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b',
-        'type': 'image',
-        'profile': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
-      },
-    ],
-    'schadrackniyibizi@gmail.com': [
-      {
-        'url': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888',
-        'type': 'image',
-        'profile':
-            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
-      },
-      {
-        'url':
-            'https://plus.unsplash.com/premium_photo-1664297441375-d8c1928bf88f',
-        'type': 'image',
-        'profile':
-            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
-      },
-      {
-        'url':
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-        'type': 'video',
-        'profile':
-            'https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b'
-      }
-    ]
-  };
+  dynamic statuses;
+
+  Future<void> getStatuses() async {
+    final storiesRef = ref.read(storiesServiceProviderImpl.notifier);
+    await storiesRef.getStories();
+
+    final stories = ref.read(storiesServiceProviderImpl);
+
+    Map<String, List<dynamic>> fetchedStories = {};
+
+    if (!stories.data['my_stories']['stories'].isEmpty) {
+      fetchedStories[stories.data['my_stories']['nickname']] =
+          stories.data['my_stories']['stories'];
+    }
+    for (var other in stories.data['others_stories']) {
+      fetchedStories[other['nickname']] = other['stories'];
+    }
+
+    setState(() {
+      statuses = fetchedStories;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getStatuses();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.sizeOf(context).height;
-    return widget.profiles == null
+    return widget.profiles == null || statuses == null
         ? const LoadingScreen()
         : RefreshIndicator(
             backgroundColor: GlobalColors.primaryColor,

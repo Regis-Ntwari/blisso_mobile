@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:routemaster/routemaster.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -12,7 +13,9 @@ import 'package:http/http.dart' as http;
 class VideoPlayerScreen extends StatefulWidget {
   final String? videoUrl;
   final String? bytes;
-  const VideoPlayerScreen({super.key, this.videoUrl, this.bytes});
+  final String? username;
+  const VideoPlayerScreen(
+      {super.key, this.videoUrl, this.bytes, this.username});
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
@@ -103,7 +106,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           backgroundColor: Colors.black,
           leading: IconButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Routemaster.of(context)
+                  .replace('/chat-detail/${widget.username}');
             },
             icon: const Icon(Icons.keyboard_arrow_left),
             color: Colors.white,

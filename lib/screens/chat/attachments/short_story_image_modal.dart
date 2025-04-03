@@ -1,70 +1,36 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
-
-import 'package:blisso_mobile/services/models/chat_message_model.dart';
-import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
+import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ImageModal extends ConsumerStatefulWidget {
+class ShortStoryImageModal extends ConsumerStatefulWidget {
   final File image;
-  final String sender;
-  final String receiver;
-  final Function? saveStory;
-  const ImageModal(
-      {super.key,
-      required this.image,
-      required this.sender,
-      required this.receiver,
-      this.saveStory});
+  const ShortStoryImageModal({super.key, required this.image});
 
   @override
-  ConsumerState<ImageModal> createState() => _ImageModalState();
+  ConsumerState<ShortStoryImageModal> createState() =>
+      _ShortStoryImageModalState();
 }
 
-class _ImageModalState extends ConsumerState<ImageModal> {
+class _ShortStoryImageModalState extends ConsumerState<ShortStoryImageModal> {
   TextEditingController captionController = TextEditingController();
 
-  String generate12ByteHexFromTimestamp(DateTime dateTime) {
-    int timestamp = dateTime.millisecondsSinceEpoch;
-
-    String hexTimestamp = timestamp.toRadixString(16).padLeft(16, '0');
-
-    final random = Random();
-    String randomHex = List.generate(
-        4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
-
-    return hexTimestamp + randomHex;
-  }
-
   void sendImageMessage() async {
-    String extension = widget.image.path.split('.').last;
-
     try {
-      List<int> bytes = await widget.image.readAsBytes();
-      String base64Bytes = base64Encode(bytes);
-      ChatMessageModel messageModel = ChatMessageModel(
-          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-          contentFileType: 'image/$extension',
-          contentFile: base64Bytes,
-          parentId: '000000000000000000000000',
-          sender: widget.sender,
-          receiver: widget.receiver,
-          action: 'created',
-          content: captionController.text,
-          isFileIncluded: true,
-          createdAt: DateTime.now().toUtc().toIso8601String());
+      Map<String, dynamic> imageStory = {
+        'post_type': 'IMAGE',
+        'caption': captionController.text,
+        'post_file': widget.image
+      };
 
-      final messageRef = ref.read(webSocketNotifierProvider.notifier);
+      final shortStoryRef = ref.read(storiesServiceProviderImpl.notifier);
 
-      messageRef.sendMessage(messageModel);
+      shortStoryRef.createStory(imageStory);
 
       Navigator.of(context).pop();
     } catch (e) {
       debugPrint(e.toString());
-      print(e);
     }
   }
 
@@ -138,8 +104,7 @@ class _ImageModalState extends ConsumerState<ImageModal> {
   }
 }
 
-void showImageWithCaption(BuildContext context, File image, String sender,
-    String receiver, Function? saveStory) {
+void showShortStoryImageWithCaption(BuildContext context, File image) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -147,11 +112,8 @@ void showImageWithCaption(BuildContext context, File image, String sender,
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return ImageModal(
+      return ShortStoryImageModal(
         image: image,
-        sender: sender,
-        receiver: receiver,
-        saveStory: saveStory,
       );
     },
   );

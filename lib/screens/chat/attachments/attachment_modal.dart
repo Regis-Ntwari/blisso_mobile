@@ -91,7 +91,7 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                             pickedImage = File(pickedFile.path);
                           });
                           showImageWithCaption(context, pickedImage!,
-                              widget.sender, widget.receiver);
+                              widget.sender, widget.receiver, null);
                         }
                       },
                       child: const CircleAvatar(
@@ -214,7 +214,7 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                             takenPicture = File(pickedFile.path);
                           });
                           showImageWithCaption(context, takenPicture!,
-                              widget.sender, widget.receiver);
+                              widget.sender, widget.receiver, null);
                         }
                       },
                       child: CircleAvatar(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:blisso_mobile/screens/home/components/stories/choose_story_component.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -19,13 +20,19 @@ class ShortStatusComponent extends ConsumerStatefulWidget {
 class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
   String? profilePicture;
   bool isLoading = true;
+  String? nickname;
 
   Future<void> getProfilePicture() async {
     String picture =
         await SharedPreferencesService.getPreference('profile_picture');
 
+    String nick = await SharedPreferencesService.getPreference('nickname');
+
+    print(nick);
+
     setState(() {
       profilePicture = picture;
+      nickname = nick;
       isLoading = false;
     });
   }
@@ -45,70 +52,44 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       height: 120,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: usernames.length + 1, // +1 to include "Add Story" button
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            // Add Story Button
-            return Padding(
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => showChooseStoryOptions(context),
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5),
               child: Column(
                 children: [
-                  InkWell(
-                    onTap: () {
-                      // Navigate to Add Story Page
-                      // Navigator.pushNamed(context, '/add_story');
-                    },
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: GlobalColors.primaryColor, width: 3),
-                      ),
-                      child: ClipOval(
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            !isLoading && profilePicture != null
-                                ? CachedNetworkImage(
-                                    imageUrl: profilePicture!,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        const CircularProgressIndicator(
-                                      color: GlobalColors.primaryColor,
-                                    ),
-                                    errorWidget: (context, url, error) => Icon(
-                                        Icons.person,
-                                        size: 50,
-                                        color: GlobalColors.whiteColor),
-                                  )
-                                : const CircularProgressIndicator(
-                                    color: GlobalColors.primaryColor,
-                                  ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                shape: BoxShape.circle,
-                              ),
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipOval(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
                             ),
-                            const Align(
-                              alignment: Alignment.center,
-                              child: Icon(Icons.add,
-                                  color: Colors.white, size: 30),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const Align(
+                            alignment: Alignment.center,
+                            child: Icon(Icons.add_outlined,
+                                color: Colors.white, size: 30),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 5),
                   const Align(
-                    alignment: Alignment.bottomRight,
+                    alignment: Alignment.center,
                     child: Text(
-                      "My Story",
+                      "Add Story",
                       style:
                           TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
@@ -116,61 +97,69 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
                   ),
                 ],
               ),
-            );
-          } else {
-            // Display Other Users' Stories
-            final String username = usernames[index - 1]; // Adjust index
-            final List<dynamic> userStatuses = widget.statuses[username]!;
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              child: Column(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      // Encode list of statuses for the selected user
-                      String encodedData = jsonEncode(userStatuses);
-                      Routemaster.of(context)
-                          .push('/homepage/view-story?data=$encodedData');
-                    },
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: GlobalColors.primaryColor, width: 3),
-                      ),
-                      child: ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: userStatuses[0]['profile'], // User Profile
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              const CircularProgressIndicator(
-                            color: GlobalColors.primaryColor,
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: usernames.length,
+                itemBuilder: (context, index) {
+                  final String username = usernames[index];
+                  final List<dynamic> userStatuses = widget.statuses[username]!;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            String encodedData = jsonEncode(userStatuses);
+                            Routemaster.of(context)
+                                .push('/homepage/view-story?data=$encodedData');
+                          },
+                          child: Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: GlobalColors.primaryColor, width: 3),
+                            ),
+                            child: ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: userStatuses[0]
+                                    ['profile_picture_uri'], // User Profile
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(
+                                  color: GlobalColors.primaryColor,
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: GlobalColors.whiteColor),
+                              ),
+                            ),
                           ),
-                          errorWidget: (context, url, error) => Icon(
-                              Icons.person,
-                              size: 50,
-                              color: GlobalColors.whiteColor),
                         ),
-                      ),
+                        const SizedBox(height: 5),
+                        Text(
+                          username == nickname
+                              ? 'My Story'
+                              : username.length > 10
+                                  ? '${username.substring(0, 10).trim()}...'
+                                  : username,
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    username.length > 10
-                        ? '${username.substring(0, 10).trim()}...'
-                        : username,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            );
-          }
-        },
+                  );
+                }
+                //},
+                ),
+          ),
+        ],
       ),
     );
   }
