@@ -9,8 +9,18 @@ class MessageRequestService {
 
     String username = await SharedPreferencesService.getPreference('username');
 
-    ApiResponse response =
-        await ApiService().getData('users/$username', accessToken);
+    ApiResponse response = await ApiService()
+        .getData('users/$username', accessToken, isChat: true);
+
+    return response;
+  }
+
+  Future<ApiResponse> sendMessageRequest(String receiverUsername) async {
+    String username = await SharedPreferencesService.getPreference('username');
+
+    ApiResponse response = await ApiService().postData(
+        endpoint: '/add-new-match',
+        body: {'left_profile': username, 'right_profile': receiverUsername});
 
     return response;
   }

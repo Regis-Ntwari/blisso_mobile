@@ -43,6 +43,7 @@ class _ChooseStoryComponentState extends State<ChooseStoryComponent> {
                       setState(() {
                         pickedImage = File(pickedFile.path);
                       });
+                      Navigator.of(context).pop();
                       showShortStoryImageWithCaption(context, pickedImage!);
                     }
                   },
@@ -66,6 +67,7 @@ class _ChooseStoryComponentState extends State<ChooseStoryComponent> {
                       setState(() {
                         pickedVideo = File(pickedFile.path);
                       });
+                      Navigator.of(context).pop();
                       ShowVideoWithCaption(context, pickedVideo!, '', '');
                     }
                   },

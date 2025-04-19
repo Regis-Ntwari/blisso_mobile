@@ -153,8 +153,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     // });
 
     return Scaffold(
-      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
+      backgroundColor: isLightTheme ? Colors.white : null,
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: isLightTheme ? Colors.white : Colors.black,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             activeIcon:
@@ -197,6 +198,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                     pinned: true,
                     elevation: 5,
                     floating: true,
+                    backgroundColor: isLightTheme ? Colors.white : Colors.black,
                     snap: true,
                     expandedHeight: isSearchVisible ? 120 : 60,
                     automaticallyImplyLeading: false,

@@ -23,7 +23,9 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
               isLoading: false,
               data: messages.result,
               statusCode: messages.statusCode);
-        } catch (e) {}
+        } catch (e) {
+          state = ApiState(isLoading: false, error: e.toString());
+        }
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());
@@ -31,28 +33,6 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
   }
 
   void addMessage(dynamic message) {
-    // List<Map<String, dynamic>> updatedChats =
-    //     List.from(state.data); // Create a new list copy
-
-    // bool isUpdated = false;
-
-    // for (var chat in updatedChats) {
-    //   if (chat.containsKey(message['receiver'])) {
-    //     chat[message['receiver']] = List.from(chat[message['receiver']]!)
-    //       ..add(message);
-    //     isUpdated = true;
-    //     break;
-    //   }
-    // }
-
-    // if (!isUpdated) {
-    //   updatedChats.add({
-    //     message['receiver']: [message]
-    //   });
-    // }
-
-    // state = ApiState(isLoading: false, data: updatedChats);
-
     List<Map<String, dynamic>> updatedChats =
         List.from(state.data); // Copy list
 
@@ -96,28 +76,6 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
   }
 
   void addMessageFromListen(dynamic message) {
-    // List<Map<String, dynamic>> updatedChats =
-    //     List.from(state.data); // Create a new list copy
-
-    // bool isUpdated = false;
-
-    // for (var chat in updatedChats) {
-    //   if (chat.containsKey(message['sender'])) {
-    //     chat[message['sender']] = List.from(chat[message['sender']]!)
-    //       ..add(message);
-    //     isUpdated = true;
-    //     break;
-    //   }
-    // }
-
-    // if (!isUpdated) {
-    //   updatedChats.add({
-    //     message['sender']: [message]
-    //   });
-    // }
-
-    // state = ApiState(isLoading: false, data: updatedChats);
-
     List<Map<String, dynamic>> updatedChats =
         List.from(state.data); // Copy list
 

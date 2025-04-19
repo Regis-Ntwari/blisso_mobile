@@ -34,8 +34,10 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   @override
   Widget build(BuildContext context) {
     final targetProfile = ref.read(targetProfileProvider.notifier);
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SizedBox(
       child: Card(
+          color: isLightTheme ? GlobalColors.whiteColor : Colors.black,
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

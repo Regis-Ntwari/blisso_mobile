@@ -15,16 +15,26 @@ class MessageRequestServiceProvider extends StateNotifier<ApiState> {
 
     try {
       ApiResponse response;
-      if (state.data == null) {
-        response = await messageRequestService.getApprovedUsers();
-        if (!StatusCodes.codes.contains(response.statusCode)) {
-          state = ApiState(isLoading: false, error: response.errorMessage);
-        } else {
-          state = ApiState(isLoading: false, data: response.result);
-        }
+      response = await messageRequestService.getApprovedUsers();
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(
+            isLoading: false,
+            error: response.errorMessage,
+            statusCode: response.statusCode);
+      } else {
+        state = ApiState(
+            isLoading: false,
+            data: response.result,
+            statusCode: response.statusCode);
       }
     } catch (e) {
       state = ApiState(isLoading: true, error: e.toString());
     }
   }
 }
+
+final messageRequestServiceProviderImpl =
+    StateNotifierProvider<MessageRequestServiceProvider, ApiState>((ref) {
+  return MessageRequestServiceProvider(
+      messageRequestService: MessageRequestService());
+});

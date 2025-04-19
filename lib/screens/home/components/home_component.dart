@@ -24,56 +24,60 @@ class _HomeComponentState extends ConsumerState<HomeComponent> {
   Future<void> getStatuses() async {
     final storiesRef = ref.read(storiesServiceProviderImpl.notifier);
     await storiesRef.getStories();
-
-    final stories = ref.read(storiesServiceProviderImpl);
-
-    Map<String, List<dynamic>> fetchedStories = {};
-
-    if (!stories.data['my_stories']['stories'].isEmpty) {
-      fetchedStories[stories.data['my_stories']['nickname']] =
-          stories.data['my_stories']['stories'];
-    }
-    for (var other in stories.data['others_stories']) {
-      fetchedStories[other['nickname']] = other['stories'];
-    }
-
-    setState(() {
-      statuses = fetchedStories;
-    });
   }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      getStatuses();
+      ref.read(storiesServiceProviderImpl.notifier).getStories();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.sizeOf(context).height;
-    return widget.profiles == null || statuses == null
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final statusRef = ref.watch(storiesServiceProviderImpl);
+    Map<String, List<dynamic>> fetchedStories = {};
+
+    if (!statusRef.isLoading && statusRef.data != null) {
+      if (!statusRef.data['my_stories']['stories'].isEmpty) {
+        fetchedStories[statusRef.data['my_stories']['nickname']] =
+            statusRef.data['my_stories']['stories'];
+      }
+      for (var other in statusRef.data['others_stories']) {
+        fetchedStories[other['nickname']] = other['stories'];
+      }
+    }
+
+    return widget.profiles == null || statusRef.isLoading
         ? const LoadingScreen()
         : RefreshIndicator(
             backgroundColor: GlobalColors.primaryColor,
             color: GlobalColors.whiteColor,
-            onRefresh: () => widget.refetch(),
-            child: SizedBox(
-              height: height,
-              child: Column(
-                children: [
-                  ShortStatusComponent(statuses: statuses),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemBuilder: (context, index) => PostCardComponent(
-                        profile: widget.profiles![index],
+            onRefresh: () async {
+              await widget.refetch();
+              await ref.read(storiesServiceProviderImpl.notifier).getStories();
+            },
+            child: SingleChildScrollView(
+              child: Container(
+                height: height * 0.9,
+                color: isLightTheme ? Colors.white : Colors.black,
+                child: Column(
+                  children: [
+                    ShortStatusComponent(statuses: fetchedStories),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        itemBuilder: (context, index) => PostCardComponent(
+                          profile: widget.profiles![index],
+                        ),
+                        itemCount: widget.profiles!.length,
                       ),
-                      itemCount: widget.profiles!.length,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

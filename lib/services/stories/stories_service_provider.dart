@@ -17,6 +17,7 @@ class StoriesServiceProvider extends StateNotifier<ApiState> {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
         state = ApiState(isLoading: false, data: response.result);
+        getStories();
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());
