@@ -69,6 +69,7 @@ class _HomeComponentState extends ConsumerState<HomeComponent> {
                     ShortStatusComponent(statuses: fetchedStories),
                     Expanded(
                       child: ListView.builder(
+                        shrinkWrap: true,
                         controller: _scrollController,
                         itemBuilder: (context, index) => PostCardComponent(
                           profile: widget.profiles![index],

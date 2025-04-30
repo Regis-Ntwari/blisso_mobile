@@ -29,7 +29,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
         child: Scaffold(
-      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
+      backgroundColor:
+          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
       body: state.isLoading
           ? const LoadingScreen()
           : Column(

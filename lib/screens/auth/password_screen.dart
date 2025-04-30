@@ -68,7 +68,8 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
 
     return SafeArea(
         child: Scaffold(
-      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
+      backgroundColor:
+          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
       body: userState.isLoading || username == null
           ? const LoadingScreen()
           : Column(

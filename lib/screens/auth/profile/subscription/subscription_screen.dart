@@ -269,8 +269,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         child: subscriptionState.isLoading || subscriptionPlans.isEmpty
             ? const LoadingScreen()
             : Scaffold(
-                backgroundColor:
-                    isLightTheme ? GlobalColors.lightBackgroundColor : null,
+                backgroundColor: isLightTheme
+                    ? GlobalColors.lightBackgroundColor
+                    : Colors.black,
                 appBar: AppBar(
                   centerTitle: true,
                   title: Text(

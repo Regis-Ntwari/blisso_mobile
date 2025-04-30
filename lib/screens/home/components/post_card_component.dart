@@ -1,4 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
+import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -6,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 
 class PostCardComponent extends ConsumerStatefulWidget {
   final Map<String, dynamic> profile;
@@ -29,6 +32,57 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   void dispose() {
     super.dispose();
     _pageController.dispose();
+  }
+
+  bool checkIfChatExists(String username) {
+    final chatRef = ref.read(chatServiceProviderImpl);
+    if (chatRef.data == null) return false;
+
+    for (var chat in chatRef.data) {
+      if (chat.containsKey(username)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<void> handleDMTap(BuildContext context) async {
+    final targetUsername = widget.profile['user']['username'];
+
+    if (checkIfChatExists(targetUsername)) {
+      final chatRef = ref.read(chatServiceProviderImpl.notifier);
+      await chatRef.getMessages();
+
+      if (context.mounted) {
+        Routemaster.of(context).push('/chat-detail/$targetUsername');
+      }
+    } else {
+      try {
+        final messageRequestRef =
+            ref.read(addMessageRequestServiceProviderImpl.notifier);
+        await messageRequestRef.sendMessageRequest(targetUsername);
+
+        if (context.mounted) {
+          // Show success popup
+          showPopupComponent(
+            context: context,
+            icon: Icons.check_circle,
+            iconColor: Colors.green,
+            message: 'Message request sent to ${widget.profile['nickname']}!',
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          // Show error popup
+          showPopupComponent(
+            context: context,
+            icon: Icons.error,
+            iconColor: Colors.red,
+            message: 'Failed to send message request: ${e.toString()}',
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -144,12 +198,13 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     SizedBox(
                       width: 100,
                       child: ButtonComponent(
-                          text: 'DM Me',
-                          backgroundColor: GlobalColors.primaryColor,
-                          foregroundColor: GlobalColors.whiteColor,
-                          buttonHeight: 40,
-                          buttonWidth: 100,
-                          onTap: () {}),
+                        text: 'DM Me',
+                        backgroundColor: GlobalColors.primaryColor,
+                        foregroundColor: GlobalColors.whiteColor,
+                        buttonHeight: 40,
+                        buttonWidth: 100,
+                        onTap: () => handleDMTap(context),
+                      ),
                     )
                   ],
                 )),

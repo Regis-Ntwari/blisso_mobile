@@ -37,7 +37,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return SafeArea(
       child: Scaffold(
           backgroundColor:
-              isLightTheme ? GlobalColors.lightBackgroundColor : null,
+              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           body: userState.isLoading
               ? const LoadingScreen()
               : SingleChildScrollView(

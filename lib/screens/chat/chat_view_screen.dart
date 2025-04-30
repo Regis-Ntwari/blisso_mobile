@@ -291,6 +291,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     final chatNotifier = ref.read(chatServiceProviderImpl.notifier);
 
     // Check if the chat exists
+    print(chatRef.data);
     bool chatExists = false;
     if (chatRef.data != null) {
       for (var chat in chatRef.data) {
@@ -449,9 +450,13 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
     return SafeArea(
       child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
         appBar: AppBar(
           automaticallyImplyLeading: false,
           leadingWidth: 40,
+          backgroundColor:
+              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           leading: Align(
             alignment: Alignment.center,
             child: Container(

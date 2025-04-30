@@ -161,7 +161,7 @@ class _TargetProfileSnapshotsComponentState
     return SafeArea(
       child: Scaffold(
         backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : null,
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
         body: snapshot.isLoading
             ? const LoadingScreen()
             : CustomScrollView(slivers: [

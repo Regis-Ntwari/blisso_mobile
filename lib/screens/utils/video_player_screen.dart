@@ -108,6 +108,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             onPressed: () {
               Routemaster.of(context)
                   .replace('/chat-detail/${widget.username}');
+
+              // Routemaster.of(context).pop();
             },
             icon: const Icon(Icons.keyboard_arrow_left),
             color: Colors.white,
@@ -137,7 +139,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
-    _videoPlayerController!.dispose();
+    _videoPlayerController?.dispose();
     _chewieController?.dispose();
     super.dispose();
   }

@@ -112,8 +112,11 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
         body: profileState.isLoading || profileState.data == null
             ? const LoadingScreen()
             : SingleChildScrollView(

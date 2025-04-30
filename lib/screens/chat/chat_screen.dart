@@ -107,6 +107,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       length: 2,
       child: SafeArea(
         child: Scaffold(
+          backgroundColor:
+              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           appBar: AppBar(
             centerTitle: true,
             leading: IconButton(

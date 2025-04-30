@@ -26,9 +26,14 @@ class _TargetProfileComponentState
     final targetProfile = ref.watch(targetProfileProvider);
     double width = MediaQuery.sizeOf(context).width;
     double height = MediaQuery.sizeOf(context).height;
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
         appBar: AppBar(
+          backgroundColor:
+              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           leading: InkWell(
             onTap: () => Routemaster.of(context).push('/homepage'),
             child: const Icon(Icons.keyboard_arrow_left),

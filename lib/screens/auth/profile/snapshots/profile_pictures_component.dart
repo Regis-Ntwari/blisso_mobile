@@ -94,7 +94,8 @@ class _ProfilePicturesComponentState
               color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
         ),
       ),
-      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
+      backgroundColor:
+          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
       body: snapshot.isLoading
           ? const LoadingScreen()
           : SingleChildScrollView(

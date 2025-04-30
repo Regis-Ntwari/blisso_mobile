@@ -77,7 +77,7 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen> {
     return SafeArea(
       child: Scaffold(
         backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : null,
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(

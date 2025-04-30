@@ -129,7 +129,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return SafeArea(
         child: Scaffold(
-      backgroundColor: isLightTheme ? GlobalColors.lightBackgroundColor : null,
+      backgroundColor:
+          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
       body: userState.isLoading
           ? const LoadingScreen()
           : SingleChildScrollView(

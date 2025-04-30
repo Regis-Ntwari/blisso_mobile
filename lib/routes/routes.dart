@@ -56,9 +56,10 @@ class Routing {
         child: WebviewVerification(url: route.pathParameters['url']!)),
     '/chat': (_) => const MaterialPage(child: ChatScreen()),
     '/chat-detail/:username': (route) => MaterialPage(
-            child: ChatViewScreen(
-          username: route.pathParameters['username']!,
-        )),
+          child: ChatViewScreen(
+            username: route.pathParameters['username']!,
+          ),
+        ),
     '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
           username: route.pathParameters['username'],
