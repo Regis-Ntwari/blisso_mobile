@@ -131,6 +131,29 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
 
     return [];
   }
+
+  void initializeChat(String username) {
+    final currentState = state;
+    List<Map<String, List<dynamic>>> currentData =
+        List.from(currentState.data ?? []);
+
+    bool chatExists = false;
+    for (var chat in currentData) {
+      if (chat.containsKey(username)) {
+        chatExists = true;
+        break;
+      }
+    }
+
+    if (!chatExists) {
+      currentData.add({username: []});
+      state = ApiState(data: currentData);
+    }
+  }
+
+  void updateMessages(List<Map<String, dynamic>> messages) {
+    state = ApiState(data: messages);
+  }
 }
 
 final chatServiceProvider = Provider((ref) => ChatService());

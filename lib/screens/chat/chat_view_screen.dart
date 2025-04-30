@@ -259,18 +259,18 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   Future<String> getChatFullName(String username) async {
     final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
+    debugPrint('Fetching full name for username: $username');
     String fullname = await allUserRef.getFullName(username);
-
+    debugPrint('Received full name: $fullname');
     return fullname;
   }
 
   Future<String> getChatProfilePicture(String username) async {
     final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
-    String fullname = await allUserRef.getProfilePicture(username);
-
-    return fullname;
+    debugPrint('Fetching profile picture for username: $username');
+    String picture = await allUserRef.getProfilePicture(username);
+    debugPrint('Received profile picture: $picture');
+    return picture;
   }
 
   final ScrollController scrollController = ScrollController();
@@ -286,14 +286,52 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   }
 
   final Map<String, GlobalKey> _messageKeys = {};
+  void initializeEmptyChat() {
+    final chatRef = ref.read(chatServiceProviderImpl);
+    final chatNotifier = ref.read(chatServiceProviderImpl.notifier);
+
+    // Check if the chat exists
+    bool chatExists = false;
+    if (chatRef.data != null) {
+      for (var chat in chatRef.data) {
+        if (chat.containsKey(widget.username)) {
+          chatExists = true;
+          break;
+        }
+      }
+    }
+
+    // If chat doesn't exist, initialize with empty messages
+    if (!chatExists) {
+      // Create a new list if data is null, otherwise use existing data
+      List<Map<String, dynamic>> newData = [];
+      if (chatRef.data != null) {
+        newData = List.from(chatRef.data);
+      }
+      newData.add({widget.username: []});
+
+      // Update the state through the notifier
+      chatNotifier.updateMessages(newData);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _initializeRecorder();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getMyUsername();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // First ensure we have the users data
+      final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+      if (allUserRef.state.data == null) {
+        debugPrint('Loading users data first');
+        await allUserRef.getAllUsers();
+      }
+
+      // Then proceed with other initializations
+      await getMyUsername();
+      initializeEmptyChat();
       scrollToBottom();
-      _loadChatDetails();
+      await _loadChatDetails();
     });
     messageControllerNotifier.value = messageController;
   }
@@ -326,9 +364,65 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   dynamic deleteMessage;
 
   Future<void> _loadChatDetails() async {
-    chatFullName = await getChatFullName(widget.username);
-    chatProfilePicture = await getChatProfilePicture(widget.username);
-    setState(() {}); // Trigger a rebuild with loaded data
+    try {
+      debugPrint('Starting to load chat details for ${widget.username}');
+
+      // First, ensure we have the users data loaded
+      final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+
+      // Try to get the data with retries
+      int retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          chatFullName = await allUserRef.getFullName(widget.username);
+          chatProfilePicture =
+              await allUserRef.getProfilePicture(widget.username);
+
+          debugPrint(
+              'Attempt ${retryCount + 1}: Name: $chatFullName, Picture: $chatProfilePicture');
+
+          // If we got both values successfully, break the loop
+          if (chatFullName != null &&
+              chatFullName != widget.username &&
+              chatProfilePicture != null &&
+              chatProfilePicture!.isNotEmpty) {
+            break;
+          }
+
+          // If we didn't get valid data, wait and retry
+          await Future.delayed(const Duration(seconds: 1));
+          retryCount++;
+        } catch (e) {
+          debugPrint('Error in attempt $retryCount: $e');
+          await Future.delayed(const Duration(seconds: 1));
+          retryCount++;
+        }
+      }
+
+      // If we still don't have valid data after all retries, use fallback
+      if (chatFullName == null ||
+          chatFullName == widget.username ||
+          chatProfilePicture == null ||
+          chatProfilePicture!.isEmpty) {
+        debugPrint('Using fallback values after $retryCount retries');
+        chatFullName = widget.username;
+        chatProfilePicture = '';
+      }
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Final error in _loadChatDetails: $e');
+      if (mounted) {
+        setState(() {
+          chatFullName = widget.username;
+          chatProfilePicture = '';
+        });
+      }
+    }
   }
 
   dynamic editMessage;
@@ -343,14 +437,13 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       scrollToBottom();
     });
 
-    dynamic messages;
-
-    for (var chat in chatRef.data) {
-      if (chat.containsKey(widget.username)) {
-        messages = chat[widget.username];
-        // for (var message in messages) {
-        //   _messageKeys[message['message_id']] = GlobalKey();
-        // }
+    dynamic messages = [];
+    if (chatRef.data != null) {
+      for (var chat in chatRef.data) {
+        if (chat.containsKey(widget.username)) {
+          messages = chat[widget.username];
+          break;
+        }
       }
     }
 
@@ -374,122 +467,146 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
               ),
             ),
           ),
-          title: chatProfilePicture == null
-              ? const SizedBox.shrink()
-              : Row(
-                  children: [
-                    CircleAvatar(
-                        backgroundImage:
-                            CachedNetworkImageProvider(chatProfilePicture!)),
-                    Padding(
-                        padding: const EdgeInsets.only(left: 5),
-                        child: Text(
-                          chatFullName!,
-                        )),
-                  ],
+          title: Row(
+            children: [
+              CircleAvatar(
+                backgroundImage:
+                    chatProfilePicture != null && chatProfilePicture!.isNotEmpty
+                        ? CachedNetworkImageProvider(chatProfilePicture!)
+                        : null,
+                backgroundColor: Colors.grey,
+                child: chatProfilePicture == null || chatProfilePicture!.isEmpty
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : null,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 5),
+                child: Text(
+                  chatFullName ?? widget.username, // Use username as fallback
                 ),
+              ),
+            ],
+          ),
         ),
         body: username == null
             ? const LoadingScreen()
             : Column(
                 children: [
                   Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages![index];
-                        final isSender = message['sender'] == username;
-                        return Padding(
-                          padding: isSender
-                              ? const EdgeInsets.only(
-                                  top: 1.5, bottom: 1.5, left: 80.0, right: 10)
-                              : const EdgeInsets.only(
-                                  top: 1.5, bottom: 1.5, left: 10.0, right: 80),
-                          child: Align(
-                            alignment: isSender
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: GestureDetector(
-                              onLongPress: () {
-                                dynamic selectedMessage = message;
-                                isSender
-                                    ? showMessageOption(
-                                        context,
-                                        () =>
-                                            deleteTextMessage(selectedMessage),
-                                        () {
-                                        messageController.text =
-                                            selectedMessage['content'];
-                                        Navigator.of(context).pop();
-                                        setState(() {
-                                          editMessage = selectedMessage;
-                                        });
-                                      })
-                                    : null;
-                              },
-                              onHorizontalDragUpdate: (details) {
-                                setState(() {
-                                  dragDistances[index] =
-                                      (dragDistances[index] ?? 0) +
-                                          details.primaryDelta!;
-                                });
-                              },
-                              onHorizontalDragEnd: (details) {
-                                if ((dragDistances[index] ?? 0) > 50) {
-                                  setState(() {
-                                    replyMessage = message;
-                                    dragDistances[index] = 0;
-                                  });
-                                } else {
-                                  setState(() {
-                                    dragDistances[index] = 0;
-                                  });
-                                }
-                              },
-                              child: Transform.translate(
-                                offset: Offset(dragDistances[index] ?? 0, 0),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 5.0, horizontal: 10.0),
-                                  decoration: BoxDecoration(
-                                    color: isSender
-                                        ? isLightTheme
-                                            ? GlobalColors.myMessageColor
-                                            : GlobalColors.primaryColor
-                                        : isLightTheme
-                                            ? Colors.grey[200]
-                                            : GlobalColors
-                                                .otherDarkMessageColor,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      MessageView(
-                                        message: message,
-                                        scrollToParent: _scrollToParent,
-                                        username: widget.username,
-                                      ),
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 5.0),
-                                        child: Text(
-                                          formatDate(message['created_at']!),
-                                          textAlign: TextAlign.end,
-                                          style: const TextStyle(fontSize: 9),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
+                    child: messages.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No messages yet. Start a conversation!',
+                              style: TextStyle(
+                                color: GlobalColors.secondaryColor,
                               ),
                             ),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              final message = messages![index];
+                              final isSender = message['sender'] == username;
+                              return Padding(
+                                padding: isSender
+                                    ? const EdgeInsets.only(
+                                        top: 1.5,
+                                        bottom: 1.5,
+                                        left: 80.0,
+                                        right: 10)
+                                    : const EdgeInsets.only(
+                                        top: 1.5,
+                                        bottom: 1.5,
+                                        left: 10.0,
+                                        right: 80),
+                                child: Align(
+                                  alignment: isSender
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: GestureDetector(
+                                    onLongPress: () {
+                                      dynamic selectedMessage = message;
+                                      isSender
+                                          ? showMessageOption(
+                                              context,
+                                              () => deleteTextMessage(
+                                                  selectedMessage), () {
+                                              messageController.text =
+                                                  selectedMessage['content'];
+                                              Navigator.of(context).pop();
+                                              setState(() {
+                                                editMessage = selectedMessage;
+                                              });
+                                            })
+                                          : null;
+                                    },
+                                    onHorizontalDragUpdate: (details) {
+                                      setState(() {
+                                        dragDistances[index] =
+                                            (dragDistances[index] ?? 0) +
+                                                details.primaryDelta!;
+                                      });
+                                    },
+                                    onHorizontalDragEnd: (details) {
+                                      if ((dragDistances[index] ?? 0) > 50) {
+                                        setState(() {
+                                          replyMessage = message;
+                                          dragDistances[index] = 0;
+                                        });
+                                      } else {
+                                        setState(() {
+                                          dragDistances[index] = 0;
+                                        });
+                                      }
+                                    },
+                                    child: Transform.translate(
+                                      offset:
+                                          Offset(dragDistances[index] ?? 0, 0),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 5.0, horizontal: 10.0),
+                                        decoration: BoxDecoration(
+                                          color: isSender
+                                              ? isLightTheme
+                                                  ? GlobalColors.myMessageColor
+                                                  : GlobalColors.primaryColor
+                                              : isLightTheme
+                                                  ? Colors.grey[200]
+                                                  : GlobalColors
+                                                      .otherDarkMessageColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            MessageView(
+                                              message: message,
+                                              scrollToParent: _scrollToParent,
+                                              username: widget.username,
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 5.0),
+                                              child: Text(
+                                                formatDate(
+                                                    message['created_at']!),
+                                                textAlign: TextAlign.end,
+                                                style: const TextStyle(
+                                                    fontSize: 9),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                   ValueListenableBuilder<bool>(
                     valueListenable: isEmojiPickerVisible,

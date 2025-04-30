@@ -1,11 +1,10 @@
-import 'package:blisso_mobile/components/popup_component.dart';
-import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/message_request_service_provider.dart';
 import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
 
 class MessageRequestModal extends ConsumerStatefulWidget {
   const MessageRequestModal({super.key});
@@ -23,25 +22,6 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
         ref.read(messageRequestServiceProviderImpl.notifier);
 
     await messageRequestRef.mapApprovedUsers();
-  }
-
-  Future<void> sendMessageRequest(String receiverUsername) async {
-    final messageRequestRef =
-        ref.read(addMessageRequestServiceProviderImpl.notifier);
-
-    await messageRequestRef.sendMessageRequest(receiverUsername);
-
-    final msgRef = ref.watch(messageRequestServiceProviderImpl);
-
-    if (msgRef.data != null) {
-      showPopupComponent(
-        context: context,
-        icon: Icons.verified,
-        message: 'Message Request Sent',
-        iconColor: Colors.green,
-        buttonText: 'OK',
-      );
-    }
   }
 
   Future<String> getChatFullName(String username) async {
@@ -73,14 +53,12 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     double height = MediaQuery.sizeOf(context).height;
     final messageRequestRef = ref.watch(messageRequestServiceProviderImpl);
-    final addMessageRequestRef =
-        ref.watch(addMessageRequestServiceProviderImpl);
     return SizedBox(
       height: height * 0.9,
       child: SafeArea(
           child: Padding(
         padding: const EdgeInsets.all(10),
-        child: messageRequestRef.isLoading || addMessageRequestRef.isLoading
+        child: messageRequestRef.isLoading
             ? const Center(
                 child: CircularProgressIndicator(
                   color: GlobalColors.primaryColor,
@@ -124,7 +102,9 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                       final usersList = messageRequestRef.data.keys.toList();
                       return InkWell(
                         onTap: () {
-                          sendMessageRequest(usersList[index]);
+                          Navigator.pop(context);
+                          Routemaster.of(context)
+                              .push('/chat-detail/${usersList[index]}');
                         },
                         child: ListTile(
                           leading: FutureBuilder<String>(

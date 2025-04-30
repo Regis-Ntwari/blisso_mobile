@@ -176,10 +176,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                 itemBuilder: (context, index) {
                                   String username =
                                       chatRef.data[index].keys.first;
-                                  Map<String, dynamic> lastMessage = chatRef
-                                          .data[index][username]![
-                                      chatRef.data[index][username]!.length -
-                                          1];
+                                  List<dynamic>? messages =
+                                      chatRef.data[index][username];
+                                  Map<String, dynamic> lastMessage = {};
+
+                                  if (messages != null && messages.isNotEmpty) {
+                                    lastMessage = messages[messages.length - 1];
+                                  } else {
+                                    lastMessage = {
+                                      'content': 'No messages yet',
+                                      'created_at': DateTime.now()
+                                          .toUtc()
+                                          .toIso8601String()
+                                    };
+                                  }
+
                                   return InkWell(
                                     onTap: () => chooseChat(username),
                                     child: ListTile(
