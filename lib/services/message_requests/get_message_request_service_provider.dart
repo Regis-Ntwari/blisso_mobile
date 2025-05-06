@@ -9,17 +9,14 @@ class AddMessageRequestServiceProvider extends StateNotifier<ApiState> {
   AddMessageRequestServiceProvider({required this.messageRequestService})
       : super(ApiState());
 
-  Future<void> sendMessageRequest(String receiverUsername) async {
+  Future<void> getMessageRequests(String receiverUsername) async {
     try {
       state = ApiState(isLoading: true);
-      final response =
-          await messageRequestService.sendMessageRequest(receiverUsername);
+      final response = await messageRequestService.getMessageRequests();
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        print(response.errorMessage);
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
-        print(response.result);
         state = ApiState(isLoading: false, data: response.result);
       }
     } catch (e) {

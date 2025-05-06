@@ -60,25 +60,21 @@ class _HomeComponentState extends ConsumerState<HomeComponent> {
               await widget.refetch();
               await ref.read(storiesServiceProviderImpl.notifier).getStories();
             },
-            child: SingleChildScrollView(
-              child: Container(
-                height: height * 0.9,
-                color: isLightTheme ? Colors.white : Colors.black,
-                child: Column(
-                  children: [
-                    ShortStatusComponent(statuses: fetchedStories),
-                    Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        controller: _scrollController,
-                        itemBuilder: (context, index) => PostCardComponent(
-                          profile: widget.profiles![index],
-                        ),
-                        itemCount: widget.profiles!.length,
-                      ),
-                    ),
-                  ],
-                ),
+            child: Container(
+              height: height * 0.9,
+              color: isLightTheme ? Colors.white : Colors.black,
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: widget.profiles!.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    // First item is the ShortStatusComponent
+                    return ShortStatusComponent(statuses: fetchedStories);
+                  }
+                  // Remaining items are PostCardComponents
+                  return PostCardComponent(
+                      profile: widget.profiles![index - 1]);
+                },
               ),
             ),
           );

@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
+import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
@@ -62,14 +63,21 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
             ref.read(addMessageRequestServiceProviderImpl.notifier);
         await messageRequestRef.sendMessageRequest(targetUsername);
 
-        if (context.mounted) {
-          // Show success popup
-          showPopupComponent(
-            context: context,
-            icon: Icons.check_circle,
-            iconColor: Colors.green,
-            message: 'Message request sent to ${widget.profile['nickname']}!',
-          );
+        final messageRequestResponse =
+            ref.read(addMessageRequestServiceProviderImpl);
+
+        if (messageRequestResponse.error == null) {
+          if (context.mounted) {
+            // Show success popup
+            showPopupComponent(
+              context: context,
+              icon: Icons.check_circle,
+              iconColor: Colors.green,
+              message: 'Message request sent to ${widget.profile['nickname']}!',
+            );
+          }
+        } else {
+          showSnackBar(context, messageRequestResponse.error!);
         }
       } catch (e) {
         if (context.mounted) {

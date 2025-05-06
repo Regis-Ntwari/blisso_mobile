@@ -186,11 +186,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                           )
                         : _videoController != null &&
                                 _videoController!.value.isInitialized
-                            ? AspectRatio(
-                                aspectRatio:
-                                    _videoController!.value.aspectRatio,
-                                child: VideoPlayer(_videoController!),
-                              )
+                            ? VideoPlayer(_videoController!)
                             : const Center(
                                 child: CircularProgressIndicator(
                                   strokeWidth: 5,

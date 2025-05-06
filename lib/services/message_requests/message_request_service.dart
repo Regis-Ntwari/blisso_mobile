@@ -18,9 +18,28 @@ class MessageRequestService {
   Future<ApiResponse> sendMessageRequest(String receiverUsername) async {
     String username = await SharedPreferencesService.getPreference('username');
 
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
     ApiResponse response = await ApiService().postData(
-        endpoint: '/add-new-match',
-        body: {'left_profile': username, 'right_profile': receiverUsername});
+        endpoint: 'matching/message-requests/CONNECTION/',
+        token: accessToken,
+        body: {
+          'requester_profile_email': username,
+          'target_profile_email': receiverUsername
+        });
+
+    return response;
+  }
+
+  Future<ApiResponse> getMessageRequests() async {
+    String username = await SharedPreferencesService.getPreference('username');
+
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService()
+        .getData('matching/message-requests/user/$username', accessToken);
 
     return response;
   }
