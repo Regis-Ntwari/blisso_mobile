@@ -30,7 +30,9 @@ class _HomeComponentState extends ConsumerState<HomeComponent> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(storiesServiceProviderImpl.notifier).getStories();
+      if (ref.read(storiesServiceProviderImpl).data == null) {
+        ref.read(storiesServiceProviderImpl.notifier).getStories();
+      }
     });
   }
 

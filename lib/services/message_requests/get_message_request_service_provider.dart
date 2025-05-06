@@ -3,13 +3,13 @@ import 'package:blisso_mobile/services/message_requests/message_request_service.
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AddMessageRequestServiceProvider extends StateNotifier<ApiState> {
+class GetMessageRequestServiceProvider extends StateNotifier<ApiState> {
   final MessageRequestService messageRequestService;
 
-  AddMessageRequestServiceProvider({required this.messageRequestService})
+  GetMessageRequestServiceProvider({required this.messageRequestService})
       : super(ApiState());
 
-  Future<void> getMessageRequests(String receiverUsername) async {
+  Future<void> getMessageRequests() async {
     try {
       state = ApiState(isLoading: true);
       final response = await messageRequestService.getMessageRequests();
@@ -25,8 +25,8 @@ class AddMessageRequestServiceProvider extends StateNotifier<ApiState> {
   }
 }
 
-final addMessageRequestServiceProviderImpl =
-    StateNotifierProvider<AddMessageRequestServiceProvider, ApiState>((ref) {
-  return AddMessageRequestServiceProvider(
+final getMessageRequestServiceProviderImpl =
+    StateNotifierProvider<GetMessageRequestServiceProvider, ApiState>((ref) {
+  return GetMessageRequestServiceProvider(
       messageRequestService: MessageRequestService());
 });

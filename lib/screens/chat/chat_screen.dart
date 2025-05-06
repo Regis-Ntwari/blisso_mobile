@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
+import 'package:blisso_mobile/screens/chat/chat_message_request.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
@@ -271,12 +272,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         ),
 
               // Second tab - Placeholder for other details
-              const Center(
-                child: Text(
-                  'Other details will go here',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
+              // const Center(
+              //   child: Text(
+              //     'Other details will go here',
+              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              //   ),
+              // ),
+              const ChatMessageRequest()
             ],
           ),
           floatingActionButton: InkWell(
