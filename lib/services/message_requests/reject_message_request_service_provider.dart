@@ -3,17 +3,16 @@ import 'package:blisso_mobile/services/message_requests/message_request_service.
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AddMessageRequestServiceProvider extends StateNotifier<ApiState> {
+class RejectMessageRequestServiceProvider extends StateNotifier<ApiState> {
   final MessageRequestService messageRequestService;
 
-  AddMessageRequestServiceProvider({required this.messageRequestService})
+  RejectMessageRequestServiceProvider({required this.messageRequestService})
       : super(ApiState());
 
-  Future<void> sendMessageRequest(String receiverUsername) async {
+  Future<void> rejectMessageRequest(int id) async {
     try {
       state = ApiState(isLoading: true);
-      final response =
-          await messageRequestService.sendMessageRequest(receiverUsername);
+      final response = await messageRequestService.rejectMessageRequest(id);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
@@ -26,8 +25,8 @@ class AddMessageRequestServiceProvider extends StateNotifier<ApiState> {
   }
 }
 
-final addMessageRequestServiceProviderImpl =
-    StateNotifierProvider<AddMessageRequestServiceProvider, ApiState>((ref) {
-  return AddMessageRequestServiceProvider(
+final rejectMessageRequestServiceProviderImpl =
+    StateNotifierProvider<RejectMessageRequestServiceProvider, ApiState>((ref) {
+  return RejectMessageRequestServiceProvider(
       messageRequestService: MessageRequestService());
 });

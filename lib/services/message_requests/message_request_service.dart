@@ -43,4 +43,28 @@ class MessageRequestService {
 
     return response;
   }
+
+  Future<ApiResponse> acceptMessageRequest(int id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postData(
+        endpoint: 'matching/message-requests/ACCEPTED/$id',
+        body: {},
+        token: accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> rejectMessageRequest(int id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postData(
+        endpoint: 'matching/message-requests/REJECTED/$id',
+        body: {},
+        token: accessToken);
+
+    return response;
+  }
 }

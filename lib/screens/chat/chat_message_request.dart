@@ -1,4 +1,6 @@
+import 'package:blisso_mobile/services/message_requests/accept_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/get_message_request_service_provider.dart';
+import 'package:blisso_mobile/services/message_requests/reject_message_request_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,11 +89,29 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final rejectRef = ref.read(
+                          acceptMessageRequestServiceProviderImpl.notifier);
+
+                      await rejectRef.acceptMessageRequest(request['id']);
+
+                      ref
+                          .read(getMessageRequestServiceProviderImpl.notifier)
+                          .getMessageRequests();
+                    },
                     icon: const Icon(Icons.check, color: Colors.green),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final rejectRef = ref.read(
+                          rejectMessageRequestServiceProviderImpl.notifier);
+
+                      await rejectRef.rejectMessageRequest(request['id']);
+
+                      ref
+                          .read(getMessageRequestServiceProviderImpl.notifier)
+                          .getMessageRequests();
+                    },
                     icon: const Icon(Icons.close, color: Colors.red),
                   ),
                 ],
