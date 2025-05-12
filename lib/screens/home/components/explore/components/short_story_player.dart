@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 
 class ShortStoryPlayer extends ConsumerStatefulWidget {
   final ShortStoryModel video;
