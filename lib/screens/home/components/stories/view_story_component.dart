@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:video_player/video_player.dart';
+import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 
 class ViewStoryComponent extends ConsumerStatefulWidget {
   const ViewStoryComponent({super.key});
@@ -24,6 +25,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   List<Map<String, dynamic>> stories = [];
   bool _isDataLoaded = false;
   String nickname = '';
+  bool isLiked = false;
+  bool isSendingReply = false;
 
   @override
   void initState() {
@@ -123,24 +126,52 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     });
   }
 
-  void sendReply(String toUsername) {
-    ChatMessageModel messageModel = ChatMessageModel(
-        messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-        parentId: '000000000000000000000000',
-        parentContent: 'Story',
-        sender: username!,
-        receiver: toUsername,
-        action: 'created',
-        content: replyController.text,
-        isFileIncluded: false,
-        createdAt: DateTime.now().toUtc().toIso8601String());
+  void sendReply(String toUsername) async {
+    setState(() {
+      isSendingReply = true;
+    });
 
-    final messageRef = ref.read(webSocketNotifierProvider.notifier);
+    try {
+      ChatMessageModel messageModel = ChatMessageModel(
+          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+          parentId: stories[currentIndex]['id'],
+          parentContent: 'Story',
+          sender: username!,
+          receiver: toUsername,
+          action: 'created',
+          content: replyController.text,
+          isFileIncluded: false,
+          createdAt: DateTime.now().toUtc().toIso8601String());
 
-    messageRef.sendMessage(messageModel);
+      final messageRef = ref.read(webSocketNotifierProvider.notifier);
+      messageRef.sendMessage(messageModel);
+
+      if (mounted) {
+        setState(() {
+          replyController.clear();
+          isSendingReply = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isSendingReply = false;
+        });
+      }
+    }
   }
 
   TextEditingController replyController = TextEditingController();
+
+  void _handleLike() {
+    final storyId = stories[currentIndex]['id'];
+    if (storyId != null) {
+      ref.read(storiesServiceProviderImpl.notifier).likeStory(storyId);
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -151,6 +182,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    print(stories[currentIndex]);
     return Scaffold(
       backgroundColor: isLightTheme ? Colors.white : Colors.black,
       body: !_isDataLoaded
@@ -206,22 +238,85 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                   Positioned(
                     bottom: 130,
                     left: 10,
-                    child: Text(
-                      stories[currentIndex]['nickname'] == nickname
-                          ? 'My Story'
-                          : stories[currentIndex]['nickname'],
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: CachedNetworkImageProvider(
+                            stories[currentIndex]['profile_picture_uri'] ?? '',
+                          ),
+                          onBackgroundImageError: (_, __) {},
+                          child: stories[currentIndex]['profile_picture_uri'] ==
+                                  null
+                              ? const Icon(Icons.person)
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              stories[currentIndex]['nickname'] == nickname
+                                  ? 'My Story'
+                                  : stories[currentIndex]['nickname'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 3.0,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '${stories[currentIndex]['likes'] ?? 0} likes',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isLightTheme
+                                    ? Colors.grey[600]
+                                    : Colors.grey[400],
+                                shadows: const [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 3.0,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   Positioned(
                     bottom: 110,
                     left: 10,
+                    right: 10,
                     child: stories[currentIndex]['caption'] != null
-                        ? Text(
-                            stories[currentIndex]['caption'],
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                        ? Container(
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.of(context).size.width - 20,
+                            ),
+                            child: Text(
+                              stories[currentIndex]['caption'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 3.0,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -260,67 +355,121 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                 ? Colors.grey[800]
                                 : Colors.black.withOpacity(0.5),
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Stack(
                               children: [
-                                // Like button
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(
-                                    Icons.favorite_border,
-                                    color: isLightTheme
-                                        ? Colors.white
-                                        : Colors.white,
-                                  ),
-                                ),
-                                // Reply Text Field in the middle
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  child: Container(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.7,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(60),
-                                      color: isLightTheme
-                                          ? Colors.grey[100]
-                                          : Colors.grey[900],
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Like button
+                                    IconButton(
+                                      onPressed: _handleLike,
+                                      icon: Icon(
+                                        isLiked
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isLiked
+                                            ? Colors.red
+                                            : isLightTheme
+                                                ? Colors.white
+                                                : Colors.white,
+                                      ),
                                     ),
-                                    child: TextField(
-                                      controller: replyController,
-                                      style: TextStyle(
+                                    // Reply Text Field in the middle
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10),
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.7,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(60),
                                           color: isLightTheme
-                                              ? Colors.black
-                                              : Colors.white),
-                                      decoration: InputDecoration(
-                                        hintText: 'Reply...',
-                                        hintStyle: TextStyle(
+                                              ? Colors.grey[100]
+                                              : Colors.grey[900],
+                                        ),
+                                        child: TextField(
+                                          controller: replyController,
+                                          style: TextStyle(
+                                              color: isLightTheme
+                                                  ? Colors.black
+                                                  : Colors.white),
+                                          decoration: InputDecoration(
+                                            hintText: 'Reply...',
+                                            hintStyle: TextStyle(
+                                                color: isLightTheme
+                                                    ? Colors.black
+                                                    : Colors.white),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 1,
+                                                    horizontal: 15),
+                                            border: const OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(60)),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Share button
+                                    IconButton(
+                                      onPressed: isSendingReply
+                                          ? null
+                                          : () {
+                                              if (replyController
+                                                  .text.isNotEmpty) {
+                                                sendReply(stories[currentIndex]
+                                                    ['username']);
+                                              }
+                                            },
+                                      icon: const Icon(Icons.send,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                if (isSendingReply)
+                                  Positioned.fill(
+                                    child: Container(
+                                      color: Colors.black.withOpacity(0.5),
+                                      child: Center(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 10,
+                                          ),
+                                          decoration: BoxDecoration(
                                             color: isLightTheme
-                                                ? Colors.black
-                                                : Colors.white),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 1, horizontal: 15),
-                                        border: const OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(60)),
-                                          borderSide: BorderSide.none,
+                                                ? Colors.white
+                                                : Colors.black,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.2),
+                                                blurRadius: 5,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            'Sending...',
+                                            style: TextStyle(
+                                              color: isLightTheme
+                                                  ? Colors.black
+                                                  : Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                // Share button
-                                IconButton(
-                                  onPressed: () {
-                                    if (replyController.text.isNotEmpty) {
-                                      sendReply(
-                                          stories[currentIndex]['username']);
-                                    }
-                                  },
-                                  icon: const Icon(Icons.send,
-                                      color: Colors.white),
-                                ),
                               ],
                             ),
                           ),

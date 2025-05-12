@@ -49,7 +49,7 @@ class MessageRequestService {
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response = await ApiService().postData(
-        endpoint: 'matching/message-requests/ACCEPTED/$id',
+        endpoint: 'matching/message-requests/ACCEPTED/$id/',
         body: {},
         token: accessToken);
 
@@ -61,7 +61,7 @@ class MessageRequestService {
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response = await ApiService().postData(
-        endpoint: 'matching/message-requests/REJECTED/$id',
+        endpoint: 'matching/message-requests/REJECTED/$id/',
         body: {},
         token: accessToken);
 

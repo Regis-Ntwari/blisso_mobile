@@ -256,76 +256,219 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                             ),
                           ),
                           if (isSearchVisible)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Row(
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 8.0),
+                              child: Column(
                                 children: [
                                   Container(
-                                    height: 50,
+                                    height: 45,
                                     decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(60)),
-                                    child: DropdownButton<String>(
-                                      value: searchAttribute,
-                                      items: <String>[
-                                        'Firstname',
-                                        'Lastname',
-                                        'Email',
-                                        'Nickname',
-                                        'Home Address'
-                                      ].map((String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          searchAttribute = value!;
-                                        });
-                                      },
+                                      color: isLightTheme
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      borderRadius: BorderRadius.circular(25),
+                                      border: Border.all(
+                                        color: isLightTheme
+                                            ? Colors.grey[300]!
+                                            : Colors.grey[700]!,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Dropdown
+                                        Container(
+                                          height: 45,
+                                          constraints: const BoxConstraints(
+                                              minWidth: 100, maxWidth: 150),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              right: BorderSide(
+                                                color: isLightTheme
+                                                    ? Colors.grey[300]!
+                                                    : Colors.grey[700]!,
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          child: DropdownButtonHideUnderline(
+                                            child: DropdownButton<String>(
+                                              value: searchAttribute,
+                                              icon: const Icon(
+                                                  Icons.arrow_drop_down),
+                                              elevation: 8,
+                                              borderRadius:
+                                                  BorderRadius.circular(25),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 4),
+                                              isDense: true,
+                                              isExpanded:
+                                                  true, // Makes dropdown text responsive
+                                              dropdownColor: isLightTheme
+                                                  ? Colors.white
+                                                  : Colors.grey[900],
+                                              style: TextStyle(
+                                                color: isLightTheme
+                                                    ? Colors.black87
+                                                    : Colors.white,
+                                                fontSize: 14,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              items: <String>[
+                                                'Firstname',
+                                                'Lastname',
+                                                'Email',
+                                                'Nickname',
+                                                'Home Address'
+                                              ].map((String value) {
+                                                return DropdownMenuItem<String>(
+                                                  value: value,
+                                                  child: Text(
+                                                    value,
+                                                    style: TextStyle(
+                                                      color: isLightTheme
+                                                          ? Colors.black87
+                                                          : Colors.white,
+                                                      fontSize: 14,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                );
+                                              }).toList(),
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  searchAttribute = value!;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        // Search Field
+                                        Expanded(
+                                          child: Container(
+                                              margin:
+                                                  const EdgeInsets.only(top: 5),
+                                              height: 50,
+                                              alignment: Alignment.center,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: TextField(
+                                                  maxLines: 1,
+                                                  controller: searchValue,
+                                                  onChanged: (value) =>
+                                                      _onSearchChange(),
+                                                  style: TextStyle(
+                                                    color: isLightTheme
+                                                        ? Colors.black87
+                                                        : Colors.white,
+                                                    fontSize: 14,
+                                                  ),
+                                                  decoration: InputDecoration(
+                                                    isDense: true,
+                                                    contentPadding:
+                                                        EdgeInsets.zero,
+                                                    hintText:
+                                                        'Search by $searchAttribute...',
+                                                    hintStyle: TextStyle(
+                                                      color: isLightTheme
+                                                          ? Colors.grey[600]
+                                                          : Colors.grey[400],
+                                                      fontSize: 14,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                    border: InputBorder.none,
+                                                    prefixIcon: Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 8),
+                                                      child: Icon(
+                                                        Icons.search,
+                                                        color: isLightTheme
+                                                            ? Colors.grey[600]
+                                                            : Colors.grey[400],
+                                                        size: 20,
+                                                      ),
+                                                    ),
+                                                    prefixIconConstraints:
+                                                        const BoxConstraints(
+                                                      minWidth: 40,
+                                                      minHeight: 40,
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ),
+                                        // Close Button
+                                        Container(
+                                          height: 45,
+                                          width: 40,
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              left: BorderSide(
+                                                color: isLightTheme
+                                                    ? Colors.grey[300]!
+                                                    : Colors.grey[700]!,
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          child: IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints:
+                                                const BoxConstraints(), // Removes default padding
+                                            icon: Icon(
+                                              Icons.close,
+                                              color: isLightTheme
+                                                  ? Colors.grey[600]
+                                                  : Colors.grey[400],
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                isSearchVisible = false;
+                                                searchValue.clear();
+                                                _onSearchChange();
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Container(
+                                  if (searchValue.text.isNotEmpty)
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
+                                        color: isLightTheme
+                                            ? Colors.grey[100]
+                                            : Colors.grey[900],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
                                           color: isLightTheme
-                                              ? Colors.grey[100]
-                                              : Colors.grey[900],
-                                          borderRadius:
-                                              BorderRadius.circular(60)),
-                                      child: TextField(
-                                        maxLines: 1,
-                                        controller: searchValue,
-                                        onChanged: (value) => _onSearchChange(),
-                                        decoration: InputDecoration(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  vertical: 5, horizontal: 15),
-                                          hintText:
-                                              'Search by $searchAttribute...',
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide.none,
-                                            borderRadius:
-                                                BorderRadius.circular(60.0),
-                                          ),
+                                              ? Colors.grey[300]!
+                                              : Colors.grey[700]!,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Searching by: $searchAttribute',
+                                        style: TextStyle(
+                                          color: isLightTheme
+                                              ? Colors.grey[600]
+                                              : Colors.grey[400],
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: const Icon(Icons.close),
-                                    onPressed: () {
-                                      setState(() {
-                                        isSearchVisible = false;
-                                        searchValue.clear();
-                                        _onSearchChange();
-                                      });
-                                    },
-                                  ),
                                 ],
                               ),
                             ),

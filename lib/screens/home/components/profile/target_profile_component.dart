@@ -1,5 +1,8 @@
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/view_picture_component.dart';
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -19,6 +22,91 @@ class TargetProfileComponent extends ConsumerStatefulWidget {
 class _TargetProfileComponentState
     extends ConsumerState<TargetProfileComponent> {
   String expandedField = '';
+  bool isLoading = false;
+
+  Future<bool> checkIfChatExists(String username) async {
+    final chatRef = ref.read(chatServiceProviderImpl);
+    if (chatRef.data == null) {
+      final chatRef = ref.read(chatServiceProviderImpl.notifier);
+      await chatRef.getMessages();
+    }
+
+    for (var chat in chatRef.data) {
+      if (chat.containsKey(username)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<void> handleDMTap(BuildContext context) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final targetProfile = ref.watch(targetProfileProvider);
+      final targetUsername = targetProfile.user!['username'];
+
+      if (await checkIfChatExists(targetUsername)) {
+        if (context.mounted) {
+          Routemaster.of(context).push('/chat-detail/$targetUsername');
+        }
+      } else {
+        try {
+          final messageRequestRef =
+              ref.read(addMessageRequestServiceProviderImpl.notifier);
+          await messageRequestRef.sendMessageRequest(targetUsername);
+
+          final messageRequestResponse =
+              ref.read(addMessageRequestServiceProviderImpl);
+
+          if (messageRequestResponse.error == null) {
+            if (context.mounted) {
+              // Show success popup
+              if (messageRequestResponse.statusCode == 200) {
+                Routemaster.of(context).push('/chat-detail/$targetUsername');
+              } else if (messageRequestResponse.statusCode == 201) {
+                showPopupComponent(
+                    context: context,
+                    icon: Icons.verified,
+                    message:
+                        'Message request sent to ${targetProfile.nickname}!');
+              } else {
+                showPopupComponent(
+                  context: context,
+                  icon: Icons.error,
+                  iconColor: Colors.red,
+                  message: messageRequestResponse.error!,
+                );
+              }
+            }
+          } else {
+            showPopupComponent(
+                context: context,
+                icon: Icons.error,
+                message: messageRequestResponse.error!);
+          }
+        } catch (e) {
+          if (context.mounted) {
+            // Show error popup
+            showPopupComponent(
+              context: context,
+              icon: Icons.error,
+              iconColor: Colors.red,
+              message: 'Failed to send message request: ${e.toString()}',
+            );
+          }
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,10 +320,10 @@ class _TargetProfileComponentState
                   child: Align(
                     alignment: Alignment.center,
                     child: ButtonComponent(
-                        text: 'DM Me',
+                        text: isLoading ? 'Loading...' : 'DM Me',
                         backgroundColor: GlobalColors.primaryColor,
                         foregroundColor: GlobalColors.lightBackgroundColor,
-                        onTap: () {}),
+                        onTap: isLoading ? () {} : () => handleDMTap(context)),
                   ),
                 ),
               ),

@@ -291,7 +291,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     final chatNotifier = ref.read(chatServiceProviderImpl.notifier);
 
     // Check if the chat exists
-    print(chatRef.data);
     bool chatExists = false;
     if (chatRef.data != null) {
       for (var chat in chatRef.data) {

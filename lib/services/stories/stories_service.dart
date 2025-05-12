@@ -21,4 +21,14 @@ class StoriesService {
 
     return response;
   }
+
+  Future<ApiResponse> likeStory(int id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postData(
+        endpoint: 'posts/posts/$id/like/', token: accessToken, body: {});
+
+    return response;
+  }
 }
