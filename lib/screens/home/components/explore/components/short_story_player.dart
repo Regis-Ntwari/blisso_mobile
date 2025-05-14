@@ -170,6 +170,33 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         size: 32,
                       ),
                     ),
+              // Add likes count below like button
+              _isLoading
+                  ? Shimmer.fromColors(
+                      baseColor: shimmerBaseColor,
+                      highlightColor: shimmerHighlightColor,
+                      child: Container(
+                        width: 40,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: isLightTheme
+                              ? Colors.grey[200]
+                              : Colors.grey[800],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 1.0),
+                      child: Text(
+                        '${widget.video.likes}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
               const SizedBox(height: 16),
               // Share button
               _isLoading

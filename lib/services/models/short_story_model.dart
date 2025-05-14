@@ -6,12 +6,14 @@ class ShortStoryModel {
   final String username;
   final String videoUrl;
   final String description;
+  final int likes;
 
   ShortStoryModel({
     required this.id,
     required this.username,
     required this.videoUrl,
     required this.description,
+    required this.likes,
   });
 
   ShortStoryModel copyWith({
@@ -19,12 +21,14 @@ class ShortStoryModel {
     String? username,
     String? videoUrl,
     String? description,
+    int? likes,
   }) {
     return ShortStoryModel(
       id: id ?? this.id,
       username: username ?? this.username,
       videoUrl: videoUrl ?? this.videoUrl,
       description: description ?? this.description,
+      likes: likes ?? this.likes,
     );
   }
 
@@ -34,6 +38,7 @@ class ShortStoryModel {
       'username': username,
       'videoUrl': videoUrl,
       'description': description,
+      'likes': likes,
     };
   }
 
@@ -43,6 +48,7 @@ class ShortStoryModel {
       username: map['username'] as String,
       videoUrl: map['videoUrl'] as String,
       description: map['description'] as String,
+      likes: map['likes'] as int? ?? 0,
     );
   }
 
@@ -53,7 +59,7 @@ class ShortStoryModel {
 
   @override
   String toString() {
-    return 'ShortStoryModel(id: $id, username: $username, videoUrl: $videoUrl, description: $description)';
+    return 'ShortStoryModel(id: $id, username: $username, videoUrl: $videoUrl, description: $description, likes: $likes)';
   }
 
   @override
@@ -63,7 +69,8 @@ class ShortStoryModel {
     return other.id == id &&
         other.username == username &&
         other.videoUrl == videoUrl &&
-        other.description == description;
+        other.description == description &&
+        other.likes == likes;
   }
 
   @override
@@ -71,6 +78,7 @@ class ShortStoryModel {
     return id.hashCode ^
         username.hashCode ^
         videoUrl.hashCode ^
-        description.hashCode;
+        description.hashCode ^
+        likes.hashCode;
   }
 }

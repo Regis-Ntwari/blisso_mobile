@@ -12,26 +12,26 @@ class ExploreComponent extends StatefulWidget {
 class _ExploreComponentState extends State<ExploreComponent> {
   final List<ShortStoryModel> videos = [
     ShortStoryModel(
-      id: '1',
-      username: 'user1',
-      videoUrl:
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-      description: 'Check out this cool video!',
-    ),
+        id: '1',
+        username: 'user1',
+        videoUrl:
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        description: 'Check out this cool video!',
+        likes: 300),
     ShortStoryModel(
-      id: '2',
-      username: 'user2',
-      videoUrl:
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      description: 'Amazing view from the mountains!',
-    ),
+        id: '2',
+        username: 'user2',
+        videoUrl:
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        description: 'Amazing view from the mountains!',
+        likes: 100),
     ShortStoryModel(
-      id: '3',
-      username: 'user3',
-      videoUrl:
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
-      description: 'Amazing view!',
-    ),
+        id: '3',
+        username: 'user3',
+        videoUrl:
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+        description: 'Amazing view!',
+        likes: 200),
   ];
   @override
   Widget build(BuildContext context) {
