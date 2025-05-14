@@ -31,4 +31,14 @@ class StoriesService {
 
     return response;
   }
+
+  Future<ApiResponse> getOneStory(int id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response =
+        await ApiService().getData('posts/stories/$id', accessToken);
+
+    return response;
+  }
 }

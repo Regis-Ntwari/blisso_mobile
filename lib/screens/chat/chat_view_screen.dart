@@ -315,9 +315,14 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     }
   }
 
+  bool isNameLoading = false;
+
   @override
   void initState() {
     super.initState();
+    setState(() {
+      isNameLoading = true;
+    });
     _initializeRecorder();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // First ensure we have the users data
@@ -329,6 +334,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
       // Then proceed with other initializations
       await getMyUsername();
+      setState(() {
+        isNameLoading = false;
+      });
       initializeEmptyChat();
       scrollToBottom();
       await _loadChatDetails();
@@ -486,7 +494,10 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 5),
                 child: Text(
-                  chatFullName ?? widget.username, // Use username as fallback
+                  isNameLoading
+                      ? 'Loading...'
+                      : chatFullName ?? widget.username,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

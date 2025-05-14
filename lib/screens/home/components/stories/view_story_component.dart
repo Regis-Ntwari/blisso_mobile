@@ -182,7 +182,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    print(stories[currentIndex]);
     return Scaffold(
       backgroundColor: isLightTheme ? Colors.white : Colors.black,
       body: !_isDataLoaded
@@ -271,29 +270,31 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                 ],
                               ),
                             ),
-                            Text(
-                              '${stories[currentIndex]['likes'] ?? 0} likes',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isLightTheme
-                                    ? Colors.grey[600]
-                                    : Colors.grey[400],
-                                shadows: const [
-                                  Shadow(
-                                    offset: Offset(1, 1),
-                                    blurRadius: 3.0,
-                                    color: Colors.black54,
-                                  ),
-                                ],
-                              ),
-                            ),
+                            stories[currentIndex]['nickname'] == nickname
+                                ? Text(
+                                    '${stories[currentIndex]['likes'] ?? 0} likes',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isLightTheme
+                                          ? Colors.grey[600]
+                                          : Colors.grey[400],
+                                      shadows: const [
+                                        Shadow(
+                                          offset: Offset(1, 1),
+                                          blurRadius: 3.0,
+                                          color: Colors.black54,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
                           ],
                         ),
                       ],
                     ),
                   ),
                   Positioned(
-                    bottom: 110,
+                    bottom: 100,
                     left: 10,
                     right: 10,
                     child: stories[currentIndex]['caption'] != null

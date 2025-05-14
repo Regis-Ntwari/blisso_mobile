@@ -6,15 +6,17 @@ import 'package:blisso_mobile/components/view_picture_bytes_component.dart';
 import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/screens/utils/audio_player.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/stories/get_one_story_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:routemaster/routemaster.dart';
 
-class MessageView extends StatefulWidget {
+class MessageView extends ConsumerStatefulWidget {
   final dynamic message;
   final Function scrollToParent;
   final String username;
@@ -25,10 +27,10 @@ class MessageView extends StatefulWidget {
       required this.username});
 
   @override
-  State<MessageView> createState() => _MessageViewState();
+  ConsumerState<MessageView> createState() => _MessageViewState();
 }
 
-class _MessageViewState extends State<MessageView> {
+class _MessageViewState extends ConsumerState<MessageView> {
   String? username;
   Future<void> getMyUsername() async {
     await SharedPreferencesService.getPreference('username').then((use) {
@@ -389,38 +391,80 @@ class _MessageViewState extends State<MessageView> {
                           AudioPlayer(message: widget.message),
                         ],
                       )
-                    : Wrap(
-                        children: [
-                          widget.message['parent_id'] !=
-                                  '000000000000000000000000'
-                              ? InkWell(
-                                  onTap: null,
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10, horizontal: 10),
-                                    color: isLightTheme
-                                        ? username == widget.message['sender']
-                                            ? GlobalColors
-                                                .myLightReplyMessageColor
-                                            : Colors.grey[400]
-                                        : username == widget.message['sender']
-                                            ? GlobalColors
-                                                .myDarkReplyMessageColor
-                                            : Colors.grey[700],
-                                    child:
-                                        Text(widget.message['parent_content']),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                          Text(
-                            widget.message['content']!,
-                            textAlign: TextAlign.justify,
-                            style: const TextStyle(
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      );
+                    : widget.message['parent_content']
+                            .toString()
+                            .startsWith('Story')
+                        ? Wrap(
+                            children: [
+                              InkWell(
+                                onTap: () async {
+                                  final shortStoryRef = ref
+                                      .read(getOneStoryProviderImpl.notifier);
+
+                                  dynamic status = shortStoryRef
+                                      .getOneStory(widget.message['parent_id']);
+                                  String encodedData = jsonEncode([status]);
+                                  Routemaster.of(context).push(
+                                      '/homepage/view-story?data=$encodedData');
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 10),
+                                  color: isLightTheme
+                                      ? username == widget.message['sender']
+                                          ? GlobalColors
+                                              .myLightReplyMessageColor
+                                          : Colors.grey[400]
+                                      : username == widget.message['sender']
+                                          ? GlobalColors.myDarkReplyMessageColor
+                                          : Colors.grey[700],
+                                  child: Text(widget.message['parent_content']),
+                                ),
+                              ),
+                              Text(
+                                widget.message['content']!,
+                                textAlign: TextAlign.justify,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Wrap(
+                            children: [
+                              widget.message['parent_id'] !=
+                                      '000000000000000000000000'
+                                  ? InkWell(
+                                      onTap: null,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        color: isLightTheme
+                                            ? username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myLightReplyMessageColor
+                                                : Colors.grey[400]
+                                            : username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myDarkReplyMessageColor
+                                                : Colors.grey[700],
+                                        child: Text(
+                                            widget.message['parent_content']),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
+                              Text(
+                                widget.message['content']!,
+                                textAlign: TextAlign.justify,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          );
   }
 }
