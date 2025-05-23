@@ -605,12 +605,23 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                             Padding(
                                               padding: const EdgeInsets.only(
                                                   top: 5.0),
-                                              child: Text(
-                                                formatDate(
-                                                    message['created_at']!),
-                                                textAlign: TextAlign.end,
-                                                style: const TextStyle(
-                                                    fontSize: 9),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.bottomRight,
+                                                    child: Text(
+                                                      formatDate(message[
+                                                          'created_at']!),
+                                                      textAlign: TextAlign.end,
+                                                      style: const TextStyle(
+                                                          fontSize: 9),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             )
                                           ],

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class WebSocketNotifier extends StateNotifier<String> {
@@ -17,10 +18,17 @@ class WebSocketNotifier extends StateNotifier<String> {
   }
 
   void sendMessage(ChatMessageModel messageModel) {
-    _webSocketService.sendMessage(messageModel);
-    ref.read(chatServiceProviderImpl.notifier).addMessage(messageModel.toMap());
+    try {
+      _webSocketService.sendMessage(messageModel);
+      ref
+          .read(chatServiceProviderImpl.notifier)
+          .addMessage(messageModel.toMap());
 
-    state = 'Sent: ${messageModel.toMap()}';
+      state = 'Sent: ${messageModel.toMap()}';
+      debugPrint('Message sent');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   void listenToMessages() {

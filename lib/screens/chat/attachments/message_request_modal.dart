@@ -1,5 +1,10 @@
+import 'dart:math';
+
 import 'package:blisso_mobile/services/message_requests/message_request_service_provider.dart';
+import 'package:blisso_mobile/services/models/chat_message_model.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
+import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +12,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
 class MessageRequestModal extends ConsumerStatefulWidget {
-  const MessageRequestModal({super.key});
+  Map<String, dynamic>? profile;
+  MessageRequestModal({super.key, this.profile});
 
   @override
   ConsumerState<MessageRequestModal> createState() =>
@@ -46,6 +52,45 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getUsers();
     });
+  }
+
+  String generate12ByteHexFromTimestamp(DateTime dateTime) {
+    // Convert DateTime to Unix timestamp in milliseconds
+    int timestamp = dateTime.millisecondsSinceEpoch;
+
+    // Convert timestamp (8 bytes) to hex
+    String hexTimestamp = timestamp.toRadixString(16).padLeft(16, '0');
+
+    // Generate 4 random bytes (8 hex characters)
+    final random = Random();
+    String randomHex = List.generate(
+        4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+
+    // Combine timestamp + random bytes (12 bytes = 24 hex characters)
+    return hexTimestamp + randomHex;
+  }
+
+  Future<void> sendContact(String receiver) async {
+    try {
+      final username = await SharedPreferencesService.getPreference('username');
+      final targetUsername = widget.profile?['user']['username'];
+      ChatMessageModel messageModel = ChatMessageModel(
+          sender: username,
+          receiver: receiver,
+          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+          contentFileType: 'Profile',
+          contentFileUrl: widget.profile?['profile_picture_uri'],
+          content: widget.profile?['nickname'],
+          parentContent: targetUsername,
+          isFileIncluded: true,
+          createdAt: DateTime.now().toUtc().toIso8601String(),
+          action: 'profile_sharing');
+
+      final messageRef = ref.read(webSocketNotifierProvider.notifier);
+      messageRef.sendMessage(messageModel);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   @override
@@ -102,9 +147,15 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                       final usersList = messageRequestRef.data.keys.toList();
                       return InkWell(
                         onTap: () {
-                          Navigator.pop(context);
-                          Routemaster.of(context)
-                              .push('/chat-detail/${usersList[index]}');
+                          if (widget.profile == null) {
+                            Navigator.pop(context);
+                            Routemaster.of(context)
+                                .push('/chat-detail/${usersList[index]}');
+                          } else {
+                            //widget.action.call('');
+                            sendContact(usersList[index]);
+                            Navigator.pop(context);
+                          }
                         },
                         child: ListTile(
                           leading: FutureBuilder<String>(
@@ -160,7 +211,8 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
   }
 }
 
-void showMessageRequestModal(BuildContext context) {
+void showMessageRequestModal(
+    BuildContext context, Map<String, dynamic>? profile) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -168,7 +220,9 @@ void showMessageRequestModal(BuildContext context) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return const MessageRequestModal();
+      return MessageRequestModal(
+        profile: profile,
+      );
     },
   );
 }

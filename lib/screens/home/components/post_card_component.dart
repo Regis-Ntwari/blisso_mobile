@@ -1,9 +1,15 @@
+import 'dart:math';
+
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
+import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
+import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +55,22 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
       }
     }
     return false;
+  }
+
+  String generate12ByteHexFromTimestamp(DateTime dateTime) {
+    // Convert DateTime to Unix timestamp in milliseconds
+    int timestamp = dateTime.millisecondsSinceEpoch;
+
+    // Convert timestamp (8 bytes) to hex
+    String hexTimestamp = timestamp.toRadixString(16).padLeft(16, '0');
+
+    // Generate 4 random bytes (8 hex characters)
+    final random = Random();
+    String randomHex = List.generate(
+        4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+
+    // Combine timestamp + random bytes (12 bytes = 24 hex characters)
+    return hexTimestamp + randomHex;
   }
 
   Future<void> handleDMTap(BuildContext context) async {
@@ -239,7 +261,10 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.share),
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      showMessageRequestModal(
+                                          context, widget.profile);
+                                    },
                                   ),
                                 ],
                               ),

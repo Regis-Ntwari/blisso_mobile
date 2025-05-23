@@ -283,7 +283,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           ),
           floatingActionButton: InkWell(
             onTap: () {
-              showMessageRequestModal(context);
+              showMessageRequestModal(context, null);
             },
             child: Container(
               decoration: BoxDecoration(

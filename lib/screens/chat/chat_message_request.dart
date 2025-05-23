@@ -49,8 +49,14 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
   @override
   Widget build(BuildContext context) {
     final messageRequests = ref.watch(getMessageRequestServiceProviderImpl);
+    final acceptMessageRequest =
+        ref.watch(acceptMessageRequestServiceProviderImpl);
+    final denyMessageRequest =
+        ref.watch(rejectMessageRequestServiceProviderImpl);
 
-    if (messageRequests.isLoading) {
+    if (messageRequests.isLoading ||
+        acceptMessageRequest.isLoading ||
+        denyMessageRequest.isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: GlobalColors.primaryColor),
       );

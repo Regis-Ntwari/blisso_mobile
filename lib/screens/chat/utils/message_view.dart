@@ -5,6 +5,9 @@ import 'dart:typed_data';
 import 'package:blisso_mobile/components/view_picture_bytes_component.dart';
 import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/screens/utils/audio_player.dart';
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
+import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/stories/get_one_story_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -431,40 +434,65 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               ),
                             ],
                           )
-                        : Wrap(
-                            children: [
-                              widget.message['parent_id'] !=
-                                      '000000000000000000000000'
-                                  ? InkWell(
-                                      onTap: null,
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10, horizontal: 10),
-                                        color: isLightTheme
-                                            ? username ==
-                                                    widget.message['sender']
-                                                ? GlobalColors
-                                                    .myLightReplyMessageColor
-                                                : Colors.grey[400]
-                                            : username ==
-                                                    widget.message['sender']
-                                                ? GlobalColors
-                                                    .myDarkReplyMessageColor
-                                                : Colors.grey[700],
-                                        child: Text(
-                                            widget.message['parent_content']),
-                                      ),
-                                    )
-                                  : const SizedBox.shrink(),
-                              Text(
-                                widget.message['content']!,
-                                textAlign: TextAlign.justify,
-                                style: const TextStyle(
-                                  fontSize: 14,
+                        : widget.message['content_file_type'] == 'Profile'
+                            ? ListTile(
+                                onTap: () async {
+                                  final profileRef = ref.read(
+                                      anyProfileServiceProviderImpl.notifier);
+                                  await profileRef.getAnyProfile(
+                                      widget.message['parent_content']);
+
+                                  final profile =
+                                      ref.read(anyProfileServiceProviderImpl);
+
+                                  final targetProfile =
+                                      ref.read(targetProfileProvider.notifier);
+                                  targetProfile.updateTargetProfile(
+                                      TargetProfileModel.fromMap(profile.data));
+                                  Routemaster.of(context)
+                                      .push('/target-profile');
+                                },
+                                leading: CircleAvatar(
+                                  backgroundImage: CachedNetworkImageProvider(
+                                    widget.message['content_file_url'],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
+                                title: Text(widget.message['content']),
+                              )
+                            : Wrap(
+                                children: [
+                                  widget.message['parent_id'] !=
+                                          '000000000000000000000000'
+                                      ? InkWell(
+                                          onTap: null,
+                                          child: Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 10, horizontal: 10),
+                                            color: isLightTheme
+                                                ? username ==
+                                                        widget.message['sender']
+                                                    ? GlobalColors
+                                                        .myLightReplyMessageColor
+                                                    : Colors.grey[400]
+                                                : username ==
+                                                        widget.message['sender']
+                                                    ? GlobalColors
+                                                        .myDarkReplyMessageColor
+                                                    : Colors.grey[700],
+                                            child: Text(widget
+                                                .message['parent_content']),
+                                          ),
+                                        )
+                                      : const SizedBox.shrink(),
+                                  Text(
+                                    widget.message['content']!,
+                                    textAlign: TextAlign.justify,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              );
   }
 }

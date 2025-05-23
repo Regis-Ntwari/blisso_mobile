@@ -354,7 +354,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                           child: Container(
                                               margin:
                                                   const EdgeInsets.only(top: 5),
-                                              height: 50,
+                                              height: 70,
                                               alignment: Alignment.center,
                                               child: Align(
                                                 alignment: Alignment.center,
