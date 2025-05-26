@@ -134,7 +134,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     try {
       ChatMessageModel messageModel = ChatMessageModel(
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-          parentId: stories[currentIndex]['id'],
+          parentId: stories[currentIndex]['id'].toString(),
           parentContent: 'Story',
           sender: username!,
           receiver: toUsername,
@@ -142,6 +142,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
           content: replyController.text,
           isFileIncluded: false,
           createdAt: DateTime.now().toUtc().toIso8601String());
+
+      print(messageModel);
 
       final messageRef = ref.read(webSocketNotifierProvider.notifier);
       messageRef.sendMessage(messageModel);
@@ -153,6 +155,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
         });
       }
     } catch (e) {
+      print(e);
       if (mounted) {
         setState(() {
           isSendingReply = false;
@@ -302,21 +305,25 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             constraints: BoxConstraints(
                               maxWidth: MediaQuery.of(context).size.width - 20,
                             ),
-                            child: Text(
-                              stories[currentIndex]['caption'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(1, 1),
-                                    blurRadius: 3.0,
-                                    color: Colors.black54,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  stories[currentIndex]['caption'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    shadows: [
+                                      Shadow(
+                                        offset: Offset(1, 1),
+                                        blurRadius: 3.0,
+                                        color: Colors.black54,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           )
                         : const SizedBox.shrink(),
@@ -418,15 +425,12 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                     ),
                                     // Share button
                                     IconButton(
-                                      onPressed: isSendingReply
-                                          ? null
-                                          : () {
-                                              if (replyController
-                                                  .text.isNotEmpty) {
-                                                sendReply(stories[currentIndex]
-                                                    ['username']);
-                                              }
-                                            },
+                                      onPressed: () {
+                                        if (replyController.text.isNotEmpty) {
+                                          sendReply(stories[currentIndex]
+                                              ['username']);
+                                        }
+                                      },
                                       icon: const Icon(Icons.send,
                                           color: Colors.white),
                                     ),

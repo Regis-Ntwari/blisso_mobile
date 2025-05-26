@@ -87,7 +87,9 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(request['requester_profile_name'] ?? ''),
+                    Text(request['requester_profile_name'] == null
+                        ? ''
+                        : 'You have received a message request from ${request['request_profile_name']}'),
                   ],
                 ),
               ),
@@ -96,16 +98,24 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
                 children: [
                   IconButton(
                     onPressed: () async {
-                      final rejectRef = ref.read(
+                      final acceptRef = ref.read(
                           acceptMessageRequestServiceProviderImpl.notifier);
 
-                      await rejectRef.acceptMessageRequest(request['id']);
+                      await acceptRef.acceptMessageRequest(request['id']);
 
                       ref
                           .read(getMessageRequestServiceProviderImpl.notifier)
                           .getMessageRequests();
                     },
-                    icon: const Icon(Icons.check, color: Colors.green),
+                    icon: const Row(
+                      children: [
+                        Icon(Icons.check, color: Colors.green),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Text('Accept'),
+                      ],
+                    ),
                   ),
                   IconButton(
                     onPressed: () async {
@@ -118,7 +128,15 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
                           .read(getMessageRequestServiceProviderImpl.notifier)
                           .getMessageRequests();
                     },
-                    icon: const Icon(Icons.close, color: Colors.red),
+                    icon: const Row(
+                      children: [
+                        Icon(Icons.close, color: Colors.red),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text('Reject'),
+                      ],
+                    ),
                   ),
                 ],
               ),
