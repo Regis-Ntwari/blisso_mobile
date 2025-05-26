@@ -148,19 +148,15 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
       final messageRef = ref.read(webSocketNotifierProvider.notifier);
       messageRef.sendMessage(messageModel);
 
-      if (mounted) {
-        setState(() {
-          replyController.clear();
-          isSendingReply = false;
-        });
-      }
+      setState(() {
+        replyController.clear();
+        isSendingReply = false;
+      });
     } catch (e) {
       print(e);
-      if (mounted) {
-        setState(() {
-          isSendingReply = false;
-        });
-      }
+      setState(() {
+        isSendingReply = false;
+      });
     }
   }
 
@@ -447,15 +443,13 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                             vertical: 10,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: isLightTheme
-                                                ? Colors.white
-                                                : Colors.black,
+                                            color: Colors.grey[400],
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                             boxShadow: [
                                               BoxShadow(
                                                 color: Colors.black
-                                                    .withOpacity(0.2),
+                                                    .withOpacity(0.3),
                                                 blurRadius: 5,
                                                 offset: const Offset(0, 2),
                                               ),
