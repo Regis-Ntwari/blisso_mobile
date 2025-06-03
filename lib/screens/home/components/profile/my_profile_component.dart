@@ -483,6 +483,95 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                 ),
                               ),
                             InkWell(
+                              onTap: () {
+                                if (expandedField == 'media') {
+                                  setState(() {
+                                    expandedField = '';
+                                  });
+                                } else {
+                                  setState(() {
+                                    expandedField = 'media';
+                                  });
+                                }
+                              },
+                              child: ListTile(
+                                title: const Text(
+                                  'My Media',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle:
+                                    const Text('View your pictures and videos'),
+                                trailing: expandedField == 'media'
+                                    ? const Icon(Icons.keyboard_arrow_down)
+                                    : const Icon(Icons.keyboard_arrow_right),
+                              ),
+                            ),
+                            if (expandedField == 'media')
+                              DefaultTabController(
+                                length: 2,
+                                child: Column(
+                                  children: [
+                                    TabBar(
+                                      tabs: const [
+                                        Tab(text: 'Pictures'),
+                                        Tab(text: 'Videos'),
+                                      ],
+                                      labelColor: GlobalColors.primaryColor,
+                                      unselectedLabelColor:
+                                          GlobalColors.secondaryColor,
+                                    ),
+                                    SizedBox(
+                                      height: 200,
+                                      child: TabBarView(
+                                        children: [
+                                          // Pictures Tab
+                                          GridView.builder(
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: 3,
+                                              crossAxisSpacing: 4,
+                                              mainAxisSpacing: 4,
+                                            ),
+                                            itemCount: profileState
+                                                .data['profile_images'].length,
+                                            itemBuilder: (context, index) {
+                                              return InkWell(
+                                                onTap: () => showPictureDialog(
+                                                  context: context,
+                                                  image: profileState.data[
+                                                      'profile_images'][index],
+                                                  isEdit: true,
+                                                  chosenPicture: chosenPicture,
+                                                  updatePicture:
+                                                      updateChosenPicture,
+                                                  savePicture: replaceImage,
+                                                ),
+                                                child: CachedNetworkImage(
+                                                  imageUrl: profileState.data[
+                                                          'profile_images']
+                                                      [index]['image_uri'],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          // Videos Tab
+                                          Center(
+                                            child: Text(
+                                              'No videos yet',
+                                              style: TextStyle(
+                                                color:
+                                                    GlobalColors.secondaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            InkWell(
                               onTap: () {},
                               child: const ListTile(
                                 title: Text(

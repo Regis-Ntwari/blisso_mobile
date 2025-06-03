@@ -1,66 +1,42 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:blisso_mobile/screens/utils/video_player.dart';
-import 'package:blisso_mobile/services/models/chat_message_model.dart';
-import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
+import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 //import 'package:routemaster/routemaster.dart';
 
-class VideoModal extends ConsumerStatefulWidget {
-  final String sender;
-  final String receiver;
+class ShortStoryVideoModal extends ConsumerStatefulWidget {
   final File video;
-  const VideoModal(
-      {super.key,
-      required this.sender,
-      required this.receiver,
-      required this.video});
+  const ShortStoryVideoModal({
+    super.key,
+    required this.video,
+  });
 
   @override
-  ConsumerState<VideoModal> createState() => _VideoModalState();
+  ConsumerState<ShortStoryVideoModal> createState() =>
+      _ShortStoryVideoModalState();
 }
 
-class _VideoModalState extends ConsumerState<VideoModal> {
+class _ShortStoryVideoModalState extends ConsumerState<ShortStoryVideoModal> {
   TextEditingController captionController = TextEditingController();
 
-  String generate12ByteHexFromTimestamp(DateTime dateTime) {
-    int timestamp = dateTime.millisecondsSinceEpoch;
-
-    String hexTimestamp = timestamp.toRadixString(16).padLeft(16, '0');
-
-    final random = Random();
-    String randomHex = List.generate(
-        4, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
-
-    return hexTimestamp + randomHex;
-  }
-
-  void sendMessage() async {
-    String extension = widget.video.path.split('.').last;
+  void postShortVideoStory() async {
     try {
-      List<int> bytes = widget.video.readAsBytesSync();
-      String base64Bytes = base64Encode(bytes);
-      ChatMessageModel messageModel = ChatMessageModel(
-          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-          contentFileType: 'video/$extension',
-          parentId: '000000000000000000000000',
-          contentFile: base64Bytes,
-          sender: widget.sender,
-          receiver: widget.receiver,
-          action: 'created',
-          content: captionController.text,
-          isFileIncluded: true,
-          createdAt: DateTime.now().toUtc().toIso8601String());
+      Map<String, dynamic> videoStory = {
+        'post_type': 'VIDEO',
+        'caption': captionController.text,
+        'post_file': widget.video
+      };
 
-      final messageRef = ref.read(webSocketNotifierProvider.notifier);
+      final shortStoryRef = ref.read(storiesServiceProviderImpl.notifier);
 
-      messageRef.sendMessage(messageModel);
+      await shortStoryRef.createStory(videoStory);
 
       Navigator.of(context).pop();
+
+      print('Story posted successfully');
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -111,7 +87,7 @@ class _VideoModalState extends ConsumerState<VideoModal> {
                       ),
                     ),
                     IconButton(
-                        onPressed: () => sendMessage(),
+                        onPressed: () => postShortVideoStory(),
                         icon: const Icon(
                           Icons.send,
                           color: GlobalColors.primaryColor,
@@ -127,11 +103,9 @@ class _VideoModalState extends ConsumerState<VideoModal> {
   }
 }
 
-void ShowVideoWithCaption(
+void showShortStoryVideoWithCaption(
   BuildContext context,
   File video,
-  String sender,
-  String receiver,
 ) {
   showModalBottomSheet(
     context: context,
@@ -140,10 +114,8 @@ void ShowVideoWithCaption(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return VideoModal(
+      return ShortStoryVideoModal(
         video: video,
-        sender: sender,
-        receiver: receiver,
       );
     },
   );

@@ -1,46 +1,60 @@
+import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/short_story_player.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
+import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ExploreComponent extends StatefulWidget {
+class ExploreComponent extends ConsumerStatefulWidget {
   const ExploreComponent({super.key});
 
   @override
-  State<ExploreComponent> createState() => _ExploreComponentState();
+  ConsumerState<ExploreComponent> createState() => _ExploreComponentState();
 }
 
-class _ExploreComponentState extends State<ExploreComponent> {
-  final List<ShortStoryModel> videos = [
-    ShortStoryModel(
-        id: '1',
-        username: 'user1',
-        videoUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-        description: 'Check out this cool video!',
-        likes: 300),
-    ShortStoryModel(
-        id: '2',
-        username: 'user2',
-        videoUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-        description: 'Amazing view from the mountains!',
-        likes: 100),
-    ShortStoryModel(
-        id: '3',
-        username: 'user3',
-        videoUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
-        description: 'Amazing view!',
-        likes: 200),
-  ];
+class _ExploreComponentState extends ConsumerState<ExploreComponent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(getVideoPostProviderImpl).data == null) {
+        ref.read(getVideoPostProviderImpl.notifier).getVideoPosts();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final videoState = ref.watch(getVideoPostProviderImpl);
+
+    if (videoState.isLoading || videoState.data == null) {
+      return const LoadingScreen();
+    }
+
+    final List<ShortStoryModel> videos = (videoState.data as List).map((video) {
+      return ShortStoryModel(
+        id: video['id'].toString(),
+        username: video['username'],
+        nickname: video['nickname'],
+        profilePicture: video['profile_picture_uri'],
+        videoUrl: video['post_file_url'],
+        description: video['caption'] ?? '',
+        likes: video['likes'] ?? 0,
+        peopleLiked: video['people_liked'] ?? [],
+      );
+    }).toList();
+
     return Scaffold(
-        body: PageView.builder(
-            scrollDirection: Axis.vertical,
-            itemCount: videos.length,
-            itemBuilder: (context, index) {
-              return ShortStoryPlayer(video: videos[index]);
-            }));
+      body: videos.isEmpty
+          ? const Center(
+              child: Text('No videos available'),
+            )
+          : PageView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: videos.length,
+              itemBuilder: (context, index) {
+                return ShortStoryPlayer(video: videos[index]);
+              }),
+    );
   }
 }

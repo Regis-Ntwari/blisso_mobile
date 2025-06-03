@@ -4,31 +4,43 @@ import 'dart:convert';
 class ShortStoryModel {
   final String id;
   final String username;
+  final String nickname;
+  final String profilePicture;
   final String videoUrl;
   final String description;
   final int likes;
+  final List<dynamic> peopleLiked;
 
   ShortStoryModel({
     required this.id,
     required this.username,
+    required this.nickname,
+    required this.profilePicture,
     required this.videoUrl,
     required this.description,
     required this.likes,
+    required this.peopleLiked,
   });
 
   ShortStoryModel copyWith({
     String? id,
     String? username,
+    String? nickname,
+    String? profilePicture,
     String? videoUrl,
     String? description,
     int? likes,
+    List<dynamic>? peopleLiked,
   }) {
     return ShortStoryModel(
       id: id ?? this.id,
       username: username ?? this.username,
+      nickname: nickname ?? this.nickname,
+      profilePicture: profilePicture ?? this.profilePicture,
       videoUrl: videoUrl ?? this.videoUrl,
       description: description ?? this.description,
       likes: likes ?? this.likes,
+      peopleLiked: peopleLiked ?? this.peopleLiked,
     );
   }
 
@@ -36,9 +48,12 @@ class ShortStoryModel {
     return <String, dynamic>{
       'id': id,
       'username': username,
+      'nickname': nickname,
+      'profilePicture': profilePicture,
       'videoUrl': videoUrl,
       'description': description,
       'likes': likes,
+      'peopleLiked': peopleLiked,
     };
   }
 
@@ -46,9 +61,12 @@ class ShortStoryModel {
     return ShortStoryModel(
       id: map['id'] as String,
       username: map['username'] as String,
+      nickname: map['nickname'] as String,
+      profilePicture: map['profilePicture'] as String,
       videoUrl: map['videoUrl'] as String,
       description: map['description'] as String,
       likes: map['likes'] as int? ?? 0,
+      peopleLiked: map['peopleLiked'] as List<dynamic> ?? [],
     );
   }
 
@@ -59,7 +77,7 @@ class ShortStoryModel {
 
   @override
   String toString() {
-    return 'ShortStoryModel(id: $id, username: $username, videoUrl: $videoUrl, description: $description, likes: $likes)';
+    return 'ShortStoryModel(id: $id, username: $username, nickname: $nickname, profilePicture: $profilePicture, videoUrl: $videoUrl, description: $description, likes: $likes, peopleLiked: $peopleLiked)';
   }
 
   @override
@@ -68,17 +86,23 @@ class ShortStoryModel {
 
     return other.id == id &&
         other.username == username &&
+        other.nickname == nickname &&
+        other.profilePicture == profilePicture &&
         other.videoUrl == videoUrl &&
         other.description == description &&
-        other.likes == likes;
+        other.likes == likes &&
+        other.peopleLiked == peopleLiked;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
         username.hashCode ^
+        nickname.hashCode ^
+        profilePicture.hashCode ^
         videoUrl.hashCode ^
         description.hashCode ^
-        likes.hashCode;
+        likes.hashCode ^
+        peopleLiked.hashCode;
   }
 }

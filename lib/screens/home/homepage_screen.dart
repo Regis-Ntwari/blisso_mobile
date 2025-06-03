@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/screens/chat/attachments/video_post_modal.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
 import 'package:blisso_mobile/screens/home/components/home_component.dart';
 import 'package:blisso_mobile/screens/home/components/search/search_component.dart';
@@ -8,6 +11,7 @@ import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:routemaster/routemaster.dart';
 
 class HomepageScreen extends ConsumerStatefulWidget {
@@ -247,6 +251,28 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                         icon: const Icon(Icons.chat),
                                         onPressed: () {
                                           Routemaster.of(context).push('/chat');
+                                        },
+                                      ),
+                                    ] else if (_selectedScreenIndex == 2) ...[
+                                      IconButton(
+                                        icon: const Row(
+                                          children: [
+                                            Icon(
+                                              Icons.add,
+                                            ),
+                                            SizedBox(width: 10),
+                                            Text('Post Video')
+                                          ],
+                                        ),
+                                        onPressed: () async {
+                                          final picker = ImagePicker();
+                                          final pickedFile =
+                                              await picker.pickVideo(
+                                                  source: ImageSource.gallery);
+                                          if (pickedFile != null) {
+                                            showVideoPostModal(
+                                                context, File(pickedFile.path));
+                                          }
                                         },
                                       ),
                                     ]

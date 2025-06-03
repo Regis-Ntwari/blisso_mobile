@@ -41,4 +41,24 @@ class StoriesService {
 
     return response;
   }
+
+  Future<ApiResponse> postVideoPosts(dynamic story) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postFormDataRequest(
+        endpoint: 'posts/video-posts/', body: story, token: accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> getVideoPosts() async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response =
+        await ApiService().getData('posts/video-posts/', accessToken);
+
+    return response;
+  }
 }

@@ -26,7 +26,7 @@ class _ShortStoryImageModalState extends ConsumerState<ShortStoryImageModal> {
 
       final shortStoryRef = ref.read(storiesServiceProviderImpl.notifier);
 
-      shortStoryRef.createStory(imageStory);
+      await shortStoryRef.createStory(imageStory);
 
       Navigator.of(context).pop();
     } catch (e) {

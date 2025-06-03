@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/services/models/short_story_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -106,13 +107,27 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         ),
                       ),
                     )
-                  : Text(
-                      widget.video.username,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  : Row(
+                      children: [
+                        CircleAvatar(
+                            radius: 20,
+                            backgroundImage: CachedNetworkImageProvider(
+                              widget.video.profilePicture,
+                            ),
+                            onBackgroundImageError: (_, __) {},
+                            child: Container()),
+                        const SizedBox(
+                          width: 5,
+                        ),
+                        Text(
+                          widget.video.nickname,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
               const SizedBox(height: 4),
               _isLoading
@@ -219,7 +234,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         // TODO: Implement share functionality
                       },
                       icon: const Icon(
-                        Icons.share,
+                        Icons.forward_to_inbox,
                         color: Colors.white,
                         size: 32,
                       ),

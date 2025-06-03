@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:blisso_mobile/screens/chat/attachments/short_story_image_modal.dart';
-import 'package:blisso_mobile/screens/chat/attachments/video_modal.dart';
+import 'package:blisso_mobile/screens/chat/attachments/short_story_video_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -68,7 +68,10 @@ class _ChooseStoryComponentState extends State<ChooseStoryComponent> {
                         pickedVideo = File(pickedFile.path);
                       });
                       Navigator.of(context).pop();
-                      ShowVideoWithCaption(context, pickedVideo!, '', '');
+                      showShortStoryVideoWithCaption(
+                        context,
+                        pickedVideo!,
+                      );
                     }
                   },
                   child: const Column(

@@ -56,6 +56,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
       setState(() {
         stories = List<Map<String, dynamic>>.from(jsonDecode(encodedData));
       });
+      print(stories);
       _loadStory();
     }
   }
@@ -269,24 +270,26 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                 ],
                               ),
                             ),
-                            stories[currentIndex]['nickname'] == nickname
-                                ? Text(
-                                    '${stories[currentIndex]['likes'] ?? 0} likes',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isLightTheme
-                                          ? Colors.grey[600]
-                                          : Colors.grey[400],
-                                      shadows: const [
-                                        Shadow(
-                                          offset: Offset(1, 1),
-                                          blurRadius: 3.0,
-                                          color: Colors.black54,
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
+                            // stories[currentIndex]['nickname'] == nickname
+                            //     ? Row(children: [
+                            //         Text(
+                            //           '${stories[currentIndex]['likes'] ?? 0} ',
+                            //           style: TextStyle(
+                            //             fontSize: 12,
+                            //             color: isLightTheme
+                            //                 ? Colors.grey[600]
+                            //                 : Colors.grey[400],
+                            //             shadows: const [
+                            //               Shadow(
+                            //                 offset: Offset(1, 1),
+                            //                 blurRadius: 3.0,
+                            //                 color: Colors.black54,
+                            //               ),
+                            //             ],
+                            //           ),
+                            //         )
+                            //       ])
+                            //     : const SizedBox.shrink(),
                           ],
                         ),
                       ],
@@ -473,11 +476,29 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             ),
                           ),
                         )
-                      : const Positioned(
+                      : Positioned(
                           left: 0,
-                          bottom: 0,
+                          bottom: 10,
                           right: 0,
-                          child: SizedBox.shrink()),
+                          child: InkWell(
+                            onTap: () {},
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${stories[currentIndex]['likes'] ?? 0}',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                const Icon(
+                                  Icons.favorite,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          )),
                 ],
               ),
             ),
