@@ -111,6 +111,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           backgroundColor:
               isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           appBar: AppBar(
+            backgroundColor: isLightTheme ? Colors.white : Colors.black,
             centerTitle: true,
             leading: IconButton(
               onPressed: () {

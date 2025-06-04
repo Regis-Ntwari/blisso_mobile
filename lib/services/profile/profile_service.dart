@@ -10,6 +10,8 @@ class ProfileService {
   Future<ApiResponse> createProfile(ProfileModel profile) async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
+
+    print(profile.toMap());
     ApiResponse response = await ApiService().postFormDataRequest(
         endpoint: 'profiles/', body: profile.toMap(), token: accessToken);
 

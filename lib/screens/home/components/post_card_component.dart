@@ -168,7 +168,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                         child: ListTile(
                             leading: CircleAvatar(
                               backgroundImage: CachedNetworkImageProvider(
-                                  widget.profile['profile_picture_uri']),
+                                  widget.profile['profile_picture_url']),
                             ),
                             contentPadding: const EdgeInsets.only(left: 5),
                             horizontalTitleGap: 10,
@@ -202,7 +202,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                                 itemBuilder: (context, index) {
                                   return CachedNetworkImage(
                                     imageUrl: widget.profile['profile_images']
-                                        [index]['image_uri'],
+                                        [index]['image_url'],
                                     fit: BoxFit.contain,
                                     placeholder: (context, url) => const Center(
                                       child: CircularProgressIndicator(

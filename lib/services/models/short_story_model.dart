@@ -10,6 +10,7 @@ class ShortStoryModel {
   final String description;
   final int likes;
   final List<dynamic> peopleLiked;
+  final bool likedThisStory;
 
   ShortStoryModel({
     required this.id,
@@ -20,6 +21,7 @@ class ShortStoryModel {
     required this.description,
     required this.likes,
     required this.peopleLiked,
+    required this.likedThisStory,
   });
 
   ShortStoryModel copyWith({
@@ -31,17 +33,18 @@ class ShortStoryModel {
     String? description,
     int? likes,
     List<dynamic>? peopleLiked,
+    bool? likedThisStory,
   }) {
     return ShortStoryModel(
-      id: id ?? this.id,
-      username: username ?? this.username,
-      nickname: nickname ?? this.nickname,
-      profilePicture: profilePicture ?? this.profilePicture,
-      videoUrl: videoUrl ?? this.videoUrl,
-      description: description ?? this.description,
-      likes: likes ?? this.likes,
-      peopleLiked: peopleLiked ?? this.peopleLiked,
-    );
+        id: id ?? this.id,
+        username: username ?? this.username,
+        nickname: nickname ?? this.nickname,
+        profilePicture: profilePicture ?? this.profilePicture,
+        videoUrl: videoUrl ?? this.videoUrl,
+        description: description ?? this.description,
+        likes: likes ?? this.likes,
+        peopleLiked: peopleLiked ?? this.peopleLiked,
+        likedThisStory: likedThisStory ?? this.likedThisStory);
   }
 
   Map<String, dynamic> toMap() {
@@ -59,15 +62,15 @@ class ShortStoryModel {
 
   factory ShortStoryModel.fromMap(Map<String, dynamic> map) {
     return ShortStoryModel(
-      id: map['id'] as String,
-      username: map['username'] as String,
-      nickname: map['nickname'] as String,
-      profilePicture: map['profilePicture'] as String,
-      videoUrl: map['videoUrl'] as String,
-      description: map['description'] as String,
-      likes: map['likes'] as int? ?? 0,
-      peopleLiked: map['peopleLiked'] as List<dynamic> ?? [],
-    );
+        id: map['id'] as String,
+        username: map['username'] as String,
+        nickname: map['nickname'] as String,
+        profilePicture: map['profile_picture'] as String,
+        videoUrl: map['post_file_url'] as String,
+        description: map['description'] as String,
+        likes: map['likes'] as int? ?? 0,
+        peopleLiked: map['people_liked'] as List<dynamic>,
+        likedThisStory: map['liked_this_story'] as bool);
   }
 
   String toJson() => json.encode(toMap());

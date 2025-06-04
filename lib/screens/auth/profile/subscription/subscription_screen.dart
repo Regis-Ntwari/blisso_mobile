@@ -471,6 +471,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                           foregroundColor:
                                               GlobalColors.whiteColor,
                                           onTap: () async {
+                                            if (chosenPlan['rw_price'] == 0.0) {
+                                              // TODO: implement free plan
+                                            }
                                             if (_currency == 'RWF') {
                                               showPaymentModes(
                                                   context: context,

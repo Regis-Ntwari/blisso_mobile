@@ -219,6 +219,9 @@ void showMessageRequestModal(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
+    backgroundColor: Theme.of(context).brightness == Brightness.light
+        ? Colors.white
+        : Colors.black,
     builder: (BuildContext context) {
       return MessageRequestModal(
         profile: profile,

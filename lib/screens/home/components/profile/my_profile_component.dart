@@ -145,7 +145,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               borderRadius: BorderRadius.circular(20),
                               child: Image(
                                 image: CachedNetworkImageProvider(
-                                    profileState.data['profile_picture_uri']),
+                                    profileState.data['profile_picture_url']),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -397,7 +397,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                             child: CachedNetworkImage(
                                                 imageUrl: profileState
                                                         .data['profile_images']
-                                                    [index]['image_uri']),
+                                                    [index]['image_url']),
                                           ),
                                         ),
                                       );

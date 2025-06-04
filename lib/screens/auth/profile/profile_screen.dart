@@ -90,7 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         nickname: _nicknameController.text,
         dob:
             '${_yearController.text}-${_monthController.text}-${_dayController.text}',
-        location: address == null ? '' : address!,
+        // location: address == null ? '' : address!,
         latitude: position!.latitude.toString(),
         longitude: position!.longitude.toString(),
         profilePic: _profilePicture!,

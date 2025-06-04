@@ -4,7 +4,6 @@ import 'dart:io';
 class ProfileModel {
   String nickname;
   String dob;
-  String location;
   String latitude;
   String longitude;
   File profilePic;
@@ -17,7 +16,6 @@ class ProfileModel {
   ProfileModel(
       {required this.nickname,
       required this.dob,
-      required this.location,
       required this.latitude,
       required this.longitude,
       required this.profilePic,
@@ -31,7 +29,6 @@ class ProfileModel {
     return <String, dynamic>{
       'nickname': nickname,
       'dob': dob,
-      'location': location,
       'latitude': latitude,
       'longitude': longitude,
       'profile_pic': profilePic,
@@ -47,7 +44,6 @@ class ProfileModel {
     return ProfileModel(
         nickname: map['nickname'] as String,
         dob: map['dob'] as String,
-        location: map['location'] as String,
         latitude: map['latitude'] as String,
         longitude: map['longitude'] as String,
         profilePic: map['profile_pic'] as File,

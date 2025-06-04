@@ -157,7 +157,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     // });
 
     return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : null,
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: isLightTheme ? Colors.white : Colors.black,
         items: <BottomNavigationBarItem>[
@@ -260,8 +260,10 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                             Icon(
                                               Icons.add,
                                             ),
-                                            SizedBox(width: 10),
-                                            Text('Post Video')
+                                            SizedBox(
+                                              width: 5,
+                                            ),
+                                            Text('New Post')
                                           ],
                                         ),
                                         onPressed: () async {

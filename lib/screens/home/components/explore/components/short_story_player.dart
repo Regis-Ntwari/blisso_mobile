@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/services/models/short_story_model.dart';
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
@@ -86,81 +87,107 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                 ),
               ),
         // Username and description
-        Positioned(
-          bottom: 80,
-          left: 16,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _isLoading
-                  ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
-                      child: Container(
-                        width: 120,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    )
-                  : Row(
-                      children: [
-                        CircleAvatar(
-                            radius: 20,
-                            backgroundImage: CachedNetworkImageProvider(
-                              widget.video.profilePicture,
-                            ),
-                            onBackgroundImageError: (_, __) {},
-                            child: Container()),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          widget.video.nickname,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-              const SizedBox(height: 4),
-              _isLoading
-                  ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
-                      child: Container(
-                        width: 200,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    )
-                  : Text(
-                      widget.video.description,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
-                    ),
-            ],
-          ),
-        ),
+        // Positioned(
+        //   bottom: 80,
+        //   left: 16,
+        //   child: Column(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //       _isLoading
+        //           ? Shimmer.fromColors(
+        //               baseColor: shimmerBaseColor,
+        //               highlightColor: shimmerHighlightColor,
+        //               child: Container(
+        //                 width: 120,
+        //                 height: 24,
+        //                 decoration: BoxDecoration(
+        //                   color: isLightTheme
+        //                       ? Colors.grey[200]
+        //                       : Colors.grey[800],
+        //                   borderRadius: BorderRadius.circular(4),
+        //                 ),
+        //               ),
+        //             )
+        //           : Row(
+        //               children: [
+        //                 CircleAvatar(
+        //                     radius: 20,
+        //                     backgroundImage: CachedNetworkImageProvider(
+        //                       widget.video.profilePicture,
+        //                     ),
+        //                     onBackgroundImageError: (_, __) {},
+        //                     child: Container()),
+        //                 const SizedBox(
+        //                   width: 5,
+        //                 ),
+        //                 Text(
+        //                   widget.video.nickname,
+        //                   style: const TextStyle(
+        //                     color: Colors.white,
+        //                     fontSize: 18,
+        //                     fontWeight: FontWeight.bold,
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //       const SizedBox(height: 4),
+        //       _isLoading
+        //           ? Shimmer.fromColors(
+        //               baseColor: shimmerBaseColor,
+        //               highlightColor: shimmerHighlightColor,
+        //               child: Container(
+        //                 width: 200,
+        //                 height: 16,
+        //                 decoration: BoxDecoration(
+        //                   color: isLightTheme
+        //                       ? Colors.grey[200]
+        //                       : Colors.grey[800],
+        //                   borderRadius: BorderRadius.circular(4),
+        //                 ),
+        //               ),
+        //             )
+        //           : Text(
+        //               widget.video.description,
+        //               style: const TextStyle(
+        //                 color: Colors.white,
+        //                 fontSize: 14,
+        //               ),
+        //             ),
+        //     ],
+        //   ),
+        // ),
         // Right side action buttons
         Positioned(
-          right: 16,
+          right: 2,
           bottom: 100,
           child: Column(
             children: [
+              // Profile picture
+              _isLoading
+                  ? Shimmer.fromColors(
+                      baseColor: shimmerBaseColor,
+                      highlightColor: shimmerHighlightColor,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isLightTheme
+                              ? Colors.grey[200]
+                              : Colors.grey[800],
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                  : IconButton(
+                      onPressed: _handleLike,
+                      icon: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: CachedNetworkImageProvider(
+                            widget.video.profilePicture,
+                          ),
+                          onBackgroundImageError: (_, __) {},
+                          child: Container()),
+                    ),
               // Like button
               _isLoading
                   ? Shimmer.fromColors(
@@ -180,8 +207,10 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   : IconButton(
                       onPressed: _handleLike,
                       icon: Icon(
-                        isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: isLiked ? Colors.red : Colors.white,
+                        Icons.favorite,
+                        color: widget.video.likedThisStory
+                            ? GlobalColors.primaryColor
+                            : Colors.white,
                         size: 32,
                       ),
                     ),
@@ -212,7 +241,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         ),
                       ),
                     ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 5),
               // Share button
               _isLoading
                   ? Shimmer.fromColors(
@@ -233,12 +262,46 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                       onPressed: () {
                         // TODO: Implement share functionality
                       },
-                      icon: const Icon(
-                        Icons.forward_to_inbox,
-                        color: Colors.white,
-                        size: 32,
+                      icon: Transform.rotate(
+                        angle: 325 *
+                            (3.1415926535 / 180), // Convert degrees to radians
+                        child: const Icon(
+                          color: Colors.white,
+                          Icons.send,
+                          size: 32,
+                        ),
+                      )),
+              const SizedBox(
+                height: 5,
+              ),
+              _isLoading
+                  ? Shimmer.fromColors(
+                      baseColor: shimmerBaseColor,
+                      highlightColor: shimmerHighlightColor,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isLightTheme
+                              ? Colors.grey[200]
+                              : Colors.grey[800],
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
+                    )
+                  : IconButton(
+                      onPressed: () {
+                        // TODO: Implement share functionality
+                      },
+                      icon: InkWell(
+                        onTap: () {},
+                        child: const CircleAvatar(
+                          child: Text(
+                            'Caption',
+                            style: TextStyle(fontSize: 9),
+                          ),
+                        ),
+                      )),
             ],
           ),
         ),
