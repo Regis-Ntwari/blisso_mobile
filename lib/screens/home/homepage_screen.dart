@@ -157,41 +157,91 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     // });
 
     return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      backgroundColor: isLightTheme
+          ? _selectedScreenIndex == 2
+              ? Colors.black
+              : Colors.white
+          : Colors.black,
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: isLightTheme ? Colors.white : Colors.black,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+        backgroundColor: isLightTheme
+            ? _selectedScreenIndex == 2
+                ? Colors.black
+                : Colors.white
+            : Colors.black,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            activeIcon:
-                const Icon(Icons.home, color: GlobalColors.primaryColor),
-            icon: Icon(Icons.home, color: GlobalColors.secondaryColor),
+            activeIcon: Icon(Icons.home,
+                color: _selectedScreenIndex == 2
+                    ? GlobalColors.primaryColor
+                    : GlobalColors.primaryColor),
+            icon: Icon(Icons.home,
+                color: _selectedScreenIndex == 2
+                    ? Colors.white
+                    : GlobalColors.secondaryColor),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            activeIcon:
-                const Icon(Icons.search, color: GlobalColors.primaryColor),
-            icon: Icon(Icons.search, color: GlobalColors.secondaryColor),
+            activeIcon: Icon(Icons.search,
+                color: _selectedScreenIndex == 2
+                    ? GlobalColors.primaryColor
+                    : GlobalColors.primaryColor),
+            icon: Icon(Icons.search,
+                color: _selectedScreenIndex == 2
+                    ? Colors.white
+                    : GlobalColors.secondaryColor),
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            activeIcon:
-                const Icon(Icons.category, color: GlobalColors.primaryColor),
-            icon: Icon(Icons.category, color: GlobalColors.secondaryColor),
+            activeIcon: Icon(Icons.category,
+                color: _selectedScreenIndex == 2
+                    ? GlobalColors.primaryColor
+                    : GlobalColors.primaryColor),
+            icon: Icon(Icons.category,
+                color: _selectedScreenIndex == 2
+                    ? Colors.white
+                    : GlobalColors.secondaryColor),
             label: 'Explore',
           ),
           BottomNavigationBarItem(
-            activeIcon:
-                const Icon(Icons.person, color: GlobalColors.primaryColor),
-            icon: Icon(Icons.person, color: GlobalColors.secondaryColor),
+            activeIcon: Icon(Icons.person,
+                color: _selectedScreenIndex == 2
+                    ? GlobalColors.primaryColor
+                    : GlobalColors.primaryColor),
+            icon: Icon(Icons.person,
+                color: _selectedScreenIndex == 2
+                    ? Colors.white
+                    : GlobalColors.secondaryColor),
             label: 'Profile',
           ),
         ],
         onTap: (value) => _onScreenChanged(value),
         currentIndex: _selectedScreenIndex,
         selectedItemColor: GlobalColors.primaryColor,
-        selectedLabelStyle: const TextStyle(color: GlobalColors.primaryColor),
-        selectedIconTheme:
-            const IconThemeData(color: GlobalColors.primaryColor),
+        unselectedItemColor: _selectedScreenIndex == 2
+            ? Colors.white
+            : GlobalColors.secondaryColor,
+        selectedLabelStyle: TextStyle(
+          color: _selectedScreenIndex == 2
+              ? GlobalColors.primaryColor
+              : GlobalColors.primaryColor,
+        ),
+        unselectedLabelStyle: TextStyle(
+          color: _selectedScreenIndex == 2
+              ? Colors.white
+              : GlobalColors.secondaryColor,
+        ),
+        selectedIconTheme: IconThemeData(
+          color: _selectedScreenIndex == 2
+              ? GlobalColors.primaryColor
+              : GlobalColors.primaryColor,
+        ),
+        unselectedIconTheme: IconThemeData(
+          color: _selectedScreenIndex == 2
+              ? Colors.white
+              : GlobalColors.secondaryColor,
+        ),
       ),
       body: profilesState.isLoading
           ? const LoadingScreen()
@@ -202,7 +252,11 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                     pinned: true,
                     elevation: 5,
                     floating: true,
-                    backgroundColor: isLightTheme ? Colors.white : Colors.black,
+                    backgroundColor: isLightTheme
+                        ? _selectedScreenIndex == 2
+                            ? Colors.black
+                            : Colors.white
+                        : Colors.black,
                     snap: true,
                     expandedHeight: isSearchVisible ? 120 : 60,
                     automaticallyImplyLeading: false,
@@ -259,11 +313,16 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                           children: [
                                             Icon(
                                               Icons.add,
+                                              color: Colors.white,
                                             ),
                                             SizedBox(
                                               width: 5,
                                             ),
-                                            Text('New Post')
+                                            Text(
+                                              'New Post',
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            )
                                           ],
                                         ),
                                         onPressed: () async {

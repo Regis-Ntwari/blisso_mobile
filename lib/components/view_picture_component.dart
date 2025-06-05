@@ -91,7 +91,7 @@ class _ViewPictureComponentState extends ConsumerState<ViewPictureComponent> {
                 maxScale: 3.0,
                 child: _chosenPicture == null
                     ? CachedNetworkImage(
-                        imageUrl: widget.image['image_uri'],
+                        imageUrl: widget.image['image_url'],
                         fit: BoxFit.contain,
                       )
                     : Image.file(

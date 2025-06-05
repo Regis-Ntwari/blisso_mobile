@@ -183,7 +183,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      backgroundColor: Colors.black,
       body: !_isDataLoaded
           ? const Center(
               child: CircularProgressIndicator(
@@ -229,8 +229,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                     top: 50,
                     left: 10,
                     child: IconButton(
-                      icon: Icon(Icons.close,
-                          color: isLightTheme ? Colors.black : Colors.white),
+                      icon: const Icon(Icons.close, color: Colors.white),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -259,8 +258,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                   ? 'My Story'
                                   : stories[currentIndex]['nickname'],
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                color: Colors.white,
                                 shadows: [
                                   Shadow(
                                     offset: Offset(1, 1),
@@ -339,12 +338,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             height: 3,
                             decoration: BoxDecoration(
                               color: index <= currentIndex
-                                  ? isLightTheme
-                                      ? Colors.black
-                                      : Colors.white
-                                  : isLightTheme
-                                      ? Colors.grey[500]
-                                      : Colors.white.withOpacity(0.5),
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
@@ -358,9 +353,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                           left: 0,
                           right: 0,
                           child: Container(
-                            color: isLightTheme
-                                ? Colors.grey[800]
-                                : Colors.black.withOpacity(0.5),
+                            color: Colors.black.withOpacity(0.5),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Stack(
                               children: [
@@ -372,14 +365,14 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                     IconButton(
                                       onPressed: _handleLike,
                                       icon: Icon(
-                                        isLiked
+                                        stories[currentIndex]
+                                                ['liked_this_story']
                                             ? Icons.favorite
                                             : Icons.favorite_border,
-                                        color: isLiked
+                                        color: stories[currentIndex]
+                                                ['liked_this_story']
                                             ? Colors.red
-                                            : isLightTheme
-                                                ? Colors.white
-                                                : Colors.white,
+                                            : Colors.white,
                                       ),
                                     ),
                                     // Reply Text Field in the middle
@@ -393,9 +386,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                         decoration: BoxDecoration(
                                           borderRadius:
                                               BorderRadius.circular(60),
-                                          color: isLightTheme
-                                              ? Colors.grey[100]
-                                              : Colors.grey[900],
+                                          color: Colors.grey[900],
                                         ),
                                         child: TextField(
                                           controller: replyController,
@@ -403,17 +394,15 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                               color: isLightTheme
                                                   ? Colors.black
                                                   : Colors.white),
-                                          decoration: InputDecoration(
+                                          decoration: const InputDecoration(
                                             hintText: 'Reply...',
-                                            hintStyle: TextStyle(
-                                                color: isLightTheme
-                                                    ? Colors.black
-                                                    : Colors.white),
+                                            hintStyle:
+                                                TextStyle(color: Colors.white),
                                             contentPadding:
-                                                const EdgeInsets.symmetric(
+                                                EdgeInsets.symmetric(
                                                     vertical: 1,
                                                     horizontal: 15),
-                                            border: const OutlineInputBorder(
+                                            border: OutlineInputBorder(
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(60)),
                                               borderSide: BorderSide.none,
@@ -458,12 +447,10 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                               ),
                                             ],
                                           ),
-                                          child: Text(
+                                          child: const Text(
                                             'Sending...',
                                             style: TextStyle(
-                                              color: isLightTheme
-                                                  ? Colors.black
-                                                  : Colors.white,
+                                              color: Colors.white,
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
                                             ),

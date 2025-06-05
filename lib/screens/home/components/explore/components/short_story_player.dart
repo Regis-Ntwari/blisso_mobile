@@ -58,104 +58,31 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    final shimmerBaseColor =
-        isLightTheme ? Colors.grey[300]! : Colors.grey[800]!;
-    final shimmerHighlightColor =
-        isLightTheme ? Colors.grey[100]! : Colors.grey[700]!;
-
     return Stack(
       children: [
         _isLoading
             ? Shimmer.fromColors(
-                baseColor: shimmerBaseColor,
-                highlightColor: shimmerHighlightColor,
+                baseColor: Colors.grey[800]!,
+                highlightColor: Colors.grey[700]!,
                 child: Container(
                   width: double.infinity,
                   height: double.infinity,
-                  color: isLightTheme ? Colors.grey[200] : Colors.black,
+                  color: Colors.black,
                 ),
               )
             : SizedBox.expand(
                 child: FittedBox(
                   fit: BoxFit.contain,
-                  child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
+                  child: Container(
+                    color: Colors.black,
+                    child: SizedBox(
+                      width: _controller.value.size.width,
+                      height: _controller.value.size.height,
+                      child: VideoPlayer(_controller),
+                    ),
                   ),
                 ),
               ),
-        // Username and description
-        // Positioned(
-        //   bottom: 80,
-        //   left: 16,
-        //   child: Column(
-        //     crossAxisAlignment: CrossAxisAlignment.start,
-        //     children: [
-        //       _isLoading
-        //           ? Shimmer.fromColors(
-        //               baseColor: shimmerBaseColor,
-        //               highlightColor: shimmerHighlightColor,
-        //               child: Container(
-        //                 width: 120,
-        //                 height: 24,
-        //                 decoration: BoxDecoration(
-        //                   color: isLightTheme
-        //                       ? Colors.grey[200]
-        //                       : Colors.grey[800],
-        //                   borderRadius: BorderRadius.circular(4),
-        //                 ),
-        //               ),
-        //             )
-        //           : Row(
-        //               children: [
-        //                 CircleAvatar(
-        //                     radius: 20,
-        //                     backgroundImage: CachedNetworkImageProvider(
-        //                       widget.video.profilePicture,
-        //                     ),
-        //                     onBackgroundImageError: (_, __) {},
-        //                     child: Container()),
-        //                 const SizedBox(
-        //                   width: 5,
-        //                 ),
-        //                 Text(
-        //                   widget.video.nickname,
-        //                   style: const TextStyle(
-        //                     color: Colors.white,
-        //                     fontSize: 18,
-        //                     fontWeight: FontWeight.bold,
-        //                   ),
-        //                 ),
-        //               ],
-        //             ),
-        //       const SizedBox(height: 4),
-        //       _isLoading
-        //           ? Shimmer.fromColors(
-        //               baseColor: shimmerBaseColor,
-        //               highlightColor: shimmerHighlightColor,
-        //               child: Container(
-        //                 width: 200,
-        //                 height: 16,
-        //                 decoration: BoxDecoration(
-        //                   color: isLightTheme
-        //                       ? Colors.grey[200]
-        //                       : Colors.grey[800],
-        //                   borderRadius: BorderRadius.circular(4),
-        //                 ),
-        //               ),
-        //             )
-        //           : Text(
-        //               widget.video.description,
-        //               style: const TextStyle(
-        //                 color: Colors.white,
-        //                 fontSize: 14,
-        //               ),
-        //             ),
-        //     ],
-        //   ),
-        // ),
         // Right side action buttons
         Positioned(
           right: 2,
@@ -165,15 +92,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               // Profile picture
               _isLoading
                   ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
                       child: Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
+                          color: Colors.grey[800],
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -191,15 +116,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               // Like button
               _isLoading
                   ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
                       child: Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
+                          color: Colors.grey[800],
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -217,15 +140,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               // Add likes count below like button
               _isLoading
                   ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
                       child: Container(
                         width: 40,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
+                          color: Colors.grey[800],
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -245,15 +166,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               // Share button
               _isLoading
                   ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
                       child: Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
+                          color: Colors.grey[800],
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -276,15 +195,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               ),
               _isLoading
                   ? Shimmer.fromColors(
-                      baseColor: shimmerBaseColor,
-                      highlightColor: shimmerHighlightColor,
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
                       child: Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: isLightTheme
-                              ? Colors.grey[200]
-                              : Colors.grey[800],
+                          color: Colors.grey[800],
                           shape: BoxShape.circle,
                         ),
                       ),

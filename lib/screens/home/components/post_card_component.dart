@@ -40,13 +40,15 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   }
 
   Future<bool> checkIfChatExists(String username) async {
-    final chatRef = ref.read(chatServiceProviderImpl);
+    final chatRef = ref.watch(chatServiceProviderImpl);
     if (chatRef.data == null) {
       final chatRef = ref.read(chatServiceProviderImpl.notifier);
       await chatRef.getMessages();
     }
 
     for (var chat in chatRef.data) {
+      print("checking if user exists in chat");
+      print("${chatRef.data} ===");
       if (chat.containsKey(username)) {
         return true;
       }

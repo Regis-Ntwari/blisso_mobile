@@ -52,6 +52,7 @@ class StoriesServiceProvider extends StateNotifier<ApiState> {
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
+
         getStories();
       } else {
         state = ApiState(isLoading: false, data: response.result);

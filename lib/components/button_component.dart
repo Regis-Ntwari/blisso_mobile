@@ -30,18 +30,20 @@ class ButtonComponent extends StatelessWidget {
         padding:
             const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            gradient: LinearGradient(
-              colors: !isLightTheme
-                  ? [
-                      GlobalColors.lightBackgroundColor,
-                      GlobalColors.primaryColor,
-                    ]
-                  : [
-                      GlobalColors.primaryColor,
-                      Colors.black87,
-                    ],
-            )),
+          borderRadius: BorderRadius.circular(5),
+          color: GlobalColors.primaryColor,
+          // gradient: LinearGradient(
+          //   colors: !isLightTheme
+          //       ? [
+          //           GlobalColors.lightBackgroundColor,
+          //           GlobalColors.primaryColor,
+          //         ]
+          //       : [
+          //           GlobalColors.primaryColor,
+          //           Colors.black87,
+          //         ],
+          // )
+        ),
         child: Align(
           alignment: Alignment.center,
           child: Text(

@@ -472,89 +472,120 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                               GlobalColors.whiteColor,
                                           onTap: () async {
                                             if (chosenPlan['rw_price'] == 0.0) {
-                                              // TODO: implement free plan
-                                            }
-                                            if (_currency == 'RWF') {
-                                              showPaymentModes(
-                                                  context: context,
-                                                  payByCard: () {
-                                                    Navigator.of(context).pop();
+                                              final subscriptionProvider = ref.read(
+                                                  subscriptionServiceProviderImpl
+                                                      .notifier);
 
-                                                    showCardPayment(
-                                                        context: context,
-                                                        cardNames: cardNames,
-                                                        cardNumber: cardNumber,
-                                                        expirationDate:
-                                                            expirationDate,
-                                                        cvv: cvv,
-                                                        initiatePayment:
-                                                            initiatePayment);
-                                                  },
-                                                  payByMomo: () {
-                                                    Navigator.of(context).pop();
+                                              Map<String, dynamic>
+                                                  subscription = {};
+                                              subscription['plan_code'] =
+                                                  chosenPlan['plan_code'];
+                                              subscription['price'] =
+                                                  chosenPlan['price'];
+                                              subscription['currency'] =
+                                                  subscription['currency'];
 
-                                                    showCardPayment(
-                                                        context: context,
-                                                        cardNames: cardNames,
-                                                        cardNumber: cardNumber,
-                                                        expirationDate:
-                                                            expirationDate,
-                                                        cvv: cvv,
-                                                        initiatePayment:
-                                                            initiatePayment);
-                                                  });
+                                              await subscriptionProvider
+                                                  .createSubscription(
+                                                      subscription);
 
-                                              // Navigator.of(context).pop();
-                                              // if (paymentModel!
-                                              //         .authorizationMode ==
-                                              //     'avs') {
-                                              //   showBillingVerification(
-                                              //       city: city,
-                                              //       address: address,
-                                              //       state: state,
-                                              //       country: country,
-                                              //       zipCode: zipCode,
-                                              //       verifyAddress:
-                                              //           verifyAddress,
-                                              //       context: context);
-                                              // } else {
-                                              //   showPinVerification(
-                                              //       context: context,
-                                              //       otpController:
-                                              //           otpController,
-                                              //       verifyPin: verifyPin);
-                                              // }
+                                              setState(() {
+                                                isSubscriptionCreated = true;
+                                              });
+
+                                              Routemaster.of(context)
+                                                  .replace('/homepage');
                                             } else {
-                                              // usd payment
-                                              showPaymentModes(
-                                                  context: context,
-                                                  isMomoEnabled: false,
-                                                  payByCard: () {
-                                                    Navigator.of(context).pop();
+                                              if (_currency == 'RWF') {
+                                                showPaymentModes(
+                                                    context: context,
+                                                    payByCard: () {
+                                                      Navigator.of(context)
+                                                          .pop();
 
-                                                    showCardPayment(
-                                                        context: context,
-                                                        cardNames: cardNames,
-                                                        cardNumber: cardNumber,
-                                                        expirationDate:
-                                                            expirationDate,
-                                                        cvv: cvv,
-                                                        initiatePayment:
-                                                            initiatePayment);
-                                                  },
-                                                  payByMomo: () {
-                                                    Navigator.of(context).pop();
+                                                      showCardPayment(
+                                                          context: context,
+                                                          cardNames: cardNames,
+                                                          cardNumber:
+                                                              cardNumber,
+                                                          expirationDate:
+                                                              expirationDate,
+                                                          cvv: cvv,
+                                                          initiatePayment:
+                                                              initiatePayment);
+                                                    },
+                                                    payByMomo: () {
+                                                      Navigator.of(context)
+                                                          .pop();
 
-                                                    showCardPayment(
-                                                        context: context,
-                                                        cardNames: cardNames,
-                                                        cardNumber: cardNumber,
-                                                        expirationDate:
-                                                            expirationDate,
-                                                        cvv: cvv,
-                                                        initiatePayment:
-                                                            initiatePayment);
-                                                  });
+                                                      showCardPayment(
+                                                          context: context,
+                                                          cardNames: cardNames,
+                                                          cardNumber:
+                                                              cardNumber,
+                                                          expirationDate:
+                                                              expirationDate,
+                                                          cvv: cvv,
+                                                          initiatePayment:
+                                                              initiatePayment);
+                                                    });
+
+                                                // Navigator.of(context).pop();
+                                                // if (paymentModel!
+                                                //         .authorizationMode ==
+                                                //     'avs') {
+                                                //   showBillingVerification(
+                                                //       city: city,
+                                                //       address: address,
+                                                //       state: state,
+                                                //       country: country,
+                                                //       zipCode: zipCode,
+                                                //       verifyAddress:
+                                                //           verifyAddress,
+                                                //       context: context);
+                                                // } else {
+                                                //   showPinVerification(
+                                                //       context: context,
+                                                //       otpController:
+                                                //           otpController,
+                                                //       verifyPin: verifyPin);
+                                                // }
+                                              } else {
+                                                // usd payment
+                                                showPaymentModes(
+                                                    context: context,
+                                                    isMomoEnabled: false,
+                                                    payByCard: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+
+                                                      showCardPayment(
+                                                          context: context,
+                                                          cardNames: cardNames,
+                                                          cardNumber:
+                                                              cardNumber,
+                                                          expirationDate:
+                                                              expirationDate,
+                                                          cvv: cvv,
+                                                          initiatePayment:
+                                                              initiatePayment);
+                                                    },
+                                                    payByMomo: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+
+                                                      showCardPayment(
+                                                          context: context,
+                                                          cardNames: cardNames,
+                                                          cardNumber:
+                                                              cardNumber,
+                                                          expirationDate:
+                                                              expirationDate,
+                                                          cvv: cvv,
+                                                          initiatePayment:
+                                                              initiatePayment);
+                                                    });
+                                              }
                                             }
 
                                             // final state = ref.read(
