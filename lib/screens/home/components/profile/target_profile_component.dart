@@ -161,6 +161,13 @@ class _TargetProfileComponentState
                                 borderRadius: BorderRadius.circular(20),
                                 child: CachedNetworkImage(
                                     imageUrl: targetProfile.profilePictureUri!,
+                                    placeholder: (context, url) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(
+                                          color: GlobalColors.primaryColor,
+                                        ),
+                                      );
+                                    },
                                     fit: BoxFit.cover),
                               ),
                             ),

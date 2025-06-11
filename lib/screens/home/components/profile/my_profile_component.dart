@@ -133,6 +133,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
             .read(subscriptionServiceProviderImpl.notifier)
             .getSubscriptionPlans();
       }
+
+      ref.read(videoPostServiceProviderImpl.notifier).getUserVideos();
     });
   }
 
@@ -148,6 +150,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     final videoPostState = ref.watch(videoPostServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    print(videoPostState.data);
+    print(videoPostState.isLoading);
     return SafeArea(
       child: Scaffold(
         backgroundColor:
@@ -561,7 +565,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                         .primaryColor,
                                                   ),
                                                 )
-                                              : videoPostState.data == null
+                                              : videoPostState.data.isEmpty
                                                   ? Center(
                                                       child: Text(
                                                         'No videos yet',
@@ -707,17 +711,17 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             // ),
                             // if (expandedField == 'media')
 
-                            InkWell(
-                              onTap: () {},
-                              child: const ListTile(
-                                title: Text(
-                                  'Subscription',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text('Click to change your profile'),
-                                trailing: Icon(Icons.keyboard_arrow_right),
-                              ),
-                            )
+                            // InkWell(
+                            //   onTap: () {},
+                            //   child: const ListTile(
+                            //     title: Text(
+                            //       'Subscription',
+                            //       style: TextStyle(fontWeight: FontWeight.bold),
+                            //     ),
+                            //     subtitle: Text('Click to change your profile'),
+                            //     trailing: Icon(Icons.keyboard_arrow_right),
+                            //   ),
+                            // )
                           ],
                         ),
                       ),

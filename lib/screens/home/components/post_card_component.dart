@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:blisso_mobile/components/button_component.dart';
-import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
@@ -41,14 +40,12 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
 
   Future<bool> checkIfChatExists(String username) async {
     final chatRef = ref.watch(chatServiceProviderImpl);
-    if (chatRef.data == null) {
+    if (chatRef.data == null || chatRef.data.isEmpty) {
       final chatRef = ref.read(chatServiceProviderImpl.notifier);
       await chatRef.getMessages();
     }
 
     for (var chat in chatRef.data) {
-      print("checking if user exists in chat");
-      print("${chatRef.data} ===");
       if (chat.containsKey(username)) {
         return true;
       }
@@ -99,7 +96,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
               setState(() {
                 isLoading = false;
               });
-              Routemaster.of(context).push('/chat-detail/$targetUsername');
+              //Routemaster.of(context).push('/chat-detail/$targetUsername');
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {
                 isLoading = false;
@@ -151,145 +148,141 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   Widget build(BuildContext context) {
     final targetProfile = ref.read(targetProfileProvider.notifier);
     final isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return isLoading
-        ? const LoadingScreen()
-        : SizedBox(
-            child: Card(
-                color: isLightTheme ? GlobalColors.whiteColor : Colors.black,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      child: Card(
+          color: isLightTheme ? GlobalColors.whiteColor : Colors.black,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            InkWell(
+              onTap: () {
+                targetProfile.updateTargetProfile(
+                    TargetProfileModel.fromMap(widget.profile));
+                Routemaster.of(context).push('/homepage/target-profile');
+              },
+              child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(
+                        widget.profile['profile_picture_url']),
+                  ),
+                  contentPadding: const EdgeInsets.only(left: 5),
+                  horizontalTitleGap: 10,
+                  title: Row(
                     children: [
-                      InkWell(
-                        onTap: () {
-                          targetProfile.updateTargetProfile(
-                              TargetProfileModel.fromMap(widget.profile));
-                          Routemaster.of(context)
-                              .push('/homepage/target-profile');
-                        },
-                        child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: CachedNetworkImageProvider(
-                                  widget.profile['profile_picture_url']),
-                            ),
-                            contentPadding: const EdgeInsets.only(left: 5),
-                            horizontalTitleGap: 10,
-                            title: Row(
-                              children: [
-                                Text(widget.profile['nickname']),
-                                Text(' - ${widget.profile['age']} years old')
-                              ],
-                            ),
-                            subtitle: Row(
-                              children: [
-                                const Icon(Icons.location_on),
-                                Text('${widget.profile['distance_annot']}'),
-                              ],
-                            )),
-                      ),
-                      SizedBox(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            double imageHeight = constraints.maxWidth;
-                            return SizedBox(
-                              height: imageHeight,
-                              child: PageView.builder(
-                                controller: _pageController,
-                                onPageChanged: (value) {
-                                  setState(() {
-                                    _currentPage = value;
-                                  });
-                                },
-                                scrollDirection: Axis.horizontal,
-                                itemBuilder: (context, index) {
-                                  return CachedNetworkImage(
-                                    imageUrl: widget.profile['profile_images']
-                                        [index]['image_url'],
-                                    fit: BoxFit.contain,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(
-                                        color: GlobalColors.primaryColor,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                itemCount:
-                                    widget.profile['profile_images'].length,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              top: 10, right: 10, left: 10),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(
-                              widget.profile['profile_images'].length,
-                              (index) => AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 4.0),
-                                width: _currentPage == index ? 12.0 : 8.0,
-                                height: 8.0,
-                                decoration: BoxDecoration(
-                                  color: _currentPage == index
-                                      ? GlobalColors.primaryColor
-                                      : Colors.grey,
-                                  borderRadius: BorderRadius.circular(4.0),
-                                ),
-                              ),
+                      Text(widget.profile['nickname']),
+                      Text(' - ${widget.profile['age']} years old')
+                    ],
+                  ),
+                  subtitle: Row(
+                    children: [
+                      const Icon(Icons.location_on),
+                      Text('${widget.profile['distance_annot']}'),
+                    ],
+                  )),
+            ),
+            SizedBox(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  double imageHeight = constraints.maxWidth;
+                  return SizedBox(
+                    height: imageHeight,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (value) {
+                        setState(() {
+                          _currentPage = value;
+                        });
+                      },
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, index) {
+                        return CachedNetworkImage(
+                          imageUrl: widget.profile['profile_images'][index]
+                              ['image_url'],
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                              color: GlobalColors.primaryColor,
                             ),
                           ),
-                        ),
+                        );
+                      },
+                      itemCount: widget.profile['profile_images'].length,
+                    ),
+                  );
+                },
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10, right: 10, left: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(
+                    widget.profile['profile_images'].length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                      width: _currentPage == index ? 12.0 : 8.0,
+                      height: 8.0,
+                      decoration: BoxDecoration(
+                        color: _currentPage == index
+                            ? GlobalColors.primaryColor
+                            : Colors.grey,
+                        borderRadius: BorderRadius.circular(4.0),
                       ),
-                      Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 1.0, vertical: 1.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.favorite_border),
-                                    onPressed: () {},
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.share),
-                                    onPressed: () {
-                                      showMessageRequestModal(
-                                          context, widget.profile);
-                                    },
-                                  ),
-                                ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 1.0, vertical: 1.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.favorite_border),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.share),
+                          onPressed: () {
+                            showMessageRequestModal(context, widget.profile);
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 100,
+                      child: isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: GlobalColors.primaryColor,
                               ),
-                              SizedBox(
-                                width: 100,
-                                child: ButtonComponent(
-                                  text: 'DM Me',
-                                  backgroundColor: GlobalColors.primaryColor,
-                                  foregroundColor: GlobalColors.whiteColor,
-                                  buttonHeight: 40,
-                                  buttonWidth: 100,
-                                  onTap: () => handleDMTap(context),
-                                ),
-                              )
-                            ],
-                          )),
-                      Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: widget.profile['target_lifesnapshots'].length >
-                                  0
-                              ? Text(
-                                  textAlign: TextAlign.start,
-                                  "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")
-                              : const SizedBox.shrink()),
-                    ])),
-          );
+                            )
+                          : ButtonComponent(
+                              text: 'DM Me',
+                              backgroundColor: GlobalColors.primaryColor,
+                              foregroundColor: GlobalColors.whiteColor,
+                              buttonHeight: 40,
+                              buttonWidth: 100,
+                              onTap: () => handleDMTap(context),
+                            ),
+                    )
+                  ],
+                )),
+            Padding(
+                padding: const EdgeInsets.all(10),
+                child: widget.profile['target_lifesnapshots'].length > 0
+                    ? Text(
+                        textAlign: TextAlign.start,
+                        "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")
+                    : const SizedBox.shrink()),
+          ])),
+    );
   }
 }
