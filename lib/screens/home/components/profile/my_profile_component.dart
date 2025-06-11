@@ -7,6 +7,8 @@ import 'package:blisso_mobile/screens/home/components/profile/edit_my_profile_co
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
+import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -125,6 +127,12 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
       if (ref.read(myProfileServiceProviderImpl).data == null) {
         fetchMyProfile();
       }
+
+      if (ref.read(subscriptionServiceProviderImpl).data == null) {
+        ref
+            .read(subscriptionServiceProviderImpl.notifier)
+            .getSubscriptionPlans();
+      }
     });
   }
 
@@ -136,6 +144,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     super.build(context);
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
+    final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
+    final videoPostState = ref.watch(videoPostServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
@@ -161,7 +171,10 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           child: InkWell(
                             onTap: () => showPictureDialog(
                                 context: context,
-                                image: {'image_uri': profilePicture},
+                                image: {
+                                  'image_url':
+                                      profileState.data['profile_picture_url']
+                                },
                                 isEdit: true,
                                 chosenPicture: chosenPicture,
                                 updatePicture: updateChosenPicture,
@@ -397,52 +410,94 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           height: 150,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 2.0),
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: subscriptions.length,
-                              itemBuilder: (context, index) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 2.0),
-                                  child: SizedBox(
-                                    height: 100,
-                                    width: 100,
-                                    child: InkWell(
-                                        onTap: () {},
-                                        child: Card(
-                                          color: Colors.grey[300],
-                                          child: SizedBox(
-                                            height: 100,
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  subscriptions[index]
-                                                      ['plan_name'],
-                                                  style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold),
+                            child: subscriptionState.isLoading ||
+                                    subscriptionState.data == null
+                                ? const Center(
+                                    child: CircularProgressIndicator(
+                                      color: GlobalColors.primaryColor,
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: subscriptionState.data.length,
+                                    itemBuilder: (context, index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 2.0),
+                                        child: SizedBox(
+                                          height: 100,
+                                          width: 100,
+                                          child: InkWell(
+                                              onTap: () {},
+                                              child: Card(
+                                                color: isLightTheme
+                                                    ? Colors.grey[300]
+                                                    : Colors.grey[800],
+                                                child: SizedBox(
+                                                  height: 100,
+                                                  child: Stack(
+                                                    children: [
+                                                      // Main content
+                                                      Center(
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Text(
+                                                              subscriptionState
+                                                                          .data[
+                                                                      index]
+                                                                  ['name'],
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                                height: 10),
+                                                            Text(
+                                                                '${subscriptionState.data[index]['rw_price']} RWF'),
+                                                            const SizedBox(
+                                                                height: 10),
+                                                            Text(
+                                                                '${subscriptionState.data[index]['usd_price']} USD'),
+                                                          ],
+                                                        ),
+                                                      ),
+
+                                                      if (subscriptionState
+                                                                          .data[
+                                                                      index]
+                                                                  ['code'] ==
+                                                              profileState.data[
+                                                                      'subscription']
+                                                                  [
+                                                                  'plan_code'] &&
+                                                          profileState.data[
+                                                                      'subscription']
+                                                                  ['status'] ==
+                                                              'active')
+                                                        const Positioned(
+                                                          top: 8,
+                                                          right: 8,
+                                                          child: Icon(
+                                                            Icons.check_circle,
+                                                            color: Colors.green,
+                                                            size: 20,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                    '${subscriptions[index]['rw_price']} RWF'),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                    '${subscriptions[index]['usd_price']} USD')
-                                              ],
-                                            ),
-                                          ),
-                                        )),
+                                              )),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                            ),
                           )),
                       SizedBox(
                         child: Column(
@@ -498,15 +553,49 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                             },
                                           ),
                                           // Videos Tab
-                                          Center(
-                                            child: Text(
-                                              'No videos yet',
-                                              style: TextStyle(
-                                                color:
-                                                    GlobalColors.secondaryColor,
-                                              ),
-                                            ),
-                                          ),
+                                          videoPostState.isLoading
+                                              ? const Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    color: GlobalColors
+                                                        .primaryColor,
+                                                  ),
+                                                )
+                                              : videoPostState.data == null
+                                                  ? Center(
+                                                      child: Text(
+                                                        'No videos yet',
+                                                        style: TextStyle(
+                                                          color: GlobalColors
+                                                              .secondaryColor,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : GridView.builder(
+                                                      gridDelegate:
+                                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                                        crossAxisCount: 3,
+                                                        crossAxisSpacing: 4,
+                                                        mainAxisSpacing: 4,
+                                                      ),
+                                                      itemCount: videoPostState
+                                                          .data.length,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return InkWell(
+                                                          onTap: () {},
+                                                          child: Container(
+                                                            color: Colors.black,
+                                                            height: 50,
+                                                            width: 50,
+                                                            child: const Center(
+                                                              child: Icon(Icons
+                                                                  .play_arrow),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
                                         ],
                                       ),
                                     ),

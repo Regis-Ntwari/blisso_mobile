@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/video_post_modal.dart';
+import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
 import 'package:blisso_mobile/screens/home/components/home_component.dart';
-import 'package:blisso_mobile/screens/home/components/search/search_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
@@ -139,7 +139,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         profiles: profiles,
         refetch: refetchProfiles,
       ),
-      const SearchComponent(),
+      const MatchingRecommendations(),
       const ExploreComponent(),
       const MyProfileComponent()
     ];
@@ -183,15 +183,15 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            activeIcon: Icon(Icons.search,
+            activeIcon: Icon(Icons.compare_arrows,
                 color: _selectedScreenIndex == 2
                     ? GlobalColors.primaryColor
                     : GlobalColors.primaryColor),
-            icon: Icon(Icons.search,
+            icon: Icon(Icons.compare_arrows,
                 color: _selectedScreenIndex == 2
                     ? Colors.white
                     : GlobalColors.secondaryColor),
-            label: 'Search',
+            label: 'Match',
           ),
           BottomNavigationBarItem(
             activeIcon: Icon(Icons.category,
@@ -274,7 +274,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                 Text(
                                   _selectedScreenIndex == 3
                                       ? 'Profile'
-                                      : 'Blisso',
+                                      : _selectedScreenIndex == 1
+                                          ? 'Matching Recommendations'
+                                          : 'Blisso',
                                   style: TextStyle(
                                     color: GlobalColors.primaryColor,
                                     fontSize: scaler.scale(24),

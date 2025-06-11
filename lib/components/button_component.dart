@@ -21,7 +21,6 @@ class ButtonComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     double height = MediaQuery.sizeOf(context).height;
     double width = MediaQuery.sizeOf(context).width;
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -49,9 +48,8 @@ class ButtonComponent extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: isLightTheme ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
       ),

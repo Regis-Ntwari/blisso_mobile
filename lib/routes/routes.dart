@@ -47,7 +47,7 @@ class Routing {
           null,
           route.pathParameters['route']!,
         )),
-    '/target-profile': (route) =>
+    '/homepage/target-profile': (route) =>
         const MaterialPage(child: TargetProfileComponent()),
     '/favorite-profile/:username': (route) => MaterialPage(
         child: FavoriteProfileScreen(

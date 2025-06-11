@@ -16,6 +16,8 @@ class StoriesService {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
+    print(accessToken);
+
     ApiResponse response =
         await ApiService().getData('posts/stories/', accessToken);
 

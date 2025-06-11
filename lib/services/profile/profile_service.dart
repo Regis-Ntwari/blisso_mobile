@@ -11,7 +11,6 @@ class ProfileService {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    print(profile.toMap());
     ApiResponse response = await ApiService().postFormDataRequest(
         endpoint: 'profiles/', body: profile.toMap(), token: accessToken);
 
@@ -32,8 +31,6 @@ class ProfileService {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    print(accessToken);
-
     ApiResponse response =
         await ApiService().getData('profiles/my/profile/', accessToken);
 
@@ -43,8 +40,6 @@ class ProfileService {
   Future<ApiResponse> getAllProfiles() async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
-
-    print(accessToken);
 
     ApiResponse response =
         await ApiService().getData('/profiles/', accessToken);

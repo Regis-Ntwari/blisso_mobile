@@ -1,4 +1,3 @@
-import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class TextInputComponent extends StatelessWidget {

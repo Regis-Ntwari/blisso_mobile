@@ -44,17 +44,20 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
           likedThisStory: video['liked_this_story']);
     }).toList();
 
-    return Scaffold(
-      body: videos.isEmpty
-          ? const Center(
-              child: Text('No videos available'),
-            )
-          : PageView.builder(
-              scrollDirection: Axis.vertical,
-              itemCount: videos.length,
-              itemBuilder: (context, index) {
-                return ShortStoryPlayer(video: videos[index]);
-              }),
-    );
+    return videos.isEmpty
+        ? const Center(
+            child: Text('No videos available'),
+          )
+        : MediaQuery.removePadding(
+            context: context,
+            removeLeft: true,
+            removeRight: true,
+            child: PageView.builder(
+                scrollDirection: Axis.vertical,
+                itemCount: videos.length,
+                itemBuilder: (context, index) {
+                  return ShortStoryPlayer(video: videos[index]);
+                }),
+          );
   }
 }

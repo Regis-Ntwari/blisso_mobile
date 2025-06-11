@@ -165,7 +165,8 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                         onTap: () {
                           targetProfile.updateTargetProfile(
                               TargetProfileModel.fromMap(widget.profile));
-                          Routemaster.of(context).push('/target-profile');
+                          Routemaster.of(context)
+                              .push('/homepage/target-profile');
                         },
                         child: ListTile(
                             leading: CircleAvatar(

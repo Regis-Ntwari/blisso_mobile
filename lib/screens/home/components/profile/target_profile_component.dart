@@ -123,7 +123,8 @@ class _TargetProfileComponentState
           backgroundColor:
               isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           leading: InkWell(
-            onTap: () => Routemaster.of(context).push('/homepage'),
+            //onTap: () => Routemaster.of(context).push('/homepage'),
+            onTap: () => Routemaster.of(context).pop(),
             child: const Icon(Icons.keyboard_arrow_left),
           ),
           centerTitle: true,
@@ -153,7 +154,7 @@ class _TargetProfileComponentState
                               onTap: () => showPictureDialog(
                                 context: context,
                                 image: {
-                                  'image_uri': targetProfile.profilePictureUri!
+                                  'image_url': targetProfile.profilePictureUri!
                                 },
                               ),
                               child: ClipRRect(
@@ -353,7 +354,7 @@ class _TargetProfileComponentState
                                     child: CachedNetworkImage(
                                         imageUrl:
                                             targetProfile.profileImages![index]
-                                                ['image_uri']),
+                                                ['image_url']),
                                   ),
                                 ),
                               );
