@@ -15,6 +15,7 @@ class ChatMessageModel {
   final String createdAt;
   String? parentId;
   String? parentContent;
+  String? messageStatus;
 
   ChatMessageModel(
       {required this.sender,
@@ -29,6 +30,7 @@ class ChatMessageModel {
       this.contentFile,
       this.parentId,
       this.parentContent,
+      this.messageStatus,
       this.senderReceiver});
 
   ChatMessageModel copyWith(
@@ -43,6 +45,7 @@ class ChatMessageModel {
       String? createdAt,
       String? messageId,
       String? parentId,
+      String? messageStatus,
       String? senderReceiver,
       String? parentContent}) {
     return ChatMessageModel(
@@ -57,6 +60,7 @@ class ChatMessageModel {
         senderReceiver: senderReceiver ?? this.senderReceiver,
         action: action ?? this.action,
         parentId: parentId ?? this.parentId,
+        messageStatus: messageStatus ?? this.messageStatus,
         messageId: messageId ?? this.messageId,
         parentContent: parentContent ?? this.parentContent);
   }
@@ -74,7 +78,8 @@ class ChatMessageModel {
       'created_at': createdAt,
       'action': action,
       'parent_id': parentId,
-      'parent_content': parentContent
+      'parent_content': parentContent,
+      'message_status': messageStatus
     };
   }
 
@@ -98,6 +103,7 @@ class ChatMessageModel {
         action: map['action'],
         parentId: map['parent_id'],
         messageId: map['message_id'],
+        messageStatus: map['message_status'],
         parentContent: map['parent_content']);
   }
 
