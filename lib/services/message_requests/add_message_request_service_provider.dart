@@ -16,9 +16,9 @@ class AddMessageRequestServiceProvider extends StateNotifier<ApiState> {
           await messageRequestService.sendMessageRequest(receiverUsername);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        state = ApiState(isLoading: false, error: response.errorMessage);
+        state = ApiState(isLoading: false, error: response.errorMessage, statusCode: response.statusCode);
       } else {
-        state = ApiState(isLoading: false, data: response.result);
+        state = ApiState(isLoading: false, data: response.result, statusCode: response.statusCode);
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());

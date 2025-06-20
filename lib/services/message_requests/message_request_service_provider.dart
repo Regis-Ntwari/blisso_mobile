@@ -1,5 +1,5 @@
 import 'package:blisso_mobile/services/api_state.dart';
-import 'package:blisso_mobile/services/message_requests/Message_request_service.dart';
+import 'package:blisso_mobile/services/message_requests/message_request_service.dart';
 import 'package:blisso_mobile/services/models/api_response.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

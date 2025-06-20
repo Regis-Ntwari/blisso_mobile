@@ -13,10 +13,6 @@ class StoriesServiceProvider extends StateNotifier<ApiState> {
     try {
       final response = await storiesService.createStory(story);
 
-      print(response.statusCode);
-      print(response.errorMessage);
-      print(response.result);
-
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {

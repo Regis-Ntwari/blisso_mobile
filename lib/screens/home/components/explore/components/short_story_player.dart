@@ -1,8 +1,14 @@
+import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
+import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
+import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:routemaster/routemaster.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +26,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   bool _isLoading = true;
   late ChewieController _chewieController;
   bool isLiked = false;
+
+  bool isProfileLoading = false;
 
   @override
   void initState() {
@@ -41,12 +49,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   }
 
   void _handleLike() {
-    // ref
-    //     .read(storiesServiceProviderImpl.notifier)
-    //     .likeStory(int.parse(widget.video.id));
-    // setState(() {
-    //   isLiked = !isLiked;
-    // });
+    ref
+        .read(getVideoPostProviderImpl.notifier)
+        .likeVideoPost(int.parse(widget.video.id));
+    setState(() {
+      isLiked = !isLiked;
+    });
   }
 
   @override
@@ -104,7 +112,34 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                       ),
                     )
                   : IconButton(
-                      onPressed: _handleLike,
+                      onPressed: () async {
+                        setState(() {
+                          isProfileLoading = true;
+                        });
+                        try {
+                          final profileRef =
+                              ref.read(anyProfileServiceProviderImpl.notifier);
+                          await profileRef.getAnyProfile(widget.video.username);
+
+                          final targetProfile =
+                              ref.read(targetProfileProvider.notifier);
+                          final profileData =
+                              ref.read(anyProfileServiceProviderImpl);
+
+                          targetProfile.updateTargetProfile(
+                              TargetProfileModel.fromMap(
+                                  profileData.data as Map<String, dynamic>));
+                          setState(() {
+                            isProfileLoading = false;
+                          });
+                          if (mounted) {
+                            Routemaster.of(context)
+                                .push('/homepage/target-profile');
+                          }
+                        } catch (e) {
+                          showSnackBar(context, 'Failed to load profile');
+                        }
+                      },
                       icon: CircleAvatar(
                           radius: 20,
                           backgroundImage: CachedNetworkImageProvider(
@@ -131,7 +166,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                       onPressed: _handleLike,
                       icon: Icon(
                         Icons.favorite,
-                        color: widget.video.likedThisStory
+                        color: widget.video.likedThisStory || isLiked
                             ? GlobalColors.primaryColor
                             : Colors.white,
                         size: 32,
@@ -208,7 +243,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     )
                   : IconButton(
                       onPressed: () {
-                        // TODO: Implement share functionality
+                        // TODO: Caption functionality
                       },
                       icon: InkWell(
                         onTap: () {},
@@ -222,6 +257,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
             ],
           ),
         ),
+        isProfileLoading ? const Center(child: CircularProgressIndicator(color: Colors.white, ),) : Container()
       ],
     );
   }

@@ -14,7 +14,7 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:open_filex/open_filex.dart';
+// import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:routemaster/routemaster.dart';
@@ -177,10 +177,10 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               debugPrint(
                                   "File downloaded successfully at $savePath");
 
-                              final result = await OpenFilex.open(savePath);
+                              // final result = await OpenFilex.open(savePath);
 
-                              debugPrint(result.type.toString());
-                              debugPrint(result.message);
+                              // debugPrint(result.type.toString());
+                              // debugPrint(result.message);
                             } else {
                               debugPrint("File not found at $savePath");
                             }
@@ -234,7 +234,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                           File tempFile = File(tempFilePath);
                           await tempFile.writeAsBytes(
                               base64Decode(widget.message['content_file']));
-                          await OpenFilex.open(tempFilePath);
+                          // await OpenFilex.open(tempFilePath);
                         },
                         child: Column(
                           children: [

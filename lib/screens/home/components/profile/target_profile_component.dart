@@ -40,70 +40,81 @@ class _TargetProfileComponentState
   }
 
   Future<void> handleDMTap(BuildContext context) async {
+    final targetProfile = ref.watch(targetProfileProvider);
+    final targetUsername = targetProfile.user!['username'];
     setState(() {
       isLoading = true;
     });
 
+    // if (await checkIfChatExists(targetUsername)) {
+    //   if (context.mounted) {
+    //     Routemaster.of(context).push('/chat-detail/$targetUsername');
+    //   }
+    // }
     try {
-      final targetProfile = ref.watch(targetProfileProvider);
-      final targetUsername = targetProfile.user!['username'];
+      final messageRequestRef =
+          ref.read(addMessageRequestServiceProviderImpl.notifier);
+      await messageRequestRef.sendMessageRequest(targetUsername);
 
-      if (await checkIfChatExists(targetUsername)) {
+      final messageRequestResponse =
+          ref.read(addMessageRequestServiceProviderImpl);
+
+      if (messageRequestResponse.error == null) {
         if (context.mounted) {
-          Routemaster.of(context).push('/chat-detail/$targetUsername');
-        }
-      } else {
-        try {
-          final messageRequestRef =
-              ref.read(addMessageRequestServiceProviderImpl.notifier);
-          await messageRequestRef.sendMessageRequest(targetUsername);
-
-          final messageRequestResponse =
-              ref.read(addMessageRequestServiceProviderImpl);
-
-          if (messageRequestResponse.error == null) {
-            if (context.mounted) {
-              // Show success popup
-              if (messageRequestResponse.statusCode == 200) {
-                Routemaster.of(context).push('/chat-detail/$targetUsername');
-              } else if (messageRequestResponse.statusCode == 201) {
-                showPopupComponent(
-                    context: context,
-                    icon: Icons.verified,
-                    message:
-                        'Message request sent to ${targetProfile.nickname}!');
-              } else {
-                showPopupComponent(
-                  context: context,
-                  icon: Icons.error,
-                  iconColor: Colors.red,
-                  message: messageRequestResponse.error!,
-                );
-              }
+          // Show success popup
+          if (messageRequestResponse.statusCode == 200) {
+            final chatRef = ref.read(chatServiceProviderImpl);
+            if (chatRef.data == null || chatRef.data.isEmpty) {
+              final chatRef = ref.read(chatServiceProviderImpl.notifier);
+              await chatRef.getMessages();
             }
-          } else {
+            setState(() {
+              isLoading = false;
+            });
+            Routemaster.of(context).push('/chat-detail/$targetUsername');
+          } else if (messageRequestResponse.statusCode == 201) {
+            setState(() {
+              isLoading = false;
+            });
             showPopupComponent(
                 context: context,
-                icon: Icons.error,
-                message: messageRequestResponse.error!);
-          }
-        } catch (e) {
-          if (context.mounted) {
-            // Show error popup
+                icon: Icons.verified,
+                iconColor: Colors.green[800],
+                message:
+                    'Message request sent to ${targetProfile.nickname}!');
+          } else {
+            setState(() {
+              isLoading = false;
+            });
             showPopupComponent(
               context: context,
               icon: Icons.error,
               iconColor: Colors.red,
-              message: 'Failed to send message request: ${e.toString()}',
+              message: messageRequestResponse.error!,
             );
           }
         }
-      }
-    } finally {
-      if (mounted) {
+      } else {
         setState(() {
           isLoading = false;
         });
+        showPopupComponent(
+            context: context,
+            icon: Icons.error,
+            message: messageRequestResponse.error!);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        // Show error popup
+        showPopupComponent(
+          context: context,
+          icon: Icons.error,
+          iconColor: Colors.red,
+          message: 'Failed to send message request: ${e.toString()}',
+        );
       }
     }
   }

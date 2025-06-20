@@ -23,6 +23,24 @@ class GetVideoPostProvider extends StateNotifier<ApiState> {
       state = ApiState(isLoading: false, error: e.toString());
     }
   }
+
+  Future<void> likeVideoPost(int id) async {
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await storiesService.likeStory(id);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(isLoading: false, error: response.errorMessage);
+        getVideoPosts();
+      } else {
+        state = ApiState(isLoading: false, data: response.result);
+        getVideoPosts();
+      }
+    } catch (e) {
+      state = ApiState(isLoading: false, error: e.toString());
+    }
+  }
 }
 
 final getVideoPostProviderImpl =

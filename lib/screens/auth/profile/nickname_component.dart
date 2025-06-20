@@ -1,7 +1,8 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
 
 class NicknameComponent extends StatelessWidget {
   final GlobalKey<FormState> formKey;

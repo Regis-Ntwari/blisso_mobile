@@ -144,7 +144,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
           isFileIncluded: false,
           createdAt: DateTime.now().toUtc().toIso8601String());
 
-      print(messageModel);
+      
 
       final messageRef = ref.read(webSocketNotifierProvider.notifier);
       messageRef.sendMessage(messageModel);
@@ -366,12 +366,12 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                       onPressed: _handleLike,
                                       icon: Icon(
                                         stories[currentIndex]
-                                                ['liked_this_story']
+                                                ['liked_this_story'] || isLiked
                                             ? Icons.favorite
                                             : Icons.favorite_border,
                                         color: stories[currentIndex]
-                                                ['liked_this_story']
-                                            ? Colors.red
+                                                ['liked_this_story'] || isLiked
+                                            ? GlobalColors.primaryColor
                                             : Colors.white,
                                       ),
                                     ),

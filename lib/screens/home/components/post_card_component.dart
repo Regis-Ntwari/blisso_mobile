@@ -38,20 +38,20 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
     _pageController.dispose();
   }
 
-  Future<bool> checkIfChatExists(String username) async {
-    final chatRef = ref.watch(chatServiceProviderImpl);
-    if (chatRef.data == null || chatRef.data.isEmpty) {
-      final chatRef = ref.read(chatServiceProviderImpl.notifier);
-      await chatRef.getMessages();
-    }
+  // Future<bool> checkIfChatExists(String username) async {
+  //   final chatRef = ref.watch(chatServiceProviderImpl);
+  //   if (chatRef.data == null || chatRef.data.isEmpty) {
+  //     final chatRef = ref.read(chatServiceProviderImpl.notifier);
+  //     await chatRef.getMessages();
+  //   }
 
-    for (var chat in chatRef.data) {
-      if (chat.containsKey(username)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  //   for (var chat in chatRef.data) {
+  //     if (chat.containsKey(username)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
     // Convert DateTime to Unix timestamp in milliseconds
@@ -76,70 +76,75 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
 
     final targetUsername = widget.profile['user']['username'];
 
-    if (await checkIfChatExists(targetUsername)) {
-      if (context.mounted) {
-        Routemaster.of(context).push('/chat-detail/$targetUsername');
-      }
-    } else {
-      try {
-        final messageRequestRef =
-            ref.read(addMessageRequestServiceProviderImpl.notifier);
-        await messageRequestRef.sendMessageRequest(targetUsername);
+    // if (await checkIfChatExists(targetUsername)) {
+    //   if (context.mounted) {
+    //     Routemaster.of(context).push('/chat-detail/$targetUsername');
+    //   }
+    // }
+    try {
+      final messageRequestRef =
+          ref.read(addMessageRequestServiceProviderImpl.notifier);
+      await messageRequestRef.sendMessageRequest(targetUsername);
 
-        final messageRequestResponse =
-            ref.read(addMessageRequestServiceProviderImpl);
+      final messageRequestResponse =
+          ref.read(addMessageRequestServiceProviderImpl);
 
-        if (messageRequestResponse.error == null) {
-          if (context.mounted) {
-            // Show success popup
-            if (messageRequestResponse.statusCode == 200) {
-              setState(() {
-                isLoading = false;
-              });
-              //Routemaster.of(context).push('/chat-detail/$targetUsername');
-            } else if (messageRequestResponse.statusCode == 201) {
-              setState(() {
-                isLoading = false;
-              });
-              showPopupComponent(
-                  context: context,
-                  icon: Icons.verified,
-                  message:
-                      'Message request sent to ${widget.profile['nickname']}!');
-            } else {
-              setState(() {
-                isLoading = false;
-              });
-              showPopupComponent(
-                context: context,
-                icon: Icons.error,
-                iconColor: Colors.red,
-                message: messageRequestResponse.error!,
-              );
+      if (messageRequestResponse.error == null) {
+        if (context.mounted) {
+          // Show success popup
+          if (messageRequestResponse.statusCode == 200) {
+            final chatRef = ref.read(chatServiceProviderImpl);
+            if (chatRef.data == null || chatRef.data.isEmpty) {
+              final chatRef = ref.read(chatServiceProviderImpl.notifier);
+              await chatRef.getMessages();
             }
-          }
-        } else {
-          setState(() {
-            isLoading = false;
-          });
-          showPopupComponent(
+            setState(() {
+              isLoading = false;
+            });
+            Routemaster.of(context).push('/chat-detail/$targetUsername');
+          } else if (messageRequestResponse.statusCode == 201) {
+            setState(() {
+              isLoading = false;
+            });
+            showPopupComponent(
+                context: context,
+                icon: Icons.verified,
+                iconColor: Colors.green[800],
+                message:
+                    'Message request sent to ${widget.profile['nickname']}!');
+          } else {
+            setState(() {
+              isLoading = false;
+            });
+            showPopupComponent(
               context: context,
               icon: Icons.error,
-              message: messageRequestResponse.error!);
+              iconColor: Colors.red,
+              message: messageRequestResponse.error!,
+            );
+          }
         }
-      } catch (e) {
-        if (context.mounted) {
-          setState(() {
-            isLoading = false;
-          });
-          // Show error popup
-          showPopupComponent(
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        showPopupComponent(
             context: context,
             icon: Icons.error,
-            iconColor: Colors.red,
-            message: 'Failed to send message request: ${e.toString()}',
-          );
-        }
+            message: messageRequestResponse.error!);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        // Show error popup
+        showPopupComponent(
+          context: context,
+          icon: Icons.error,
+          iconColor: Colors.red,
+          message: 'Failed to send message request: ${e.toString()}',
+        );
       }
     }
   }

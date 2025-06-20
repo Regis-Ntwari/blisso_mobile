@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/services/message_requests/accept_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/get_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/reject_message_request_service_provider.dart';
@@ -84,14 +85,9 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
           child: Column(
             children: [
               ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(request['requester_profile_name'] == null
-                        ? ''
-                        : 'You have received a message request from ${request['request_profile_name']}'),
-                  ],
-                ),
+                title: ExpandableTextComponent(text: request['requester_profile_name'] == null
+                    ? ''
+                    : 'You have received a message request from ${request['requester_profile_name']}'),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

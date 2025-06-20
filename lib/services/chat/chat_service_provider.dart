@@ -14,6 +14,7 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     try {
       final chatService = ref.read(chatServiceProvider);
       final messages = await chatService.getAllMyMessages();
+      print(messages);
 
       if (!StatusCodes.codes.contains(messages.statusCode)) {
         state = ApiState(isLoading: false, error: messages.errorMessage);

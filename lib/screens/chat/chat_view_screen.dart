@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/attachment_modal.dart';
 import 'package:blisso_mobile/screens/chat/message_options/message_option.dart';
@@ -329,11 +330,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     _initializeRecorder();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // First ensure we have the users data
-      final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-      if (allUserRef.state.data == null) {
-        debugPrint('Loading users data first');
-        await allUserRef.getAllUsers();
-      }
+      // final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+      // if (allUserRef.state.data == null) {
+      //   debugPrint('Loading users data first');
+      //   await allUserRef.getAllUsers();
+      // }
 
       // Then proceed with other initializations
       await getMyUsername();
@@ -464,7 +465,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
             isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          leadingWidth: 40,
+          leadingWidth: 30,
           backgroundColor:
               isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
           leading: Align(
@@ -484,23 +485,24 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
           ),
           title: Row(
             children: [
-              CircleAvatar(
-                backgroundImage:
-                    chatProfilePicture != null && chatProfilePicture!.isNotEmpty
-                        ? CachedNetworkImageProvider(chatProfilePicture!)
-                        : null,
-                backgroundColor: Colors.grey,
-                child: chatProfilePicture == null || chatProfilePicture!.isEmpty
-                    ? const Icon(Icons.person, color: Colors.white)
-                    : null,
+              Container(
+                margin: const EdgeInsets.only(right: 5),
+                child: CircleAvatar(
+                  backgroundImage:
+                      chatProfilePicture != null && chatProfilePicture!.isNotEmpty
+                          ? CachedNetworkImageProvider(chatProfilePicture!)
+                          : null,
+                  backgroundColor: Colors.grey,
+                  child: chatProfilePicture == null || chatProfilePicture!.isEmpty
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : null,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 5),
-                child: Text(
-                  isNameLoading
+              Expanded(
+                child: ExpandableTextComponent(
+                  text: isNameLoading
                       ? 'Loading...'
                       : chatFullName ?? widget.username,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

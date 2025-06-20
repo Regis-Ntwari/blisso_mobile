@@ -198,50 +198,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   return InkWell(
                                     onTap: () => chooseChat(username),
                                     child: ListTile(
-                                      leading: FutureBuilder<String>(
-                                        future: Future(() =>
-                                            getChatProfilePicture(username)),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const CircleAvatar(
-                                              backgroundColor: Colors.grey,
-                                              child: CircularProgressIndicator(
-                                                color:
-                                                    GlobalColors.primaryColor,
-                                              ),
-                                            );
-                                          } else if (snapshot.hasError ||
-                                              !snapshot.hasData) {
-                                            return const CircleAvatar(
-                                              backgroundColor: Colors.grey,
-                                              child: Icon(Icons.person,
-                                                  color: Colors.white),
-                                            );
-                                          } else {
-                                            return CircleAvatar(
-                                              backgroundImage:
-                                                  CachedNetworkImageProvider(
-                                                      snapshot.data!),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      title: FutureBuilder<String>(
-                                        future: Future(
-                                            () => getChatFullName(username)),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Text('Loading...');
-                                          } else if (snapshot.hasError ||
-                                              !snapshot.hasData) {
-                                            return const Text('Unknown User');
-                                          } else {
-                                            return Text(snapshot.data!);
-                                          }
-                                        },
-                                      ),
+                                      leading: const CircleAvatar(
+                                              child: Icon(Icons.person)
+                                                  // CachedNetworkImageProvider(
+                                                  //     snapshot.data!),
+                                            ),
+                                      title: Text(username),
                                       subtitle: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
