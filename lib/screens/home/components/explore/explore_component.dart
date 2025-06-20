@@ -16,9 +16,9 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
       if (ref.read(getVideoPostProviderImpl).data == null) {
-        ref.read(getVideoPostProviderImpl.notifier).getVideoPosts();
+        await ref.read(getVideoPostProviderImpl.notifier).getVideoPosts();
       }
     });
   }
