@@ -8,16 +8,17 @@ class GetVideoPostProvider extends StateNotifier<ApiState> {
 
   GetVideoPostProvider({required this.storiesService}) : super(ApiState());
 
-  Future<void> getVideoPosts() async {
-    state = ApiState(isLoading: true);
+  Future<void> likeVideoPost(int id) async {
+    state = ApiState(isLoading: false);
 
     try {
-      final response = await storiesService.getVideoPosts();
+      final response = await storiesService.likeStory(id);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
         state = ApiState(isLoading: false, data: response.result);
+        
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());
@@ -25,7 +26,7 @@ class GetVideoPostProvider extends StateNotifier<ApiState> {
   }
 }
 
-final getVideoPostProviderImpl =
+final likeVideoPostProviderImpl =
     StateNotifierProvider<GetVideoPostProvider, ApiState>((ref) {
   return GetVideoPostProvider(storiesService: StoriesService());
 });

@@ -3,7 +3,7 @@ import 'package:blisso_mobile/services/models/short_story_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
-import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
+import 'package:blisso_mobile/services/stories/like_video_post_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
@@ -50,10 +50,14 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   void _handleLike() {
     ref
-        .read(getVideoPostProviderImpl.notifier)
+        .read(likeVideoPostProviderImpl.notifier)
         .likeVideoPost(int.parse(widget.video.id));
     setState(() {
+      if(isLiked) {
+        //widget.video.likes = widget.video.likes - 1;
+      }
       isLiked = !isLiked;
+      
     });
   }
 

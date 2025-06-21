@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
+import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -173,6 +177,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     }
   }
 
+  bool isProfileLoading = false;
+
   @override
   void dispose() {
     _videoController?.dispose();
@@ -236,62 +242,92 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                   Positioned(
                     bottom: 130,
                     left: 10,
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage: CachedNetworkImageProvider(
-                            stories[currentIndex]['profile_picture_uri'] ?? '',
-                          ),
-                          onBackgroundImageError: (_, __) {},
-                          child: stories[currentIndex]['profile_picture_uri'] ==
-                                  null
-                              ? const Icon(Icons.person)
-                              : null,
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              stories[currentIndex]['nickname'] == nickname
-                                  ? 'My Story'
-                                  : stories[currentIndex]['nickname'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(1, 1),
-                                    blurRadius: 3.0,
-                                    color: Colors.black54,
-                                  ),
-                                ],
-                              ),
+                    child: InkWell(
+                      onTap: () async {
+                        setState(() {
+                          isProfileLoading = true;
+                        });
+                        try {
+                          final profileRef =
+                              ref.read(anyProfileServiceProviderImpl.notifier);
+                          await profileRef.getAnyProfile(stories[currentIndex]['username']);
+
+                          final targetProfile =
+                              ref.read(targetProfileProvider.notifier);
+                          final profileData =
+                              ref.read(anyProfileServiceProviderImpl);
+
+                          targetProfile.updateTargetProfile(
+                              TargetProfileModel.fromMap(
+                                  profileData.data as Map<String, dynamic>));
+                          setState(() {
+                            isProfileLoading = false;
+                          });
+                          if (mounted) {
+                            Routemaster.of(context)
+                                .push('/homepage/target-profile');
+                          }
+                        } catch (e) {
+                          showSnackBar(context, 'Failed to load profile');
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundImage: CachedNetworkImageProvider(
+                              stories[currentIndex]['profile_picture_uri'] ?? '',
                             ),
-                            // stories[currentIndex]['nickname'] == nickname
-                            //     ? Row(children: [
-                            //         Text(
-                            //           '${stories[currentIndex]['likes'] ?? 0} ',
-                            //           style: TextStyle(
-                            //             fontSize: 12,
-                            //             color: isLightTheme
-                            //                 ? Colors.grey[600]
-                            //                 : Colors.grey[400],
-                            //             shadows: const [
-                            //               Shadow(
-                            //                 offset: Offset(1, 1),
-                            //                 blurRadius: 3.0,
-                            //                 color: Colors.black54,
-                            //               ),
-                            //             ],
-                            //           ),
-                            //         )
-                            //       ])
-                            //     : const SizedBox.shrink(),
-                          ],
-                        ),
-                      ],
+                            onBackgroundImageError: (_, __) {},
+                            child: stories[currentIndex]['profile_picture_uri'] ==
+                                    null
+                                ? const Icon(Icons.person)
+                                : null,
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                stories[currentIndex]['nickname'] == nickname
+                                    ? 'My Story'
+                                    : stories[currentIndex]['nickname'],
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(1, 1),
+                                      blurRadius: 3.0,
+                                      color: Colors.black54,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // stories[currentIndex]['nickname'] == nickname
+                              //     ? Row(children: [
+                              //         Text(
+                              //           '${stories[currentIndex]['likes'] ?? 0} ',
+                              //           style: TextStyle(
+                              //             fontSize: 12,
+                              //             color: isLightTheme
+                              //                 ? Colors.grey[600]
+                              //                 : Colors.grey[400],
+                              //             shadows: const [
+                              //               Shadow(
+                              //                 offset: Offset(1, 1),
+                              //                 blurRadius: 3.0,
+                              //                 color: Colors.black54,
+                              //               ),
+                              //             ],
+                              //           ),
+                              //         )
+                              //       ])
+                              //     : const SizedBox.shrink(),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   Positioned(
@@ -486,6 +522,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                               ],
                             ),
                           )),
+                          isProfileLoading ? const Center(child: CircularProgressIndicator(color: Colors.white, ),) : Container()
                 ],
               ),
             ),
