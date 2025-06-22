@@ -63,12 +63,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   void chooseChat(String username) {
-    final chatRef = ref.read(chatServiceProviderImpl);
-    for (Map<dynamic, dynamic> chat in chatRef.data) {
-      if (chat.containsKey(username)) {
-        Routemaster.of(context).push('/chat-detail/$username');
-      }
-    }
+    // final chatRef = ref.read(chatServiceProviderImpl);
+    // for (Map<dynamic, dynamic> chat in chatRef.data) {
+    //   if (chat.containsKey(username)) {
+    //     Routemaster.of(context).push('/chat-detail/$username');
+    //   }
+    // }
+    Routemaster.of(context).push('/chat-detail/$username');
   }
 
   Future<String> getChatFullName(String username) async {
@@ -103,6 +104,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final chatRef = ref.watch(chatServiceProviderImpl);
+    print(chatRef.data);
 
     return DefaultTabController(
       length: 2,
@@ -178,10 +180,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             Expanded(
                               child: ListView.builder(
                                 itemBuilder: (context, index) {
+                                  print(chatRef.data[index]['username']);
                                   String username =
-                                      chatRef.data[index].keys.first;
+                                      chatRef.data[index]['username'];
                                   List<dynamic>? messages =
-                                      chatRef.data[index][username];
+                                      chatRef.data[index]['messages'];
                                   Map<String, dynamic> lastMessage = {};
 
                                   if (messages != null && messages.isNotEmpty) {

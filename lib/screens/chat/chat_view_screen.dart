@@ -343,7 +343,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       });
       initializeEmptyChat();
       scrollToBottom();
-      await _loadChatDetails();
+      //await _loadChatDetails();
     });
     messageControllerNotifier.value = messageController;
   }
@@ -375,67 +375,67 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   dynamic deleteMessage;
 
-  Future<void> _loadChatDetails() async {
-    try {
-      debugPrint('Starting to load chat details for ${widget.username}');
+  // Future<void> _loadChatDetails() async {
+  //   try {
+  //     debugPrint('Starting to load chat details for ${widget.username}');
 
-      // First, ensure we have the users data loaded
-      final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
+  //     // First, ensure we have the users data loaded
+  //     final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
 
-      // Try to get the data with retries
-      int retryCount = 0;
-      const maxRetries = 3;
+  //     // Try to get the data with retries
+  //     int retryCount = 0;
+  //     const maxRetries = 3;
 
-      while (retryCount < maxRetries) {
-        try {
-          chatFullName = await allUserRef.getFullName(widget.username);
-          chatProfilePicture =
-              await allUserRef.getProfilePicture(widget.username);
+  //     while (retryCount < maxRetries) {
+  //       try {
+  //         chatFullName = await allUserRef.getFullName(widget.username);
+  //         chatProfilePicture =
+  //             await allUserRef.getProfilePicture(widget.username);
 
-          debugPrint(
-              'Attempt ${retryCount + 1}: Name: $chatFullName, Picture: $chatProfilePicture');
+  //         debugPrint(
+  //             'Attempt ${retryCount + 1}: Name: $chatFullName, Picture: $chatProfilePicture');
 
-          // If we got both values successfully, break the loop
-          if (chatFullName != null &&
-              chatFullName != widget.username &&
-              chatProfilePicture != null &&
-              chatProfilePicture!.isNotEmpty) {
-            break;
-          }
+  //         // If we got both values successfully, break the loop
+  //         if (chatFullName != null &&
+  //             chatFullName != widget.username &&
+  //             chatProfilePicture != null &&
+  //             chatProfilePicture!.isNotEmpty) {
+  //           break;
+  //         }
 
-          // If we didn't get valid data, wait and retry
-          await Future.delayed(const Duration(seconds: 1));
-          retryCount++;
-        } catch (e) {
-          debugPrint('Error in attempt $retryCount: $e');
-          await Future.delayed(const Duration(seconds: 1));
-          retryCount++;
-        }
-      }
+  //         // If we didn't get valid data, wait and retry
+  //         await Future.delayed(const Duration(seconds: 1));
+  //         retryCount++;
+  //       } catch (e) {
+  //         debugPrint('Error in attempt $retryCount: $e');
+  //         await Future.delayed(const Duration(seconds: 1));
+  //         retryCount++;
+  //       }
+  //     }
 
-      // If we still don't have valid data after all retries, use fallback
-      if (chatFullName == null ||
-          chatFullName == widget.username ||
-          chatProfilePicture == null ||
-          chatProfilePicture!.isEmpty) {
-        debugPrint('Using fallback values after $retryCount retries');
-        chatFullName = widget.username;
-        chatProfilePicture = '';
-      }
+  //     // If we still don't have valid data after all retries, use fallback
+  //     if (chatFullName == null ||
+  //         chatFullName == widget.username ||
+  //         chatProfilePicture == null ||
+  //         chatProfilePicture!.isEmpty) {
+  //       debugPrint('Using fallback values after $retryCount retries');
+  //       chatFullName = widget.username;
+  //       chatProfilePicture = '';
+  //     }
 
-      if (mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      debugPrint('Final error in _loadChatDetails: $e');
-      if (mounted) {
-        setState(() {
-          chatFullName = widget.username;
-          chatProfilePicture = '';
-        });
-      }
-    }
-  }
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   } catch (e) {
+  //     debugPrint('Final error in _loadChatDetails: $e');
+  //     if (mounted) {
+  //       setState(() {
+  //         chatFullName = widget.username;
+  //         chatProfilePicture = '';
+  //       });
+  //     }
+  //   }
+  // }
 
   dynamic editMessage;
 
@@ -452,8 +452,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     dynamic messages = [];
     if (chatRef.data != null) {
       for (var chat in chatRef.data) {
-        if (chat.containsKey(widget.username)) {
-          messages = chat[widget.username];
+        if (chat['username'] == widget.username) {
+          messages = chat['messages'];
           break;
         }
       }
