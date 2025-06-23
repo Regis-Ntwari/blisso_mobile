@@ -35,6 +35,8 @@ class MessageView extends ConsumerStatefulWidget {
 
 class _MessageViewState extends ConsumerState<MessageView> {
   String? username;
+
+  bool isLoading = false;
   Future<void> getMyUsername() async {
     await SharedPreferencesService.getPreference('username').then((use) {
       if (mounted) {
@@ -58,7 +60,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return widget.message['content_file_type'].toString().startsWith('image/')
+    return isLoading ? const Center(child: CircularProgressIndicator(color: GlobalColors.primaryColor,),) : widget.message['content_file_type'].toString().startsWith('image/')
         ? widget.message['content_file_url'].toString().startsWith('https:')
             ? Wrap(
                 children: [
@@ -437,6 +439,9 @@ class _MessageViewState extends ConsumerState<MessageView> {
                         : widget.message['content_file_type'] == 'Profile'
                             ? ListTile(
                                 onTap: () async {
+                                  setState(() {
+                                    isLoading = true;
+                                  });
                                   final profileRef = ref.read(
                                       anyProfileServiceProviderImpl.notifier);
                                   await profileRef.getAnyProfile(
@@ -449,8 +454,12 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                       ref.read(targetProfileProvider.notifier);
                                   targetProfile.updateTargetProfile(
                                       TargetProfileModel.fromMap(profile.data));
+                                  String chatUser = username! == widget.message['sender'] ? widget.message['receiver'] : widget.message['sender'];
+                                  setState(() {
+                                    isLoading = false;
+                                  });
                                   Routemaster.of(context)
-                                      .push('/target-profile');
+                                      .push('/chat-detail/$chatUser/profile');
                                 },
                                 leading: CircleAvatar(
                                   backgroundImage: CachedNetworkImageProvider(

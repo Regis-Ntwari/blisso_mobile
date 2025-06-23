@@ -1,9 +1,10 @@
+import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
-import 'package:blisso_mobile/services/stories/like_video_post_provider.dart';
+import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
@@ -25,9 +26,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   late VideoPlayerController _controller;
   bool _isLoading = true;
   late ChewieController _chewieController;
-  bool isLiked = false;
 
   bool isProfileLoading = false;
+  bool showCaption = false;
 
   @override
   void initState() {
@@ -50,15 +51,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   void _handleLike() {
     ref
-        .read(likeVideoPostProviderImpl.notifier)
+        .read(getVideoPostProviderImpl.notifier)
         .likeVideoPost(int.parse(widget.video.id));
-    setState(() {
-      if(isLiked) {
-        //widget.video.likes = widget.video.likes - 1;
-      }
-      isLiked = !isLiked;
-      
-    });
+    setState(() {});
   }
 
   @override
@@ -169,8 +164,10 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   : IconButton(
                       onPressed: _handleLike,
                       icon: Icon(
-                        Icons.favorite,
-                        color: widget.video.likedThisStory || isLiked
+                        widget.video.likedThisStory
+                            ? Icons.favorite
+                            : Icons.favorite_outline,
+                        color: widget.video.likedThisStory
                             ? GlobalColors.primaryColor
                             : Colors.white,
                         size: 32,
@@ -245,23 +242,46 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         ),
                       ),
                     )
-                  : IconButton(
-                      onPressed: () {
-                        // TODO: Caption functionality
+                  : InkWell(
+                      onTap: () {
+                        setState(() {
+                          showCaption = !showCaption;
+                        });
                       },
-                      icon: InkWell(
-                        onTap: () {},
-                        child: const CircleAvatar(
-                          child: Text(
-                            'Caption',
-                            style: TextStyle(fontSize: 9),
-                          ),
+                      child: const CircleAvatar(
+                        backgroundColor: GlobalColors.primaryColor,
+                        child: Text(
+                          'Caption',
+                          style: TextStyle(fontSize: 9, color: Colors.white),
                         ),
-                      )),
+                      ),
+                    ),
             ],
           ),
         ),
-        isProfileLoading ? const Center(child: CircularProgressIndicator(color: Colors.white, ),) : Container()
+        showCaption
+            ? Positioned(
+                bottom: 30,
+                left: MediaQuery.sizeOf(context).width / 2 - 50,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      showCaption = !showCaption;
+                    });
+                  },
+                  child: ExpandableTextComponent(
+                    text: widget.video.description,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ))
+            : Container(),
+        isProfileLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            : Container()
       ],
     );
   }

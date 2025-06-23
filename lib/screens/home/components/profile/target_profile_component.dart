@@ -2,6 +2,7 @@ import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -67,6 +68,20 @@ class _TargetProfileComponentState
             if (chatRef.data == null || chatRef.data.isEmpty) {
               final chatRef = ref.read(chatServiceProviderImpl.notifier);
               await chatRef.getMessages();
+            }
+            final chatsRef = ref.read(chatServiceProviderImpl);
+            for (var chat in chatsRef.data) {
+              if (chat['username'] == targetUsername) {
+                final chatDetailsRef =
+                    ref.read(getChatDetailsProviderImpl.notifier);
+                chatDetailsRef.updateChatDetails({
+                  'username': targetUsername,
+                  'profile_picture': targetProfile.profilePictureUri,
+                  'full_name': '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                  'nickname': targetProfile.nickname,
+                  'messages': chat['messages']
+                });
+              }
             }
             setState(() {
               isLoading = false;

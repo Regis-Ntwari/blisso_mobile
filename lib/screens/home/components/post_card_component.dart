@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
@@ -76,11 +77,6 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
 
     final targetUsername = widget.profile['user']['username'];
 
-    // if (await checkIfChatExists(targetUsername)) {
-    //   if (context.mounted) {
-    //     Routemaster.of(context).push('/chat-detail/$targetUsername');
-    //   }
-    // }
     try {
       final messageRequestRef =
           ref.read(addMessageRequestServiceProviderImpl.notifier);
@@ -97,6 +93,20 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
             if (chatRef.data == null || chatRef.data.isEmpty) {
               final chatRef = ref.read(chatServiceProviderImpl.notifier);
               await chatRef.getMessages();
+            }
+            final chatsRef = ref.read(chatServiceProviderImpl);
+            for (var chat in chatsRef.data) {
+              if (chat['username'] == targetUsername) {
+                final chatDetailsRef =
+                    ref.read(getChatDetailsProviderImpl.notifier);
+                chatDetailsRef.updateChatDetails({
+                  'username': targetUsername,
+                  'profile_picture': widget.profile['profile_picture_url'],
+                  'full_name': '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
+                  'nickname': widget.profile['nickname'],
+                  'messages': chat['messages']
+                });
+              }
             }
             setState(() {
               isLoading = false;

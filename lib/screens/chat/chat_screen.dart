@@ -2,6 +2,7 @@ import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
 import 'package:blisso_mobile/screens/chat/chat_message_request.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -62,13 +63,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     return dateFormat.format(dateTime);
   }
 
-  void chooseChat(String username) {
+  void chooseChat(String username, String profilePicture, String nickname, String fullname, List<dynamic>? messages) {
     // final chatRef = ref.read(chatServiceProviderImpl);
     // for (Map<dynamic, dynamic> chat in chatRef.data) {
     //   if (chat.containsKey(username)) {
     //     Routemaster.of(context).push('/chat-detail/$username');
     //   }
     // }
+    final chatDetailsRef = ref.read(getChatDetailsProviderImpl.notifier);
+    chatDetailsRef.updateChatDetails({
+      'username': username,
+      'profile_picture': profilePicture,
+      'full_name': fullname,
+      'nickname': nickname,
+      'messages': messages
+    });
     Routemaster.of(context).push('/chat-detail/$username');
   }
 
@@ -104,7 +113,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final chatRef = ref.watch(chatServiceProviderImpl);
-    print(chatRef.data);
 
     return DefaultTabController(
       length: 2,
@@ -180,7 +188,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             Expanded(
                               child: ListView.builder(
                                 itemBuilder: (context, index) {
-                                  print(chatRef.data[index]['username']);
+                                  String profilePicture = chatRef.data[index]['profile_picture_url'];
+                                  String nickname = chatRef.data[index]['nickname'];
+                                  String fullname = chatRef.data[index]['full_name'];
                                   String username =
                                       chatRef.data[index]['username'];
                                   List<dynamic>? messages =
@@ -199,14 +209,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   }
 
                                   return InkWell(
-                                    onTap: () => chooseChat(username),
+                                    onTap: () => chooseChat(username, profilePicture, nickname, fullname, messages),
                                     child: ListTile(
-                                      leading: const CircleAvatar(
-                                              child: Icon(Icons.person)
-                                                  // CachedNetworkImageProvider(
-                                                  //     snapshot.data!),
-                                            ),
-                                      title: Text(username),
+                                      leading: CircleAvatar(
+                                        backgroundImage: CachedNetworkImageProvider(profilePicture),
+                                          ),
+                                      title: Text(fullname),
                                       subtitle: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,

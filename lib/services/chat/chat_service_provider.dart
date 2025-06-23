@@ -14,7 +14,6 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     try {
       final chatService = ref.read(chatServiceProvider);
       final messages = await chatService.getAllMyMessages();
-      print(messages);
 
       if (!StatusCodes.codes.contains(messages.statusCode)) {
         state = ApiState(isLoading: false, error: messages.errorMessage);
@@ -33,16 +32,13 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  void addMessage(dynamic message) {
-    List<Map<String, dynamic>> updatedChats =
-        List.from(state.data); // Copy list
-
+  void _applyMessageToChat(String chatKey, dynamic message) {
+    List<Map<String, dynamic>> updatedChats = List.from(state.data ?? []);
     bool isUpdated = false;
 
     for (var chat in updatedChats) {
-      if (chat.containsKey(message['receiver'])) {
-        List messages = List.from(chat[message['receiver']]!);
-
+      if (chat['username'] == chatKey) {
+        List messages = List.from(chat['messages']);
         if (message['action'] == 'edited') {
           for (int i = 0; i < messages.length; i++) {
             if (messages[i]['message_id'] == message['message_id']) {
@@ -59,8 +55,10 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
           messages.add(message);
           isUpdated = true;
         }
+        chat['messages'] = messages;
 
-        chat[message['receiver']] = messages;
+        updatedChats.remove(chat);
+        updatedChats.insert(0, chat);
         break;
       }
     }
@@ -68,55 +66,26 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     if (!isUpdated &&
         message['action'] != 'edited' &&
         message['action'] != 'deleted') {
-      updatedChats.add({
-        message['receiver']: [message]
-      });
+
+      final newChat = {
+        'username': message['receiver'],
+        'full_name': '',
+        'profile_picture_url': '',
+        'nickname': '',
+        'messages': [message]
+      };
+      updatedChats.insert(0, newChat);
     }
 
     state = ApiState(isLoading: false, data: updatedChats);
   }
 
+  void addMessage(dynamic message) {
+    _applyMessageToChat(message['receiver'], message);
+  }
+
   void addMessageFromListen(dynamic message) {
-    List<Map<String, dynamic>> updatedChats =
-        List.from(state.data); // Copy list
-
-    bool isUpdated = false;
-
-    for (var chat in updatedChats) {
-      if (chat.containsKey(message['sender'])) {
-        List messages = List.from(chat[message['sender']]!);
-
-        if (message['action'] == 'edited') {
-          for (int i = 0; i < messages.length; i++) {
-            if (messages[i]['message_id'] == message['message_id']) {
-              messages[i] = message;
-              isUpdated = true;
-              break;
-            }
-          }
-        } else if (message['action'] == 'deleted') {
-          messages
-              .removeWhere((msg) => msg['message_id'] == message['message_id']);
-          isUpdated = true;
-        } else {
-          messages.add(message);
-          isUpdated = true;
-        }
-
-        chat[message['sender']] = messages;
-        break;
-      }
-    }
-
-    if (!isUpdated &&
-        message['action'] != 'edited' &&
-        message['action'] != 'deleted') {
-      updatedChats.add({
-        message['sender']: [message]
-      });
-    }
-
-    state = ApiState(isLoading: false, data: updatedChats);
+    _applyMessageToChat(message['sender'], message);
   }
 
   Future<List<dynamic>> getUserMessages(String username) async {
@@ -125,8 +94,8 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     }
 
     for (var chat in state.data) {
-      if (chat.containsKey(username)) {
-        return chat[username];
+      if (chat['username'] == username) {
+        return chat['messages'];
       }
     }
 
@@ -135,19 +104,24 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
 
   void initializeChat(String username) {
     final currentState = state;
-    List<Map<String, List<dynamic>>> currentData =
-        List.from(currentState.data ?? []);
+    List<Map<String, dynamic>> currentData = List.from(currentState.data ?? []);
 
     bool chatExists = false;
     for (var chat in currentData) {
-      if (chat.containsKey(username)) {
+      if (chat['username'] == username) {
         chatExists = true;
         break;
       }
     }
 
     if (!chatExists) {
-      currentData.add({username: []});
+      currentData.add({
+        'username': username,
+        'full_name': '',
+        'profile_picture_url': '',
+        'nickname': '',
+        'messages': []
+      });
       state = ApiState(data: currentData);
     }
   }

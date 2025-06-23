@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
@@ -342,8 +343,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  stories[currentIndex]['caption'],
+                                ExpandableTextComponent(
+                                  text: stories[currentIndex]['caption'],
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -355,7 +356,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                       ),
                                     ],
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),

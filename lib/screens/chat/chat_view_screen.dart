@@ -3,14 +3,13 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:blisso_mobile/components/expandable_text_component.dart';
-import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/attachment_modal.dart';
 import 'package:blisso_mobile/screens/chat/message_options/message_option.dart';
 import 'package:blisso_mobile/screens/chat/utils/message_view.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
-import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +31,7 @@ class ChatViewScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
-  dynamic messages;
+  //dynamic messages;
 
   bool isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year &&
@@ -199,6 +198,14 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
     messageRef.sendMessage(messageModel);
 
+    final getMessageDetailRef = ref.read(getChatDetailsProviderImpl.notifier);
+
+    if (editMessage == null) {
+      getMessageDetailRef.addMessageToChat(messageModel.toMap());
+    } else {
+      getMessageDetailRef.replaceMessageInChat(messageModel.toMap());
+    }
+
     setState(() {
       editMessage = null;
       replyMessage = null;
@@ -245,6 +252,10 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
       messageRef.sendMessage(messageModel);
 
+      final getMessageDetailRef = ref.read(getChatDetailsProviderImpl.notifier);
+
+      getMessageDetailRef.addMessageToChat(messageModel.toMap());
+
       //Navigator.of(context).pop();
     } catch (e) {
       debugPrint(e.toString());
@@ -258,23 +269,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       final messageRef = ref.read(webSocketNotifierProvider.notifier);
 
       messageRef.sendMessage(ChatMessageModel.fromMap(deletedMessage));
+
+      final getMessageDetailRef = ref.read(getChatDetailsProviderImpl.notifier);
+
+      getMessageDetailRef.removeMessageFromChat(deletedMessage['message_id']);
     }
-  }
-
-  Future<String> getChatFullName(String username) async {
-    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-    debugPrint('Fetching full name for username: $username');
-    String fullname = await allUserRef.getFullName(username);
-    debugPrint('Received full name: $fullname');
-    return fullname;
-  }
-
-  Future<String> getChatProfilePicture(String username) async {
-    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-    debugPrint('Fetching profile picture for username: $username');
-    String picture = await allUserRef.getProfilePicture(username);
-    debugPrint('Received profile picture: $picture');
-    return picture;
   }
 
   final ScrollController scrollController = ScrollController();
@@ -298,7 +297,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     bool chatExists = false;
     if (chatRef.data != null) {
       for (var chat in chatRef.data) {
-        if (chat.containsKey(widget.username)) {
+        if (chat['username'] == widget.username) {
           chatExists = true;
           break;
         }
@@ -312,7 +311,13 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       if (chatRef.data != null) {
         newData = List.from(chatRef.data);
       }
-      newData.add({widget.username: []});
+      newData.add({
+        'username': widget.username,
+        'full_name': '',
+        'profile_picture_url': '',
+        'nickname': '',
+        'messages': []
+      });
 
       // Update the state through the notifier
       chatNotifier.updateMessages(newData);
@@ -324,9 +329,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      isNameLoading = true;
-    });
+    // setState(() {
+    //   isNameLoading = true;
+    // });
     _initializeRecorder();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // First ensure we have the users data
@@ -338,9 +343,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
       // Then proceed with other initializations
       await getMyUsername();
-      setState(() {
-        isNameLoading = false;
-      });
+      // setState(() {
+      //   isNameLoading = false;
+      // });
       initializeEmptyChat();
       scrollToBottom();
       //await _loadChatDetails();
@@ -375,89 +380,17 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   dynamic deleteMessage;
 
-  // Future<void> _loadChatDetails() async {
-  //   try {
-  //     debugPrint('Starting to load chat details for ${widget.username}');
-
-  //     // First, ensure we have the users data loaded
-  //     final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
-  //     // Try to get the data with retries
-  //     int retryCount = 0;
-  //     const maxRetries = 3;
-
-  //     while (retryCount < maxRetries) {
-  //       try {
-  //         chatFullName = await allUserRef.getFullName(widget.username);
-  //         chatProfilePicture =
-  //             await allUserRef.getProfilePicture(widget.username);
-
-  //         debugPrint(
-  //             'Attempt ${retryCount + 1}: Name: $chatFullName, Picture: $chatProfilePicture');
-
-  //         // If we got both values successfully, break the loop
-  //         if (chatFullName != null &&
-  //             chatFullName != widget.username &&
-  //             chatProfilePicture != null &&
-  //             chatProfilePicture!.isNotEmpty) {
-  //           break;
-  //         }
-
-  //         // If we didn't get valid data, wait and retry
-  //         await Future.delayed(const Duration(seconds: 1));
-  //         retryCount++;
-  //       } catch (e) {
-  //         debugPrint('Error in attempt $retryCount: $e');
-  //         await Future.delayed(const Duration(seconds: 1));
-  //         retryCount++;
-  //       }
-  //     }
-
-  //     // If we still don't have valid data after all retries, use fallback
-  //     if (chatFullName == null ||
-  //         chatFullName == widget.username ||
-  //         chatProfilePicture == null ||
-  //         chatProfilePicture!.isEmpty) {
-  //       debugPrint('Using fallback values after $retryCount retries');
-  //       chatFullName = widget.username;
-  //       chatProfilePicture = '';
-  //     }
-
-  //     if (mounted) {
-  //       setState(() {});
-  //     }
-  //   } catch (e) {
-  //     debugPrint('Final error in _loadChatDetails: $e');
-  //     if (mounted) {
-  //       setState(() {
-  //         chatFullName = widget.username;
-  //         chatProfilePicture = '';
-  //       });
-  //     }
-  //   }
-  // }
-
   dynamic editMessage;
 
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
-    final chatRef = ref.watch(chatServiceProviderImpl);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollToBottom();
     });
 
-    dynamic messages = [];
-    if (chatRef.data != null) {
-      for (var chat in chatRef.data) {
-        if (chat['username'] == widget.username) {
-          messages = chat['messages'];
-          break;
-        }
-      }
-    }
+    final chatDetailsRef = ref.watch(getChatDetailsProviderImpl);
 
     return SafeArea(
       child: Scaffold(
@@ -488,255 +421,100 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
               Container(
                 margin: const EdgeInsets.only(right: 5),
                 child: CircleAvatar(
-                  backgroundImage:
-                      chatProfilePicture != null && chatProfilePicture!.isNotEmpty
-                          ? CachedNetworkImageProvider(chatProfilePicture!)
-                          : null,
                   backgroundColor: Colors.grey,
-                  child: chatProfilePicture == null || chatProfilePicture!.isEmpty
-                      ? const Icon(Icons.person, color: Colors.white)
-                      : null,
+                  backgroundImage: CachedNetworkImageProvider(
+                      chatDetailsRef['profile_picture']),
                 ),
               ),
               Expanded(
                 child: ExpandableTextComponent(
-                  text: isNameLoading
-                      ? 'Loading...'
-                      : chatFullName ?? widget.username,
+                  text: chatDetailsRef['full_name'],
                 ),
               ),
             ],
           ),
         ),
-        body: username == null
-            ? const LoadingScreen()
-            : Column(
-                children: [
-                  Expanded(
-                    child: messages.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No messages yet. Start a conversation!',
-                              style: TextStyle(
-                                color: GlobalColors.secondaryColor,
-                              ),
-                            ),
-                          )
-                        : Builder(
-                            builder: (context) {
-                              // --- BEGIN UNREAD INDICATOR LOGIC ---
-                              int unreadCount = 0;
-                              int? firstUnreadIndex;
-                              for (int i = 0; i < messages.length; i++) {
-                                final msg = messages[i];
-                                if (msg['sender'] != username &&
-                                    msg['message_status'] == 'unseen') {
-                                  unreadCount++;
-                                  if (firstUnreadIndex == null) {
-                                    firstUnreadIndex = i;
-                                  }
-                                }
-                              }
-                              // --- END UNREAD INDICATOR LOGIC ---
-                              return ListView.builder(
-                                controller: scrollController,
-                                itemCount: messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = messages![index];
-                                  final isSender =
-                                      message['sender'] == username;
-                                  // Insert unread indicator above the first unread message
-                                  if (unreadCount > 0 &&
-                                      firstUnreadIndex == index) {
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
+        body: Column(
+          children: [
+            Expanded(
+              child: chatDetailsRef['messages'].isEmpty
+                  ? Center(
+                      child: Text(
+                        'No messages yet. Start a conversation!',
+                        style: TextStyle(
+                          color: GlobalColors.secondaryColor,
+                        ),
+                      ),
+                    )
+                  : Builder(
+                      builder: (context) {
+                        // --- BEGIN UNREAD INDICATOR LOGIC ---
+                        int unreadCount = 0;
+                        int? firstUnreadIndex;
+                        for (int i = 0;
+                            i < chatDetailsRef['messages'].length;
+                            i++) {
+                          final msg = chatDetailsRef['messages'][i];
+                          if (msg['sender'] != username &&
+                              msg['message_status'] == 'unseen') {
+                            unreadCount++;
+                            firstUnreadIndex ??= i;
+                          }
+                        }
+                        // --- END UNREAD INDICATOR LOGIC ---
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: chatDetailsRef['messages'].length,
+                          itemBuilder: (context, index) {
+                            final message = chatDetailsRef['messages'][index];
+                            final isSender = message['sender'] == username;
+                            // Insert unread indicator above the first unread message
+                            if (unreadCount > 0 && firstUnreadIndex == index) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
+                                    child: Row(
                                       children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8.0),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Divider(
-                                                  color: GlobalColors
-                                                      .primaryColor
-                                                      .withOpacity(0.5),
-                                                  thickness: 1.2,
-                                                  endIndent: 8,
-                                                  indent: 8,
-                                                ),
-                                              ),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      GlobalColors.primaryColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: Text(
-                                                  '$unreadCount unread message${unreadCount > 1 ? 's' : ''}',
-                                                  style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Divider(
-                                                  color: GlobalColors
-                                                      .primaryColor
-                                                      .withOpacity(0.5),
-                                                  thickness: 1.2,
-                                                  endIndent: 8,
-                                                  indent: 8,
-                                                ),
-                                              ),
-                                            ],
+                                        Expanded(
+                                          child: Divider(
+                                            color: GlobalColors.primaryColor
+                                                .withOpacity(0.5),
+                                            thickness: 1.2,
+                                            endIndent: 8,
+                                            indent: 8,
                                           ),
                                         ),
-                                        Padding(
-                                          padding: isSender
-                                              ? const EdgeInsets.only(
-                                                  top: 1.5,
-                                                  bottom: 1.5,
-                                                  left: 80.0,
-                                                  right: 10)
-                                              : const EdgeInsets.only(
-                                                  top: 1.5,
-                                                  bottom: 1.5,
-                                                  left: 10.0,
-                                                  right: 80),
-                                          child: Align(
-                                            alignment: isSender
-                                                ? Alignment.centerRight
-                                                : Alignment.centerLeft,
-                                            child: GestureDetector(
-                                              onLongPress: () {
-                                                dynamic selectedMessage =
-                                                    message;
-                                                isSender
-                                                    ? showMessageOption(
-                                                        context,
-                                                        () => deleteTextMessage(
-                                                            selectedMessage),
-                                                        () {
-                                                        messageController.text =
-                                                            selectedMessage[
-                                                                'content'];
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        setState(() {
-                                                          editMessage =
-                                                              selectedMessage;
-                                                        });
-                                                      })
-                                                    : null;
-                                              },
-                                              onHorizontalDragUpdate:
-                                                  (details) {
-                                                setState(() {
-                                                  dragDistances[index] =
-                                                      (dragDistances[index] ??
-                                                              0) +
-                                                          details.primaryDelta!;
-                                                });
-                                              },
-                                              onHorizontalDragEnd: (details) {
-                                                if ((dragDistances[index] ??
-                                                        0) >
-                                                    50) {
-                                                  setState(() {
-                                                    replyMessage = message;
-                                                    dragDistances[index] = 0;
-                                                  });
-                                                } else {
-                                                  setState(() {
-                                                    dragDistances[index] = 0;
-                                                  });
-                                                }
-                                              },
-                                              child: Transform.translate(
-                                                offset: Offset(
-                                                    dragDistances[index] ?? 0,
-                                                    0),
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      vertical: 5.0,
-                                                      horizontal: 10.0),
-                                                  decoration: BoxDecoration(
-                                                    color: isSender
-                                                        ? isLightTheme
-                                                            ? GlobalColors
-                                                                .myMessageColor
-                                                            : GlobalColors
-                                                                .primaryColor
-                                                        : isLightTheme
-                                                            ? Colors.grey[200]
-                                                            : GlobalColors
-                                                                .otherDarkMessageColor,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      MessageView(
-                                                        message: message,
-                                                        scrollToParent:
-                                                            _scrollToParent,
-                                                        username:
-                                                            widget.username,
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 5.0),
-                                                        child: Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .end,
-                                                          children: [
-                                                            Align(
-                                                              alignment: Alignment
-                                                                  .bottomRight,
-                                                              child: Text(
-                                                                formatDate(message[
-                                                                    'created_at']!),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .end,
-                                                                style:
-                                                                    const TextStyle(
-                                                                        fontSize:
-                                                                            9),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: GlobalColors.primaryColor,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            '$unreadCount unread message${unreadCount > 1 ? 's' : ''}',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Divider(
+                                            color: GlobalColors.primaryColor
+                                                .withOpacity(0.5),
+                                            thickness: 1.2,
+                                            endIndent: 8,
+                                            indent: 8,
                                           ),
                                         ),
                                       ],
-                                    );
-                                  }
-                                  // Default message rendering
-                                  return Padding(
+                                    ),
+                                  ),
+                                  Padding(
                                     padding: isSender
                                         ? const EdgeInsets.only(
                                             top: 1.5,
@@ -854,267 +632,355 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                         ),
                                       ),
                                     ),
-                                  );
-                                },
+                                  ),
+                                ],
                               );
-                            },
-                          ),
-                  ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: isEmojiPickerVisible,
-                    builder: (context, isVisible, child) {
-                      return Column(
-                        children: [
-                          if (isVisible)
-                            SizedBox(
-                                height: 250,
-                                child: EmojiPicker(
-                                  onBackspacePressed: () {},
-                                  onEmojiSelected: (category, emoji) {
+                            }
+                            // Default message rendering
+                            return Padding(
+                              padding: isSender
+                                  ? const EdgeInsets.only(
+                                      top: 1.5,
+                                      bottom: 1.5,
+                                      left: 80.0,
+                                      right: 10)
+                                  : const EdgeInsets.only(
+                                      top: 1.5,
+                                      bottom: 1.5,
+                                      left: 10.0,
+                                      right: 80),
+                              child: Align(
+                                alignment: isSender
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: GestureDetector(
+                                  onLongPress: () {
+                                    dynamic selectedMessage = message;
+                                    isSender
+                                        ? showMessageOption(
+                                            context,
+                                            () => deleteTextMessage(
+                                                selectedMessage), () {
+                                            messageController.text =
+                                                selectedMessage['content'];
+                                            Navigator.of(context).pop();
+                                            setState(() {
+                                              editMessage = selectedMessage;
+                                            });
+                                          })
+                                        : null;
+                                  },
+                                  onHorizontalDragUpdate: (details) {
                                     setState(() {
-                                      isVoice = false;
+                                      dragDistances[index] =
+                                          (dragDistances[index] ?? 0) +
+                                              details.primaryDelta!;
                                     });
                                   },
-                                  textEditingController: messageController,
-                                  config: Config(
-                                    height: 256,
-                                    checkPlatformCompatibility: true,
-                                    emojiViewConfig: EmojiViewConfig(
-                                      backgroundColor: isLightTheme
-                                          ? GlobalColors.lightBackgroundColor
-                                          : Colors.black,
-                                      emojiSizeMax: 28 *
-                                          (foundation.defaultTargetPlatform ==
-                                                  TargetPlatform.iOS
-                                              ? 1.20
-                                              : 1.0),
-                                    ),
-                                    viewOrderConfig: const ViewOrderConfig(
-                                      top: EmojiPickerItem.searchBar,
-                                      middle: EmojiPickerItem.categoryBar,
-                                      bottom: EmojiPickerItem.emojiView,
-                                    ),
-                                    skinToneConfig: const SkinToneConfig(),
-                                    categoryViewConfig: CategoryViewConfig(
-                                        indicatorColor:
-                                            GlobalColors.primaryColor,
-                                        iconColorSelected:
-                                            GlobalColors.primaryColor,
-                                        backgroundColor: isLightTheme
-                                            ? GlobalColors.lightBackgroundColor
-                                            : Colors.black),
-                                    bottomActionBarConfig:
-                                        BottomActionBarConfig(
-                                            enabled: false,
-                                            buttonColor:
-                                                GlobalColors.primaryColor,
-                                            backgroundColor: isLightTheme
-                                                ? GlobalColors
-                                                    .lightBackgroundColor
-                                                : Colors.black),
-                                    searchViewConfig: SearchViewConfig(
-                                        backgroundColor: isLightTheme
-                                            ? GlobalColors.lightBackgroundColor
-                                            : Colors.black),
-                                  ),
-                                )),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 2, vertical: 5),
-                            child: Column(
-                              children: [
-                                replyMessage == null
-                                    ? const SizedBox.shrink()
-                                    : Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10, horizontal: 10),
-                                        color: isLightTheme
-                                            ? Colors.grey[300]
-                                            : Colors.grey[800],
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    replyMessage['sender'] ==
-                                                            username
-                                                        ? 'Me'
-                                                        : chatFullName!,
+                                  onHorizontalDragEnd: (details) {
+                                    if ((dragDistances[index] ?? 0) > 50) {
+                                      setState(() {
+                                        replyMessage = message;
+                                        dragDistances[index] = 0;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        dragDistances[index] = 0;
+                                      });
+                                    }
+                                  },
+                                  child: Transform.translate(
+                                    offset:
+                                        Offset(dragDistances[index] ?? 0, 0),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 5.0, horizontal: 10.0),
+                                      decoration: BoxDecoration(
+                                        color: isSender
+                                            ? isLightTheme
+                                                ? GlobalColors.myMessageColor
+                                                : GlobalColors.primaryColor
+                                            : isLightTheme
+                                                ? Colors.grey[200]
+                                                : GlobalColors
+                                                    .otherDarkMessageColor,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          MessageView(
+                                            message: message,
+                                            scrollToParent: _scrollToParent,
+                                            username: widget.username,
+                                          ),
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 5.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Align(
+                                                  alignment:
+                                                      Alignment.bottomRight,
+                                                  child: Text(
+                                                    formatDate(
+                                                        message['created_at']!),
+                                                    textAlign: TextAlign.end,
                                                     style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold),
+                                                        fontSize: 9),
                                                   ),
-                                                  Text(replyMessage[
-                                                              'content_file_type']
-                                                          .toString()
-                                                          .startsWith('video')
-                                                      ? 'Video'
-                                                      : replyMessage[
-                                                                  'content_file_type']
-                                                              .toString()
-                                                              .startsWith(
-                                                                  'audio')
-                                                          ? 'Audio'
-                                                          : replyMessage[
-                                                                      'content_file_type']
-                                                                  .toString()
-                                                                  .startsWith(
-                                                                      'file')
-                                                              ? 'Document'
-                                                              : replyMessage[
-                                                                  'content'])
-                                                ]),
-                                            Positioned(
-                                              top: -2,
-                                              right: 0,
-                                              child: IconButton(
-                                                icon: const Icon(Icons.close),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    replyMessage = null;
-                                                  });
-                                                },
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: isEmojiPickerVisible,
+              builder: (context, isVisible, child) {
+                return Column(
+                  children: [
+                    if (isVisible)
+                      SizedBox(
+                          height: 250,
+                          child: EmojiPicker(
+                            onBackspacePressed: () {},
+                            onEmojiSelected: (category, emoji) {
+                              setState(() {
+                                isVoice = false;
+                              });
+                            },
+                            textEditingController: messageController,
+                            config: Config(
+                              height: 256,
+                              checkPlatformCompatibility: true,
+                              emojiViewConfig: EmojiViewConfig(
+                                backgroundColor: isLightTheme
+                                    ? GlobalColors.lightBackgroundColor
+                                    : Colors.black,
+                                emojiSizeMax: 28 *
+                                    (foundation.defaultTargetPlatform ==
+                                            TargetPlatform.iOS
+                                        ? 1.20
+                                        : 1.0),
+                              ),
+                              viewOrderConfig: const ViewOrderConfig(
+                                top: EmojiPickerItem.searchBar,
+                                middle: EmojiPickerItem.categoryBar,
+                                bottom: EmojiPickerItem.emojiView,
+                              ),
+                              skinToneConfig: const SkinToneConfig(),
+                              categoryViewConfig: CategoryViewConfig(
+                                  indicatorColor: GlobalColors.primaryColor,
+                                  iconColorSelected: GlobalColors.primaryColor,
+                                  backgroundColor: isLightTheme
+                                      ? GlobalColors.lightBackgroundColor
+                                      : Colors.black),
+                              bottomActionBarConfig: BottomActionBarConfig(
+                                  enabled: false,
+                                  buttonColor: GlobalColors.primaryColor,
+                                  backgroundColor: isLightTheme
+                                      ? GlobalColors.lightBackgroundColor
+                                      : Colors.black),
+                              searchViewConfig: SearchViewConfig(
+                                  backgroundColor: isLightTheme
+                                      ? GlobalColors.lightBackgroundColor
+                                      : Colors.black),
+                            ),
+                          )),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 2, vertical: 5),
+                      child: Column(
+                        children: [
+                          replyMessage == null
+                              ? const SizedBox.shrink()
+                              : Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 10),
+                                  color: isLightTheme
+                                      ? Colors.grey[300]
+                                      : Colors.grey[800],
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              replyMessage['sender'] == username
+                                                  ? 'Me'
+                                                  : chatFullName!,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            Text(replyMessage[
+                                                        'content_file_type']
+                                                    .toString()
+                                                    .startsWith('video')
+                                                ? 'Video'
+                                                : replyMessage[
+                                                            'content_file_type']
+                                                        .toString()
+                                                        .startsWith('audio')
+                                                    ? 'Audio'
+                                                    : replyMessage[
+                                                                'content_file_type']
+                                                            .toString()
+                                                            .startsWith('file')
+                                                        ? 'Document'
+                                                        : replyMessage[
+                                                            'content'])
+                                          ]),
+                                      Positioned(
+                                        top: -2,
+                                        right: 0,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () {
+                                            setState(() {
+                                              replyMessage = null;
+                                            });
+                                          },
                                         ),
                                       ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      onPressed: toggleEmojiPicker,
-                                      icon: isVisible
-                                          ? const Icon(Icons.keyboard)
-                                          : const Icon(
-                                              Icons.emoji_emotions_outlined),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.attachment),
-                                      onPressed: () => showAttachmentOptions(
-                                          context, username!, widget.username),
-                                    ),
-                                    Expanded(
-                                      child: _isRecording
-                                          ? const Text('Recording...')
-                                          : Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(60),
-                                                color: isLightTheme
-                                                    ? Colors.grey[100]
-                                                    : Colors.grey[900],
-                                              ),
-                                              child: ValueListenableBuilder<
-                                                  TextEditingController>(
-                                                valueListenable:
-                                                    messageControllerNotifier,
-                                                builder: (context, controller,
-                                                    child) {
-                                                  return TextField(
-                                                    maxLines: 3,
-                                                    minLines: 1,
-                                                    textInputAction:
-                                                        TextInputAction.newline,
-                                                    controller:
-                                                        messageController,
-                                                    onChanged: (value) {
-                                                      setState(() {
-                                                        isVoice = value.isEmpty;
-                                                      });
-                                                    },
-                                                    focusNode: textFocusNode,
-                                                    decoration: InputDecoration(
-                                                      hintText:
-                                                          'Type a message...',
-                                                      border:
-                                                          OutlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          60)),
-                                                      contentPadding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                              horizontal: 15),
-                                                    ),
-                                                    onTap: () {
-                                                      isEmojiPickerVisible
-                                                          .value = false;
-                                                    },
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 5.0),
-                                      child: Container(
-                                        height: 50,
-                                        width: 50,
+                                    ],
+                                  ),
+                                ),
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: toggleEmojiPicker,
+                                icon: isVisible
+                                    ? const Icon(Icons.keyboard)
+                                    : const Icon(Icons.emoji_emotions_outlined),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.attachment),
+                                onPressed: () => showAttachmentOptions(
+                                    context, username!, widget.username),
+                              ),
+                              Expanded(
+                                child: _isRecording
+                                    ? const Text('Recording...')
+                                    : Container(
                                         decoration: BoxDecoration(
                                           borderRadius:
-                                              BorderRadius.circular(50),
-                                          color: GlobalColors.primaryColor,
+                                              BorderRadius.circular(60),
+                                          color: isLightTheme
+                                              ? Colors.grey[100]
+                                              : Colors.grey[900],
                                         ),
-                                        child: isVoice
-                                            ? GestureDetector(
-                                                onLongPress: _startRecording,
-                                                onLongPressUp: _stopRecording,
-                                                child: CircleAvatar(
-                                                  backgroundColor: _isRecording
-                                                      ? GlobalColors
-                                                          .primaryColor
-                                                      : GlobalColors.whiteColor,
-                                                  child: Icon(Icons.mic,
-                                                      color: _isRecording
-                                                          ? Colors.white
-                                                          : GlobalColors
-                                                              .primaryColor),
-                                                ),
-                                              )
-                                            : IconButton(
-                                                onPressed: () {
-                                                  final message =
-                                                      messageController.text
-                                                          .trim();
-                                                  sendTextMessage(message);
-
-                                                  if (message.isNotEmpty) {
-                                                    messageController.clear();
-                                                    WidgetsBinding.instance
-                                                        .addPostFrameCallback(
-                                                            (_) {
-                                                      scrollToBottom();
-                                                    });
-                                                  }
-                                                },
-                                                icon: Icon(
-                                                  color: Colors.white,
-                                                  isVoice
-                                                      ? Icons.mic
-                                                      : Icons.send,
-                                                ),
+                                        child: ValueListenableBuilder<
+                                            TextEditingController>(
+                                          valueListenable:
+                                              messageControllerNotifier,
+                                          builder:
+                                              (context, controller, child) {
+                                            return TextField(
+                                              maxLines: 3,
+                                              minLines: 1,
+                                              textInputAction:
+                                                  TextInputAction.newline,
+                                              controller: messageController,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  isVoice = value.isEmpty;
+                                                });
+                                              },
+                                              focusNode: textFocusNode,
+                                              decoration: InputDecoration(
+                                                hintText: 'Type a message...',
+                                                border: OutlineInputBorder(
+                                                    borderSide: BorderSide.none,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            60)),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 15),
                                               ),
+                                              onTap: () {
+                                                isEmojiPickerVisible.value =
+                                                    false;
+                                              },
+                                            );
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5.0),
+                                child: Container(
+                                  height: 50,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(50),
+                                    color: GlobalColors.primaryColor,
+                                  ),
+                                  child: isVoice
+                                      ? GestureDetector(
+                                          onLongPress: _startRecording,
+                                          onLongPressUp: _stopRecording,
+                                          child: CircleAvatar(
+                                            backgroundColor: _isRecording
+                                                ? GlobalColors.primaryColor
+                                                : GlobalColors.whiteColor,
+                                            child: Icon(Icons.mic,
+                                                color: _isRecording
+                                                    ? Colors.white
+                                                    : GlobalColors
+                                                        .primaryColor),
+                                          ),
+                                        )
+                                      : IconButton(
+                                          onPressed: () {
+                                            final message =
+                                                messageController.text.trim();
+                                            sendTextMessage(message);
+
+                                            if (message.isNotEmpty) {
+                                              messageController.clear();
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                scrollToBottom();
+                                              });
+                                            }
+                                          },
+                                          icon: Icon(
+                                            color: Colors.white,
+                                            isVoice ? Icons.mic : Icons.send,
+                                          ),
+                                        ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ],
-                      );
-                    },
-                  ),
-                ],
-              ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

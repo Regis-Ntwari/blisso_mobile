@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:blisso_mobile/services/message_requests/message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
-import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -28,22 +27,6 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
         ref.read(messageRequestServiceProviderImpl.notifier);
 
     await messageRequestRef.mapApprovedUsers();
-  }
-
-  Future<String> getChatFullName(String username) async {
-    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
-    String fullname = await allUserRef.getFullName(username);
-
-    return fullname;
-  }
-
-  Future<String> getChatProfilePicture(String username) async {
-    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
-    String fullname = await allUserRef.getProfilePicture(username);
-
-    return fullname;
   }
 
   @override
@@ -152,54 +135,16 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                             Routemaster.of(context)
                                 .push('/chat-detail/${usersList[index]}');
                           } else {
-                            //widget.action.call('');
                             sendContact(usersList[index]);
                             Navigator.pop(context);
                           }
                         },
                         child: ListTile(
-                          leading: FutureBuilder<String>(
-                            future: Future(
-                                () => getChatProfilePicture(usersList[index])),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const CircleAvatar(
-                                  backgroundColor: Colors.grey,
-                                  child: CircularProgressIndicator(
-                                    color: GlobalColors.primaryColor,
-                                  ),
-                                );
-                              } else if (snapshot.hasError ||
-                                  !snapshot.hasData) {
-                                return const CircleAvatar(
-                                  backgroundColor: Colors.grey,
-                                  child:
-                                      Icon(Icons.person, color: Colors.white),
-                                );
-                              } else {
-                                return CircleAvatar(
+                          leading: CircleAvatar(
                                   backgroundImage: CachedNetworkImageProvider(
-                                      snapshot.data!),
-                                );
-                              }
-                            },
-                          ),
-                          title: FutureBuilder<String>(
-                            future:
-                                Future(() => getChatFullName(usersList[index])),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Text('Loading...');
-                              } else if (snapshot.hasError ||
-                                  !snapshot.hasData) {
-                                return const Text('Unknown User');
-                              } else {
-                                return Text(snapshot.data!);
-                              }
-                            },
-                          ),
+                                      messageRequestRef.data[usersList[index]]['profile_picture_url']),
+                                ),
+                          title: Text(messageRequestRef.data[usersList[index]]['fullname'])
                         ),
                       );
                     },

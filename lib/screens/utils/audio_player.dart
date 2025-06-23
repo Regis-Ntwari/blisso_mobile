@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:http/http.dart' as http;
@@ -21,8 +22,12 @@ class _AudioPlayerState extends State<AudioPlayer> {
   double sliderValue = 0.0;
   double audioDuration = 0.0;
   StreamSubscription? _playerSubscription;
+  bool isLoading = false;
 
   Future<void> _initialize() async {
+    setState(() {
+      isLoading = true;
+    });
     _player = FlutterSoundPlayer();
     await _player!.openPlayer();
     // Initialize with progress callback
@@ -85,6 +90,9 @@ class _AudioPlayerState extends State<AudioPlayer> {
       }
 
       setState(() => isPlaying = true);
+      setState(() {
+        isLoading = false;
+      });
       _startListening();
     } catch (e) {
       debugPrint('Error playing audio: $e');
@@ -152,6 +160,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
             Expanded(
               child: Slider(
                 value: sliderValue,
+                activeColor: GlobalColors.primaryColor,
                 onChanged: (value) async {
                   setState(() => sliderValue = value);
                   await _player!

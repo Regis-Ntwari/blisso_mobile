@@ -60,6 +60,8 @@ class Routing {
             username: route.pathParameters['username']!,
           ),
         ),
+    '/chat-detail/:username/profile': (route) => const MaterialPage(
+        child: TargetProfileComponent()),
     '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
           username: route.pathParameters['username'],
