@@ -311,15 +311,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       if (chatRef.data != null) {
         newData = List.from(chatRef.data);
       }
-      newData.add({
-        'username': widget.username,
-        'full_name': '',
-        'profile_picture_url': '',
-        'nickname': '',
-        'messages': []
-      });
-
-      // Update the state through the notifier
       chatNotifier.updateMessages(newData);
     }
   }
@@ -329,26 +320,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   @override
   void initState() {
     super.initState();
-    // setState(() {
-    //   isNameLoading = true;
-    // });
     _initializeRecorder();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // First ensure we have the users data
-      // final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-      // if (allUserRef.state.data == null) {
-      //   debugPrint('Loading users data first');
-      //   await allUserRef.getAllUsers();
-      // }
-
-      // Then proceed with other initializations
       await getMyUsername();
-      // setState(() {
-      //   isNameLoading = false;
-      // });
       initializeEmptyChat();
       scrollToBottom();
-      //await _loadChatDetails();
     });
     messageControllerNotifier.value = messageController;
   }
@@ -362,10 +338,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   void _scrollToParent(String parentId) {
     final key = _messageKeys[parentId];
     if (key != null) {
-      // Find the context of the widget using the key
       final context = key.currentContext;
       if (context != null) {
-        // Scroll to the widget
         Scrollable.ensureVisible(
           context,
           duration: const Duration(milliseconds: 500),

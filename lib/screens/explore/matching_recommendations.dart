@@ -50,8 +50,8 @@ class _MatchingRecommendationsState
         itemCount: matchingState.data.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
+          crossAxisSpacing: 5,
+          mainAxisSpacing: 5,
           childAspectRatio: 3 / 4,
         ),
         itemBuilder: (context, index) {
@@ -90,7 +90,7 @@ class _MatchingRecommendationsState
             },
             child: Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(10)),
               clipBehavior: Clip.antiAlias,
               child: Stack(
                 children: [

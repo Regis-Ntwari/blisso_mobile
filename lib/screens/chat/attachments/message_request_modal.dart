@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -60,6 +62,7 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
       ChatMessageModel messageModel = ChatMessageModel(
           sender: username,
           receiver: receiver,
+          messageStatus: 'unseen',
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'Profile',
           contentFileUrl: widget.profile?['profile_picture_uri'],
@@ -131,21 +134,53 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                       return InkWell(
                         onTap: () {
                           if (widget.profile == null) {
+                            final chatRef = ref.read(chatServiceProviderImpl);
+                            int check = 0;
+                            for (var chat in chatRef.data) {
+                              if (chat['username'] ==
+                                  messageRequestRef.data[usersList[index]]['username']) {
+                                final chatDetailRef = ref
+                                    .read(getChatDetailsProviderImpl.notifier);
+                                chatDetailRef.updateChatDetails({
+                                  'username': messageRequestRef.data[usersList[index]]['username'],
+                                  'profile_picture': messageRequestRef.data[usersList[index]]['profile_picture_url'],
+                                  'full_name': messageRequestRef.data[usersList[index]]['fullname'],
+                                  'nickname': messageRequestRef.data[usersList[index]]['nickname'],
+                                  'messages': chat['messages']
+                                });
+                                check = 1;
+                              }
+                            }
+
+                            if (check == 0) {
+                              final chatDetailRef =
+                                  ref.read(getChatDetailsProviderImpl.notifier);
+
+                              chatDetailRef.updateChatDetails({
+                                'username': messageRequestRef.data[usersList[index]]['username'],
+                                'profile_picture': messageRequestRef.data[usersList[index]]['profile_picture_url'],
+                                'full_name': messageRequestRef.data[usersList[index]]['fullname'],
+                                'nickname': messageRequestRef.data[usersList[index]]['nickname'],
+                                'messages': []
+                              });
+                            }
                             Navigator.pop(context);
-                            Routemaster.of(context)
-                                .push('/chat-detail/${usersList[index]}');
+
+                            Routemaster.of(context).push(
+                                '/chat-detail/${usersList[index]}');
                           } else {
                             sendContact(usersList[index]);
                             Navigator.pop(context);
                           }
                         },
                         child: ListTile(
-                          leading: CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(
-                                      messageRequestRef.data[usersList[index]]['profile_picture_url']),
-                                ),
-                          title: Text(messageRequestRef.data[usersList[index]]['fullname'])
-                        ),
+                            leading: CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(
+                                  messageRequestRef.data[usersList[index]]
+                                      ['profile_picture_url']),
+                            ),
+                            title: Text(messageRequestRef.data[usersList[index]]
+                                ['fullname'])),
                       );
                     },
                   ))
