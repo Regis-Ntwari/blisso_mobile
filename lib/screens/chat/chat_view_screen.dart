@@ -349,8 +349,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     }
   }
 
-  String? chatFullName;
-  String? chatProfilePicture;
+  
 
   dynamic deleteMessage;
 
@@ -800,7 +799,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                             Text(
                                               replyMessage['sender'] == username
                                                   ? 'Me'
-                                                  : chatFullName!,
+                                                  : chatDetailsRef['full_name'],
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.bold),
                                             ),
