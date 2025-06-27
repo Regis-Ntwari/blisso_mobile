@@ -60,82 +60,14 @@ class _MessageViewState extends ConsumerState<MessageView> {
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return isLoading ? const Center(child: CircularProgressIndicator(color: GlobalColors.primaryColor,),) : widget.message['content_file_type'].toString().startsWith('image/')
-        ? widget.message['content_file_url'].toString().startsWith('https:')
-            ? Wrap(
-                children: [
-                  widget.message['parent_id'] != '000000000000000000000000'
-                      ? InkWell(
-                          onTap: null,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 10),
-                            color: isLightTheme
-                                ? username == widget.message['sender']
-                                    ? GlobalColors.myLightReplyMessageColor
-                                    : Colors.grey[200]
-                                : username == widget.message['sender']
-                                    ? GlobalColors.myDarkReplyMessageColor
-                                    : Colors.grey[700],
-                            child: Text(widget.message['parent_content']),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                  InkWell(
-                    onTap: () => showPictureDialog(
-                        context: context,
-                        image: {
-                          'image_uri': widget.message['content_file_url']
-                        },
-                        isEdit: false,
-                        chosenPicture: null,
-                        updatePicture: () {},
-                        savePicture: () {}),
-                    child: CachedNetworkImage(
-                        placeholder: (context, url) =>
-                            const CircularProgressIndicator(
-                              color: GlobalColors.primaryColor,
-                            ),
-                        imageUrl: widget.message['content_file_url']),
-                  ),
-                  Text(widget.message['content'])
-                ],
-              )
-            : Wrap(
-                children: [
-                  widget.message['parent_id'] != '000000000000000000000000'
-                      ? InkWell(
-                          onTap: null,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 10),
-                            color: isLightTheme
-                                ? username == widget.message['sender']
-                                    ? GlobalColors.myLightReplyMessageColor
-                                    : Colors.grey[400]
-                                : username == widget.message['sender']
-                                    ? GlobalColors.myDarkReplyMessageColor
-                                    : Colors.grey[700],
-                            child: Text(widget.message['parent_content']),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                  InkWell(
-                    onTap: () {
-                      showPictureBytesDialog(
-                          context: context,
-                          image: widget.message['content_file']);
-                    },
-                    child: Image.memory(Uint8List.fromList(
-                        base64Decode(widget.message['content_file']))),
-                  ),
-                  Text(widget.message['content'])
-                ],
-              )
-        : widget.message['content_file_type'].toString().startsWith('file/')
-            ? widget.message['content_file_url'].toString().startsWith('https')
+    return isLoading
+        ? const Center(
+            child: CircularProgressIndicator(
+              color: GlobalColors.primaryColor,
+            ),
+          )
+        : widget.message['content_file_type'].toString().startsWith('image/')
+            ? widget.message['content_file_url'].toString().startsWith('https:')
                 ? Wrap(
                     children: [
                       widget.message['parent_id'] != '000000000000000000000000'
@@ -148,7 +80,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                 color: isLightTheme
                                     ? username == widget.message['sender']
                                         ? GlobalColors.myLightReplyMessageColor
-                                        : Colors.grey[400]
+                                        : Colors.grey[200]
                                     : username == widget.message['sender']
                                         ? GlobalColors.myDarkReplyMessageColor
                                         : Colors.grey[700],
@@ -157,55 +89,23 @@ class _MessageViewState extends ConsumerState<MessageView> {
                             )
                           : const SizedBox.shrink(),
                       InkWell(
-                        onTap: () async {
-                          var tempDir = await getTemporaryDirectory();
-
-                          // Extract file name from URL
-                          String fileName = widget.message['content_file_url']
-                              .split('/')
-                              .last;
-
-                          // Define save path
-                          String savePath = "${tempDir.path}/$fileName";
-
-                          // Download file
-                          try {
-                            debugPrint("Downloading file to: $savePath");
-                            await Dio().download(
-                                widget.message['content_file_url'], savePath);
-
-                            // Check if the file exists
-                            if (await File(savePath).exists()) {
-                              debugPrint(
-                                  "File downloaded successfully at $savePath");
-
-                              // final result = await OpenFilex.open(savePath);
-
-                              // debugPrint(result.type.toString());
-                              // debugPrint(result.message);
-                            } else {
-                              debugPrint("File not found at $savePath");
-                            }
-                          } catch (e) {
-                            debugPrint("Error downloading file: $e");
-                          }
-                        },
-                        child: Column(
-                          children: [
-                            const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.file_open,
-                                  size: 30,
+                        onTap: () => showPictureDialog(
+                            context: context,
+                            image: {
+                              'image_uri': widget.message['content_file_url']
+                            },
+                            isEdit: false,
+                            chosenPicture: null,
+                            updatePicture: () {},
+                            savePicture: () {}),
+                        child: CachedNetworkImage(
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(
+                                  color: GlobalColors.primaryColor,
                                 ),
-                                Text('document')
-                              ],
-                            ),
-                            Text(widget.message['content'])
-                          ],
-                        ),
+                            imageUrl: widget.message['content_file_url']),
                       ),
+                      Text(widget.message['content'])
                     ],
                   )
                 : Wrap(
@@ -229,41 +129,18 @@ class _MessageViewState extends ConsumerState<MessageView> {
                             )
                           : const SizedBox.shrink(),
                       InkWell(
-                        onTap: () async {
-                          Directory tempDir = await getTemporaryDirectory();
-                          String tempFilePath =
-                              '${tempDir.path}/${DateTime.now()}.${widget.message['content_file_type'].toString().split('/')[1]}';
-                          File tempFile = File(tempFilePath);
-                          await tempFile.writeAsBytes(
-                              base64Decode(widget.message['content_file']));
-                          // await OpenFilex.open(tempFilePath);
+                        onTap: () {
+                          showPictureBytesDialog(
+                              context: context,
+                              image: widget.message['content_file']);
                         },
-                        child: Column(
-                          children: [
-                            const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.file_open,
-                                  size: 30,
-                                ),
-                                Text('document')
-                              ],
-                            ),
-                            widget.message['content'] == ''
-                                ? const SizedBox.shrink()
-                                : Padding(
-                                    padding: const EdgeInsets.only(top: 1.0),
-                                    child: Text(widget.message['content']),
-                                  )
-                          ],
-                        ),
+                        child: Image.memory(Uint8List.fromList(
+                            base64Decode(widget.message['content_file']))),
                       ),
+                      Text(widget.message['content'])
                     ],
                   )
-            : widget.message['content_file_type']
-                    .toString()
-                    .startsWith('video/')
+            : widget.message['content_file_type'].toString().startsWith('file/')
                 ? widget.message['content_file_url']
                         .toString()
                         .startsWith('https')
@@ -292,27 +169,57 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                 )
                               : const SizedBox.shrink(),
                           InkWell(
-                            onTap: () {
-                              Routemaster.of(context).push(
-                                  '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
+                            onTap: () async {
+                              var tempDir = await getTemporaryDirectory();
+
+                              // Extract file name from URL
+                              String fileName = widget
+                                  .message['content_file_url']
+                                  .split('/')
+                                  .last;
+
+                              // Define save path
+                              String savePath = "${tempDir.path}/$fileName";
+
+                              // Download file
+                              try {
+                                debugPrint("Downloading file to: $savePath");
+                                await Dio().download(
+                                    widget.message['content_file_url'],
+                                    savePath);
+
+                                // Check if the file exists
+                                if (await File(savePath).exists()) {
+                                  debugPrint(
+                                      "File downloaded successfully at $savePath");
+
+                                  // final result = await OpenFilex.open(savePath);
+
+                                  // debugPrint(result.type.toString());
+                                  // debugPrint(result.message);
+                                } else {
+                                  debugPrint("File not found at $savePath");
+                                }
+                              } catch (e) {
+                                debugPrint("Error downloading file: $e");
+                              }
                             },
-                            child: Container(
-                              height: 300,
-                              color: Colors.black,
-                              child: const Align(
-                                alignment: Alignment.center,
-                                child: Icon(Icons.play_arrow,
-                                    color: Colors.white, size: 30),
-                              ),
+                            child: Column(
+                              children: [
+                                const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.file_open,
+                                      size: 30,
+                                    ),
+                                    Text('document')
+                                  ],
+                                ),
+                                Text(widget.message['content'])
+                              ],
                             ),
                           ),
-                          Text(
-                            widget.message['content']!,
-                            textAlign: TextAlign.justify,
-                            style: const TextStyle(
-                              fontSize: 14,
-                            ),
-                          )
                         ],
                       )
                     : Wrap(
@@ -340,91 +247,84 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                 )
                               : const SizedBox.shrink(),
                           InkWell(
-                            onTap: () {
-                              Routemaster.of(context).push(
-                                  '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
+                            onTap: () async {
+                              Directory tempDir = await getTemporaryDirectory();
+                              String tempFilePath =
+                                  '${tempDir.path}/${DateTime.now()}.${widget.message['content_file_type'].toString().split('/')[1]}';
+                              File tempFile = File(tempFilePath);
+                              await tempFile.writeAsBytes(
+                                  base64Decode(widget.message['content_file']));
+                              // await OpenFilex.open(tempFilePath);
                             },
-                            child: Container(
-                              height: 300,
-                              color: Colors.black,
-                              child: const Align(
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.play_arrow,
-                                  color: Colors.white,
-                                  size: 30,
+                            child: Column(
+                              children: [
+                                const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.file_open,
+                                      size: 30,
+                                    ),
+                                    Text('document')
+                                  ],
                                 ),
-                              ),
+                                widget.message['content'] == ''
+                                    ? const SizedBox.shrink()
+                                    : Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 1.0),
+                                        child: Text(widget.message['content']),
+                                      )
+                              ],
                             ),
                           ),
-                          Text(
-                            widget.message['content']!,
-                            textAlign: TextAlign.justify,
-                            style: const TextStyle(
-                              fontSize: 14,
-                            ),
-                          )
                         ],
                       )
                 : widget.message['content_file_type']
                         .toString()
-                        .startsWith('audio/')
-                    ? Wrap(
-                        children: [
-                          widget.message['parent_id'] !=
-                                  '000000000000000000000000'
-                              ? InkWell(
-                                  onTap: null,
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10, horizontal: 10),
-                                    color: isLightTheme
-                                        ? username == widget.message['sender']
-                                            ? GlobalColors
-                                                .myLightReplyMessageColor
-                                            : Colors.grey[400]
-                                        : username == widget.message['sender']
-                                            ? GlobalColors
-                                                .myDarkReplyMessageColor
-                                            : Colors.grey[700],
-                                    child:
-                                        Text(widget.message['parent_content']),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                          AudioPlayer(message: widget.message),
-                        ],
-                      )
-                    : widget.message['parent_content']
+                        .startsWith('video/')
+                    ? widget.message['content_file_url']
                             .toString()
-                            .startsWith('Story')
+                            .startsWith('https')
                         ? Wrap(
                             children: [
+                              widget.message['parent_id'] !=
+                                      '000000000000000000000000'
+                                  ? InkWell(
+                                      onTap: null,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        color: isLightTheme
+                                            ? username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myLightReplyMessageColor
+                                                : Colors.grey[400]
+                                            : username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myDarkReplyMessageColor
+                                                : Colors.grey[700],
+                                        child: Text(
+                                            widget.message['parent_content']),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
                               InkWell(
-                                onTap: () async {
-                                  final shortStoryRef = ref
-                                      .read(getOneStoryProviderImpl.notifier);
-
-                                  dynamic status = shortStoryRef
-                                      .getOneStory(widget.message['parent_id']);
-                                  String encodedData = jsonEncode([status]);
+                                onTap: () {
                                   Routemaster.of(context).push(
-                                      '/homepage/view-story?data=$encodedData');
+                                      '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
                                 },
                                 child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 10),
-                                  color: isLightTheme
-                                      ? username == widget.message['sender']
-                                          ? GlobalColors
-                                              .myLightReplyMessageColor
-                                          : Colors.grey[400]
-                                      : username == widget.message['sender']
-                                          ? GlobalColors.myDarkReplyMessageColor
-                                          : Colors.grey[700],
-                                  child: Text(widget.message['parent_content']),
+                                  height: 300,
+                                  color: Colors.black,
+                                  child: const Align(
+                                    alignment: Alignment.center,
+                                    child: Icon(Icons.play_arrow,
+                                        color: Colors.white, size: 30),
+                                  ),
                                 ),
                               ),
                               Text(
@@ -433,67 +333,128 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                 style: const TextStyle(
                                   fontSize: 14,
                                 ),
-                              ),
+                              )
                             ],
                           )
-                        : widget.message['content_file_type'] == 'Profile'
-                            ? ListTile(
-                                onTap: () async {
-                                  setState(() {
-                                    isLoading = true;
-                                  });
-                                  final profileRef = ref.read(
-                                      anyProfileServiceProviderImpl.notifier);
-                                  await profileRef.getAnyProfile(
-                                      widget.message['parent_content']);
-
-                                  final profile =
-                                      ref.read(anyProfileServiceProviderImpl);
-
-                                  final targetProfile =
-                                      ref.read(targetProfileProvider.notifier);
-                                  targetProfile.updateTargetProfile(
-                                      TargetProfileModel.fromMap(profile.data));
-                                  String chatUser = username! == widget.message['sender'] ? widget.message['receiver'] : widget.message['sender'];
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-                                  Routemaster.of(context)
-                                      .push('/chat-detail/$chatUser/profile');
+                        : Wrap(
+                            children: [
+                              widget.message['parent_id'] !=
+                                      '000000000000000000000000'
+                                  ? InkWell(
+                                      onTap: null,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        color: isLightTheme
+                                            ? username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myLightReplyMessageColor
+                                                : Colors.grey[400]
+                                            : username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myDarkReplyMessageColor
+                                                : Colors.grey[700],
+                                        child: Text(
+                                            widget.message['parent_content']),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
+                              InkWell(
+                                onTap: () {
+                                  Routemaster.of(context).push(
+                                      '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
                                 },
-                                leading: CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(
-                                    widget.message['content_file_url'],
+                                child: Container(
+                                  height: 300,
+                                  color: Colors.black,
+                                  child: const Align(
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.play_arrow,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
                                   ),
                                 ),
-                                title: Text(widget.message['content']),
+                              ),
+                              Text(
+                                widget.message['content']!,
+                                textAlign: TextAlign.justify,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
                               )
-                            : Wrap(
+                            ],
+                          )
+                    : widget.message['content_file_type']
+                            .toString()
+                            .startsWith('audio/')
+                        ? Wrap(
+                            children: [
+                              widget.message['parent_id'] !=
+                                      '000000000000000000000000'
+                                  ? InkWell(
+                                      onTap: null,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        color: isLightTheme
+                                            ? username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myLightReplyMessageColor
+                                                : Colors.grey[400]
+                                            : username ==
+                                                    widget.message['sender']
+                                                ? GlobalColors
+                                                    .myDarkReplyMessageColor
+                                                : Colors.grey[700],
+                                        child: Text(
+                                            widget.message['parent_content']),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
+                              AudioPlayer(message: widget.message),
+                            ],
+                          )
+                        : widget.message['parent_content']
+                                .toString()
+                                .startsWith('Story')
+                            ? Wrap(
                                 children: [
-                                  widget.message['parent_id'] !=
-                                          '000000000000000000000000'
-                                      ? InkWell(
-                                          onTap: null,
-                                          child: Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 10, horizontal: 10),
-                                            color: isLightTheme
-                                                ? username ==
-                                                        widget.message['sender']
-                                                    ? GlobalColors
-                                                        .myLightReplyMessageColor
-                                                    : Colors.grey[400]
-                                                : username ==
-                                                        widget.message['sender']
-                                                    ? GlobalColors
-                                                        .myDarkReplyMessageColor
-                                                    : Colors.grey[700],
-                                            child: Text(widget
-                                                .message['parent_content']),
-                                          ),
-                                        )
-                                      : const SizedBox.shrink(),
+                                  InkWell(
+                                    onTap: () async {
+                                      final shortStoryRef = ref.read(
+                                          getOneStoryProviderImpl.notifier);
+
+                                      dynamic status =
+                                          shortStoryRef.getOneStory(
+                                              widget.message['parent_id']);
+                                      String encodedData = jsonEncode([status]);
+                                      Routemaster.of(context).push(
+                                          '/homepage/view-story?data=$encodedData');
+                                    },
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 10),
+                                      color: isLightTheme
+                                          ? username == widget.message['sender']
+                                              ? GlobalColors
+                                                  .myLightReplyMessageColor
+                                              : Colors.grey[400]
+                                          : username == widget.message['sender']
+                                              ? GlobalColors
+                                                  .myDarkReplyMessageColor
+                                              : Colors.grey[700],
+                                      child: Text(
+                                          widget.message['parent_content']),
+                                    ),
+                                  ),
                                   Text(
                                     widget.message['content']!,
                                     textAlign: TextAlign.justify,
@@ -502,6 +463,92 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                     ),
                                   ),
                                 ],
-                              );
+                              )
+                            : widget.message['content_file_type'] == 'Profile'
+                                ? ListTile(
+                                    onTap: () async {
+                                      setState(() {
+                                        isLoading = true;
+                                      });
+                                      final profileRef = ref.read(
+                                          anyProfileServiceProviderImpl
+                                              .notifier);
+                                      await profileRef.getAnyProfile(
+                                          widget.message['parent_content']);
+
+                                      final profile = ref
+                                          .read(anyProfileServiceProviderImpl);
+
+                                      final targetProfile = ref
+                                          .read(targetProfileProvider.notifier);
+                                      targetProfile.updateTargetProfile(
+                                          TargetProfileModel.fromMap(
+                                              profile.data));
+                                      String chatUser =
+                                          username! == widget.message['sender']
+                                              ? widget.message['receiver']
+                                              : widget.message['sender'];
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                      Routemaster.of(context).push(
+                                          '/chat-detail/$chatUser/profile');
+                                    },
+                                    leading: CircleAvatar(
+                                      backgroundImage:
+                                          CachedNetworkImageProvider(
+                                        widget.message['content_file_url'],
+                                      ),
+                                    ),
+                                    title: Text(widget.message['content']),
+                                  )
+                                : widget.message['content_file_type'] ==
+                                        'Video_post'
+                                    ? ListTile(
+                                      onTap: () {},
+                                        leading: const Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                        ),
+                                        title: Text(widget.message['content']),
+                                      )
+                                    : Wrap(
+                                        children: [
+                                          widget.message['parent_id'] !=
+                                                  '000000000000000000000000'
+                                              ? InkWell(
+                                                  onTap: null,
+                                                  child: Container(
+                                                    width: double.infinity,
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 10,
+                                                        horizontal: 10),
+                                                    color: isLightTheme
+                                                        ? username ==
+                                                                widget.message[
+                                                                    'sender']
+                                                            ? GlobalColors
+                                                                .myLightReplyMessageColor
+                                                            : Colors.grey[400]
+                                                        : username ==
+                                                                widget.message[
+                                                                    'sender']
+                                                            ? GlobalColors
+                                                                .myDarkReplyMessageColor
+                                                            : Colors.grey[700],
+                                                    child: Text(widget.message[
+                                                        'parent_content']),
+                                                  ),
+                                                )
+                                              : Text(
+                                                  widget.message['content']!,
+                                                  textAlign: TextAlign.justify,
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                        ],
+                                      );
   }
 }

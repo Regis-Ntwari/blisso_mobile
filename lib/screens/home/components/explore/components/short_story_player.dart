@@ -1,5 +1,6 @@
 import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
+import 'package:blisso_mobile/screens/home/components/explore/components/share_story_modal.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
@@ -215,7 +216,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     )
                   : IconButton(
                       onPressed: () {
-                        // TODO: Implement share functionality
+                        showShareVideoModal(context, widget.video);
                       },
                       icon: Transform.rotate(
                         angle: 325 *
