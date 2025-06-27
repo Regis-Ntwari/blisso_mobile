@@ -83,9 +83,8 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
       final messageRef = ref.read(webSocketNotifierProvider.notifier);
       messageRef.sendMessage(messageModel);
       Navigator.of(context).pop();
-    } catch (e, stackTrace) {
-      debugPrint(e.toString());
-      print(stackTrace);
+    } catch (e) {
+      //debugPrint(e.toString());
     }
   }
 
@@ -143,9 +142,6 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
                       final usersList = messageRequestRef.data.keys.toList();
                       return InkWell(
                         onTap: () {
-                          print(messageRequestRef.data);
-                          print(usersList);
-                          print(messageRequestRef.data[usersList[index]]);
                           shareVideo(messageRequestRef.data[usersList[index]]['username']);
                         },
                         child: ListTile(
