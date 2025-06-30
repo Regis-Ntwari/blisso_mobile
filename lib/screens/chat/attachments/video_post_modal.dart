@@ -71,7 +71,7 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
                     Expanded(
                       child: TextField(
                         controller: captionController,
-                        maxLines: 2,
+                        maxLines: 4,
                         minLines: 1,
                         decoration: const InputDecoration(
                           hintText: "Add a caption...",

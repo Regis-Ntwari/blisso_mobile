@@ -2,7 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:blisso_mobile/components/expandable_text_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
+import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
@@ -61,7 +65,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
       setState(() {
         stories = List<Map<String, dynamic>>.from(jsonDecode(encodedData));
       });
-      print(stories);
       _loadStory();
     }
   }
@@ -136,34 +139,94 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     setState(() {
       isSendingReply = true;
     });
+    final messageRequestRef =
+        ref.read(addMessageRequestServiceProviderImpl.notifier);
+    await messageRequestRef.sendMessageRequest(toUsername);
 
-    try {
-      ChatMessageModel messageModel = ChatMessageModel(
-          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-          parentId: stories[currentIndex]['id'].toString(),
-          parentContent: 'Story',
-          sender: username!,
-          receiver: toUsername,
-          action: 'created',
-          content: replyController.text,
-          isFileIncluded: false,
-          createdAt: DateTime.now().toUtc().toIso8601String());
+    final messageRequestResponse =
+        ref.read(addMessageRequestServiceProviderImpl);
 
-      
+    if (messageRequestResponse.error == null) {
+      if (context.mounted) {
+        if (messageRequestResponse.statusCode == 200) {
+          final chatRef = ref.read(chatServiceProviderImpl);
+          if (chatRef.data == null || chatRef.data.isEmpty) {
+            final chatRef = ref.read(chatServiceProviderImpl.notifier);
+            await chatRef.getMessages();
+          }
+          try {
+            ChatMessageModel messageModel = ChatMessageModel(
+                messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+                parentId: stories[currentIndex]['id'].toString(),
+                parentContent: 'Story',
+                contentFileType: stories[currentIndex]['id'].toString(),
+                sender: username!,
+                receiver: toUsername,
+                action: 'created',
+                content: replyController.text,
+                isFileIncluded: false,
+                createdAt: DateTime.now().toUtc().toIso8601String());
 
-      final messageRef = ref.read(webSocketNotifierProvider.notifier);
-      messageRef.sendMessage(messageModel);
+            final messageRef = ref.read(webSocketNotifierProvider.notifier);
+            messageRef.sendMessage(messageModel);
 
-      setState(() {
-        replyController.clear();
-        isSendingReply = false;
-      });
-    } catch (e) {
-      print(e);
-      setState(() {
-        isSendingReply = false;
-      });
+            setState(() {
+              replyController.clear();
+              isSendingReply = false;
+            });
+          } catch (e) {
+            setState(() {
+              isSendingReply = false;
+            });
+          }
+        } else if (messageRequestResponse.statusCode == 201) {
+          setState(() {
+            isSendingReply = false;
+          });
+          showPopupComponent(
+              context: context,
+              icon: Icons.verified,
+              iconColor: Colors.green[800],
+              message: 'Message request sent to $username!');
+        } else {
+          setState(() {
+            isSendingReply = false;
+          });
+          showPopupComponent(
+            context: context,
+            icon: Icons.error,
+            iconColor: Colors.red,
+            message: messageRequestResponse.error!,
+          );
+        }
+      }
     }
+
+    // try {
+    //   ChatMessageModel messageModel = ChatMessageModel(
+    //       messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+    //       parentId: stories[currentIndex]['id'].toString(),
+    //       parentContent: 'Story',
+    //       contentFileType: stories[currentIndex]['id'],
+    //       sender: username!,
+    //       receiver: toUsername,
+    //       action: 'created',
+    //       content: replyController.text,
+    //       isFileIncluded: false,
+    //       createdAt: DateTime.now().toUtc().toIso8601String());
+
+    //   final messageRef = ref.read(webSocketNotifierProvider.notifier);
+    //   messageRef.sendMessage(messageModel);
+
+    //   setState(() {
+    //     replyController.clear();
+    //     isSendingReply = false;
+    //   });
+    // } catch (e) {
+    //   setState(() {
+    //     isSendingReply = false;
+    //   });
+    // }
   }
 
   TextEditingController replyController = TextEditingController();
@@ -185,6 +248,87 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     _videoController?.dispose();
     super.dispose();
   }
+
+  /*try {
+      final messageRequestRef =
+          ref.read(addMessageRequestServiceProviderImpl.notifier);
+      await messageRequestRef.sendMessageRequest(targetUsername);
+
+      final messageRequestResponse =
+          ref.read(addMessageRequestServiceProviderImpl);
+
+      if (messageRequestResponse.error == null) {
+        if (context.mounted) {
+          // Show success popup
+          if (messageRequestResponse.statusCode == 200) {
+            final chatRef = ref.read(chatServiceProviderImpl);
+            if (chatRef.data == null || chatRef.data.isEmpty) {
+              final chatRef = ref.read(chatServiceProviderImpl.notifier);
+              await chatRef.getMessages();
+            }
+            final chatsRef = ref.read(chatServiceProviderImpl);
+            for (var chat in chatsRef.data) {
+              if (chat['username'] == targetUsername) {
+                final chatDetailsRef =
+                    ref.read(getChatDetailsProviderImpl.notifier);
+                chatDetailsRef.updateChatDetails({
+                  'username': targetUsername,
+                  'profile_picture': widget.profile['profile_picture_url'],
+                  'full_name': '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
+                  'nickname': widget.profile['nickname'],
+                  'messages': chat['messages']
+                });
+              }
+            }
+            setState(() {
+              isLoading = false;
+            });
+            Routemaster.of(context).push('/chat-detail/$targetUsername');
+          } else if (messageRequestResponse.statusCode == 201) {
+            setState(() {
+              isLoading = false;
+            });
+            showPopupComponent(
+                context: context,
+                icon: Icons.verified,
+                iconColor: Colors.green[800],
+                message:
+                    'Message request sent to ${widget.profile['nickname']}!');
+          } else {
+            setState(() {
+              isLoading = false;
+            });
+            showPopupComponent(
+              context: context,
+              icon: Icons.error,
+              iconColor: Colors.red,
+              message: messageRequestResponse.error!,
+            );
+          }
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        showPopupComponent(
+            context: context,
+            icon: Icons.error,
+            message: messageRequestResponse.error!);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        // Show error popup
+        showPopupComponent(
+          context: context,
+          icon: Icons.error,
+          iconColor: Colors.red,
+          message: 'Failed to send message request: ${e.toString()}',
+        );
+      }
+    } */
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +395,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                         try {
                           final profileRef =
                               ref.read(anyProfileServiceProviderImpl.notifier);
-                          await profileRef.getAnyProfile(stories[currentIndex]['username']);
+                          await profileRef
+                              .getAnyProfile(stories[currentIndex]['username']);
 
                           final targetProfile =
                               ref.read(targetProfileProvider.notifier);
@@ -277,10 +422,12 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                           CircleAvatar(
                             radius: 20,
                             backgroundImage: CachedNetworkImageProvider(
-                              stories[currentIndex]['profile_picture_uri'] ?? '',
+                              stories[currentIndex]['profile_picture_uri'] ??
+                                  '',
                             ),
                             onBackgroundImageError: (_, __) {},
-                            child: stories[currentIndex]['profile_picture_uri'] ==
+                            child: stories[currentIndex]
+                                        ['profile_picture_uri'] ==
                                     null
                                 ? const Icon(Icons.person)
                                 : null,
@@ -305,32 +452,39 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                   ],
                                 ),
                               ),
-                              // stories[currentIndex]['nickname'] == nickname
-                              //     ? Row(children: [
-                              //         Text(
-                              //           '${stories[currentIndex]['likes'] ?? 0} ',
-                              //           style: TextStyle(
-                              //             fontSize: 12,
-                              //             color: isLightTheme
-                              //                 ? Colors.grey[600]
-                              //                 : Colors.grey[400],
-                              //             shadows: const [
-                              //               Shadow(
-                              //                 offset: Offset(1, 1),
-                              //                 blurRadius: 3.0,
-                              //                 color: Colors.black54,
-                              //               ),
-                              //             ],
-                              //           ),
-                              //         )
-                              //       ])
-                              //     : const SizedBox.shrink(),
                             ],
                           ),
                         ],
                       ),
                     ),
                   ),
+                  isSendingReply
+                      ? Center(
+                          child: Container(
+                            width: 120,
+                            height: 50,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey[800]),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                child: const Text(
+                                  'Sending...',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                   Positioned(
                     bottom: 100,
                     left: 10,
@@ -340,25 +494,23 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             constraints: BoxConstraints(
                               maxWidth: MediaQuery.of(context).size.width - 20,
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ExpandableTextComponent(
-                                  text: stories[currentIndex]['caption'],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(1, 1),
-                                        blurRadius: 3.0,
-                                        color: Colors.black54,
-                                      ),
-                                    ],
+                            child: 
+                                Center(
+                                  child: ExpandableTextComponent(
+                                    text: stories[currentIndex]['caption'],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(1, 1),
+                                          blurRadius: 3.0,
+                                          color: Colors.black54,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -402,11 +554,13 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                       onPressed: _handleLike,
                                       icon: Icon(
                                         stories[currentIndex]
-                                                ['liked_this_story'] || isLiked
+                                                    ['liked_this_story'] ||
+                                                isLiked
                                             ? Icons.favorite
                                             : Icons.favorite_border,
                                         color: stories[currentIndex]
-                                                ['liked_this_story'] || isLiked
+                                                    ['liked_this_story'] ||
+                                                isLiked
                                             ? GlobalColors.primaryColor
                                             : Colors.white,
                                       ),
@@ -422,7 +576,9 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                         decoration: BoxDecoration(
                                           borderRadius:
                                               BorderRadius.circular(60),
-                                          color: Colors.grey[900],
+                                          color: isLightTheme
+                                              ? Colors.grey[900]
+                                              : Colors.grey[200],
                                         ),
                                         child: TextField(
                                           controller: replyController,
@@ -460,41 +616,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                     ),
                                   ],
                                 ),
-                                if (isSendingReply)
-                                  Positioned.fill(
-                                    child: Container(
-                                      color: Colors.black.withOpacity(0.5),
-                                      child: Center(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 10,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[400],
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black
-                                                    .withOpacity(0.3),
-                                                blurRadius: 5,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Text(
-                                            'Sending...',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
                               ],
                             ),
                           ),
@@ -522,7 +643,13 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                               ],
                             ),
                           )),
-                          isProfileLoading ? const Center(child: CircularProgressIndicator(color: Colors.white, ),) : Container()
+                  isProfileLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        )
+                      : Container()
                 ],
               ),
             ),

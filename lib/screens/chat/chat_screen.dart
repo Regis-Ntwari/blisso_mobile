@@ -63,7 +63,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     return dateFormat.format(dateTime);
   }
 
-  void chooseChat(String username, String profilePicture, String nickname, String fullname, List<dynamic>? messages) {
+  void chooseChat(String username, String profilePicture, String nickname,
+      String fullname, List<dynamic>? messages) {
     // final chatRef = ref.read(chatServiceProviderImpl);
     // for (Map<dynamic, dynamic> chat in chatRef.data) {
     //   if (chat.containsKey(username)) {
@@ -188,9 +189,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             Expanded(
                               child: ListView.builder(
                                 itemBuilder: (context, index) {
-                                  String profilePicture = chatRef.data[index]['profile_picture_url'];
-                                  String nickname = chatRef.data[index]['nickname'];
-                                  String fullname = chatRef.data[index]['full_name'];
+                                  String profilePicture = chatRef.data[index]
+                                      ['profile_picture_url'];
+                                  String nickname =
+                                      chatRef.data[index]['nickname'];
+                                  String fullname =
+                                      chatRef.data[index]['full_name'];
                                   String username =
                                       chatRef.data[index]['username'];
                                   List<dynamic>? messages =
@@ -209,11 +213,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   }
 
                                   return InkWell(
-                                    onTap: () => chooseChat(username, profilePicture, nickname, fullname, messages),
+                                    onTap: () => chooseChat(
+                                        username,
+                                        profilePicture,
+                                        nickname,
+                                        fullname,
+                                        messages),
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        backgroundImage: CachedNetworkImageProvider(profilePicture),
-                                          ),
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                                profilePicture),
+                                      ),
                                       title: Text(fullname),
                                       subtitle: Row(
                                         mainAxisAlignment:
@@ -231,8 +242,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                           Text(
                                             formatDate(lastMessage['created_at']
                                                 .toString()),
-                                            style:
-                                                const TextStyle(fontSize: 10),
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: lastMessage[
+                                                                'sender'] !=
+                                                            username &&
+                                                        lastMessage[
+                                                                'message_status'] ==
+                                                            'unseen'
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal),
                                           ),
                                         ],
                                       ),
@@ -244,14 +263,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             ),
                           ],
                         ),
-
-              // Second tab - Placeholder for other details
-              // const Center(
-              //   child: Text(
-              //     'Other details will go here',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              //   ),
-              // ),
               const ChatMessageRequest()
             ],
           ),

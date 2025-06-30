@@ -11,7 +11,9 @@ import 'package:blisso_mobile/screens/auth/profile/subscription/verification/web
 import 'package:blisso_mobile/screens/auth/register_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_view_screen.dart';
+import 'package:blisso_mobile/screens/chat/chat_view_video.dart';
 import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
+import 'package:blisso_mobile/screens/home/components/stories/view_shared_story_screen.dart';
 import 'package:blisso_mobile/screens/home/components/stories/view_story_component.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
@@ -60,8 +62,13 @@ class Routing {
             username: route.pathParameters['username']!,
           ),
         ),
-    '/chat-detail/:username/profile': (route) => const MaterialPage(
-        child: TargetProfileComponent()),
+    '/chat-detail/:username/:id': (route) => MaterialPage(
+        child: ChatViewVideo(videoId: int.parse(route.pathParameters['id']!))),
+    '/chat-detail/:username/story-player': (route) => MaterialPage(
+        child:
+            ViewSharedStoryScreen(id: int.parse(route.queryParameters['id']!))),
+    '/chat-detail/:username/profile': (route) =>
+        const MaterialPage(child: TargetProfileComponent()),
     '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
           username: route.pathParameters['username'],

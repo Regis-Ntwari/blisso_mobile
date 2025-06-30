@@ -78,31 +78,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     }
   }
 
-  List<Map<String, dynamic>> subscriptions = [
-    {
-      "plan_code": "001",
-      "plan_name": "Free plan",
-      "price": 0,
-      "currency": "RWF",
-      "rw_price": 0,
-      "usd_price": 0.0,
-      "start_date": "2024-11-09 14:32:08",
-      "end_date": "2027-10-25 14:32:08",
-      "expired": false
-    },
-    {
-      "plan_code": "002",
-      "plan_name": "Monthly plan",
-      "price": 5000,
-      "currency": "RWF",
-      "rw_price": 5000,
-      "usd_price": 5.0,
-      "start_date": "2024-11-09 19:00:34",
-      "end_date": "2024-12-09 19:00:34",
-      "expired": false
-    }
-  ];
-
   Future<void> updateProfilePicture(TargetProfileModel model) async {
     final profileRef = ref.read(myProfileServiceProviderImpl.notifier);
 
@@ -589,12 +564,12 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                         return InkWell(
                                                           onTap: () {},
                                                           child: Container(
-                                                            color: Colors.black,
+                                                            color: isLightTheme ? Colors.black : Colors.grey[800],
                                                             height: 50,
                                                             width: 50,
                                                             child: const Center(
                                                               child: Icon(Icons
-                                                                  .play_arrow),
+                                                                  .play_arrow, color: Colors.white,),
                                                             ),
                                                           ),
                                                         );
@@ -685,43 +660,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                   }).toList(),
                                 ),
                               ),
-                            // InkWell(
-                            //   onTap: () {
-                            //     if (expandedField == 'media') {
-                            //       setState(() {
-                            //         expandedField = '';
-                            //       });
-                            //     } else {
-                            //       setState(() {
-                            //         expandedField = 'media';
-                            //       });
-                            //     }
-                            //   },
-                            //   child: ListTile(
-                            //     title: const Text(
-                            //       'My Media',
-                            //       style: TextStyle(fontWeight: FontWeight.bold),
-                            //     ),
-                            //     subtitle:
-                            //         const Text('View your pictures and videos'),
-                            //     trailing: expandedField == 'media'
-                            //         ? const Icon(Icons.keyboard_arrow_down)
-                            //         : const Icon(Icons.keyboard_arrow_right),
-                            //   ),
-                            // ),
-                            // if (expandedField == 'media')
-
-                            // InkWell(
-                            //   onTap: () {},
-                            //   child: const ListTile(
-                            //     title: Text(
-                            //       'Subscription',
-                            //       style: TextStyle(fontWeight: FontWeight.bold),
-                            //     ),
-                            //     subtitle: Text('Click to change your profile'),
-                            //     trailing: Icon(Icons.keyboard_arrow_right),
-                            //   ),
-                            // )
+                            
                           ],
                         ),
                       ),

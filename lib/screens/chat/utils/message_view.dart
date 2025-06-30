@@ -9,7 +9,6 @@ import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
-import 'package:blisso_mobile/services/stories/get_one_story_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -427,16 +426,21 @@ class _MessageViewState extends ConsumerState<MessageView> {
                             ? Wrap(
                                 children: [
                                   InkWell(
-                                    onTap: () async {
-                                      final shortStoryRef = ref.read(
-                                          getOneStoryProviderImpl.notifier);
+                                    onTap: () {
+                                      String chatUser =
+                                          username! == widget.message['sender']
+                                              ? widget.message['receiver']
+                                              : widget.message['sender'];
+                                      Routemaster.of(context).push('/chat-detail/$chatUser/story-player?id=${widget.message['content_file_type']}');
+                                      // final shortStoryRef = ref.read(
+                                      //     getOneStoryProviderImpl.notifier);
 
-                                      dynamic status =
-                                          shortStoryRef.getOneStory(
-                                              widget.message['parent_id']);
-                                      String encodedData = jsonEncode([status]);
-                                      Routemaster.of(context).push(
-                                          '/homepage/view-story?data=$encodedData');
+                                      // dynamic status =
+                                      //     shortStoryRef.getOneStory(
+                                      //         widget.message['parent_id']);
+                                      // String encodedData = jsonEncode([status]);
+                                      // Routemaster.of(context).push(
+                                      //     '/homepage/view-story?data=$encodedData');
                                     },
                                     child: Container(
                                       width: double.infinity,
@@ -505,7 +509,13 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                 : widget.message['content_file_type'] ==
                                         'Video_post'
                                     ? ListTile(
-                                      onTap: () {},
+                                        onTap: () {
+                                          String chatUser =
+                                          username! == widget.message['sender']
+                                              ? widget.message['receiver']
+                                              : widget.message['sender'];
+                                          Routemaster.of(context).push('/chat-detail/$chatUser/${widget.message['parent_content']}');
+                                        },
                                         leading: const Icon(
                                           Icons.play_arrow,
                                           color: Colors.white,
@@ -516,30 +526,47 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                         children: [
                                           widget.message['parent_id'] !=
                                                   '000000000000000000000000'
-                                              ? InkWell(
-                                                  onTap: null,
-                                                  child: Container(
-                                                    width: double.infinity,
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        vertical: 10,
-                                                        horizontal: 10),
-                                                    color: isLightTheme
-                                                        ? username ==
-                                                                widget.message[
-                                                                    'sender']
-                                                            ? GlobalColors
-                                                                .myLightReplyMessageColor
-                                                            : Colors.grey[400]
-                                                        : username ==
-                                                                widget.message[
-                                                                    'sender']
-                                                            ? GlobalColors
-                                                                .myDarkReplyMessageColor
-                                                            : Colors.grey[700],
-                                                    child: Text(widget.message[
-                                                        'parent_content']),
-                                                  ),
+                                              ? Wrap(
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: null,
+                                                      child: Container(
+                                                        width: double.infinity,
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                vertical: 10,
+                                                                horizontal: 10),
+                                                        color: isLightTheme
+                                                            ? username ==
+                                                                    widget.message[
+                                                                        'sender']
+                                                                ? GlobalColors
+                                                                    .myLightReplyMessageColor
+                                                                : Colors
+                                                                    .grey[400]
+                                                            : username ==
+                                                                    widget.message[
+                                                                        'sender']
+                                                                ? GlobalColors
+                                                                    .myDarkReplyMessageColor
+                                                                : Colors
+                                                                    .grey[700],
+                                                        child: Text(widget
+                                                                .message[
+                                                            'parent_content']),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      widget
+                                                          .message['content']!,
+                                                      textAlign:
+                                                          TextAlign.justify,
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 )
                                               : Text(
                                                   widget.message['content']!,
