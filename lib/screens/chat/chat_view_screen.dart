@@ -324,6 +324,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await getMyUsername();
       initializeEmptyChat();
+      ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
       scrollToBottom();
     });
     messageControllerNotifier.value = messageController;
@@ -359,8 +360,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      //ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
       scrollToBottom();
+      
     });
 
     final chatDetailsRef = ref.watch(getChatDetailsProviderImpl);

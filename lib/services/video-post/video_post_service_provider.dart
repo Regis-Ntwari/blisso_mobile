@@ -30,6 +30,28 @@ class VideoPostServiceProvider extends StateNotifier<ApiState> {
       state = ApiState(isLoading: false, error: e.toString(), statusCode: 500);
     }
   }
+
+  Future<void> getTargetVideos(String username) async{
+    state = ApiState(isLoading: true);
+
+    try {
+      final response = await videoPostService.getTargetVideos(username);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        state = ApiState(
+            isLoading: false,
+            error: response.errorMessage,
+            statusCode: response.statusCode);
+      } else {
+        state = ApiState(
+            isLoading: false,
+            data: response.result,
+            statusCode: response.statusCode);
+      }
+    } catch (e) {
+      state = ApiState(isLoading: false, error: e.toString(), statusCode: 500);
+    }
+  }
 }
 
 final videoPostServiceProviderImpl =

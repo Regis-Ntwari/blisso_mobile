@@ -238,6 +238,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                                 ? '${lastMessage['content'].toString().characters.take(30)}...'
                                                 : lastMessage['content']
                                                     .toString(),
+                                                    style: TextStyle(fontWeight: lastMessage[
+                                                                'sender'] !=
+                                                            username &&
+                                                        lastMessage[
+                                                                'message_status'] ==
+                                                            'unseen'
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal),
                                           ),
                                           Text(
                                             formatDate(lastMessage['created_at']

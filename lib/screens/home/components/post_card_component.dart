@@ -6,6 +6,7 @@ import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dar
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -102,7 +103,8 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                 chatDetailsRef.updateChatDetails({
                   'username': targetUsername,
                   'profile_picture': widget.profile['profile_picture_url'],
-                  'full_name': '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
+                  'full_name':
+                      '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
                   'nickname': widget.profile['nickname'],
                   'messages': chat['messages']
                 });
@@ -176,6 +178,18 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                 Routemaster.of(context).push('/homepage/target-profile');
               },
               child: ListTile(
+                  trailing: widget.profile['feeling_caption'] != null
+                      ? Padding(
+                        padding: const EdgeInsets.only(right: 10.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(widget.profile['feeling_emojis'], style: const TextStyle(fontSize: 24),),
+                              Text(widget.profile['feeling_caption'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),)
+                            ],
+                          ),
+                      )
+                      : const SizedBox.shrink(),
                   leading: CircleAvatar(
                     backgroundImage: CachedNetworkImageProvider(
                         widget.profile['profile_picture_url']),
@@ -261,7 +275,11 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.favorite_border),
-                          onPressed: () {},
+                          onPressed: () async{
+                            final likeRef = ref.read(profileServiceProviderImpl.notifier);
+
+                            await likeRef.likeProfile(widget.profile['id']);
+                          },
                         ),
                         IconButton(
                           icon: const Icon(Icons.share),

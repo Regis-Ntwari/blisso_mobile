@@ -148,6 +148,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -160,7 +161,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
             Expanded(
               child: Slider(
                 value: sliderValue,
-                activeColor: GlobalColors.primaryColor,
+                activeColor: isLightTheme ? GlobalColors.primaryColor : GlobalColors.whiteColor,
                 onChanged: (value) async {
                   setState(() => sliderValue = value);
                   await _player!

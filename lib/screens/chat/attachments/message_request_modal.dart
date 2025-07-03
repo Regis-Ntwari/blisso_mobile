@@ -25,10 +25,12 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
   TextEditingController searchController = TextEditingController();
 
   Future<void> getUsers() async {
-    final messageRequestRef =
-        ref.read(messageRequestServiceProviderImpl.notifier);
+    if (ref.read(messageRequestServiceProviderImpl).data == null) {
+      final messageRequestRef =
+          ref.read(messageRequestServiceProviderImpl.notifier);
 
-    await messageRequestRef.mapApprovedUsers();
+      await messageRequestRef.mapApprovedUsers();
+    }
   }
 
   @override
@@ -138,14 +140,20 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                             int check = 0;
                             for (var chat in chatRef.data) {
                               if (chat['username'] ==
-                                  messageRequestRef.data[usersList[index]]['username']) {
+                                  messageRequestRef.data[usersList[index]]
+                                      ['username']) {
                                 final chatDetailRef = ref
                                     .read(getChatDetailsProviderImpl.notifier);
                                 chatDetailRef.updateChatDetails({
-                                  'username': messageRequestRef.data[usersList[index]]['username'],
-                                  'profile_picture': messageRequestRef.data[usersList[index]]['profile_picture_url'],
-                                  'full_name': messageRequestRef.data[usersList[index]]['fullname'],
-                                  'nickname': messageRequestRef.data[usersList[index]]['nickname'],
+                                  'username': messageRequestRef
+                                      .data[usersList[index]]['username'],
+                                  'profile_picture':
+                                      messageRequestRef.data[usersList[index]]
+                                          ['profile_picture_url'],
+                                  'full_name': messageRequestRef
+                                      .data[usersList[index]]['fullname'],
+                                  'nickname': messageRequestRef
+                                      .data[usersList[index]]['nickname'],
                                   'messages': chat['messages']
                                 });
                                 check = 1;
@@ -157,17 +165,22 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                                   ref.read(getChatDetailsProviderImpl.notifier);
 
                               chatDetailRef.updateChatDetails({
-                                'username': messageRequestRef.data[usersList[index]]['username'],
-                                'profile_picture': messageRequestRef.data[usersList[index]]['profile_picture_url'],
-                                'full_name': messageRequestRef.data[usersList[index]]['fullname'],
-                                'nickname': messageRequestRef.data[usersList[index]]['nickname'],
+                                'username': messageRequestRef
+                                    .data[usersList[index]]['username'],
+                                'profile_picture':
+                                    messageRequestRef.data[usersList[index]]
+                                        ['profile_picture_url'],
+                                'full_name': messageRequestRef
+                                    .data[usersList[index]]['fullname'],
+                                'nickname': messageRequestRef
+                                    .data[usersList[index]]['nickname'],
                                 'messages': []
                               });
                             }
                             Navigator.pop(context);
 
-                            Routemaster.of(context).push(
-                                '/chat-detail/${usersList[index]}');
+                            Routemaster.of(context)
+                                .push('/chat-detail/${usersList[index]}');
                           } else {
                             sendContact(usersList[index]);
                             Navigator.pop(context);

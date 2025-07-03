@@ -85,9 +85,9 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
           child: Column(
             children: [
               ListTile(
-                title: ExpandableTextComponent(text: request['requester_profile_name'] == null
+                title: Flexible(child: Text(request['requester_profile_name'] == null
                     ? ''
-                    : 'You have received a message request from ${request['requester_profile_name']}'),
+                    : 'You have received a message request from ${request['requester_profile_name']}')),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

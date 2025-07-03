@@ -14,6 +14,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:routemaster/routemaster.dart';
 
 class MyProfileComponent extends ConsumerStatefulWidget {
   const MyProfileComponent({super.key});
@@ -216,6 +217,13 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           ),
                         ],
                       ),
+                      profileState.data['feeling_caption'] != null
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 30),
+                              child: Text(
+                                  'Feeling ${profileState.data['feeling_caption']}${profileState.data['feeling_emojis']}'),
+                            )
+                          : const SizedBox.shrink(),
                       Row(
                         children: [
                           const SizedBox(
@@ -562,14 +570,26 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                       itemBuilder:
                                                           (context, index) {
                                                         return InkWell(
-                                                          onTap: () {},
+                                                          onTap: () {
+                                                            Routemaster.of(
+                                                                    context)
+                                                                .push(
+                                                                    '/homepage/video-player?videoUrl=${Uri.encodeComponent(videoPostState.data[index]['post_file_url'])}');
+                                                          },
                                                           child: Container(
-                                                            color: isLightTheme ? Colors.black : Colors.grey[800],
+                                                            color: isLightTheme
+                                                                ? Colors.black
+                                                                : Colors
+                                                                    .grey[800],
                                                             height: 50,
                                                             width: 50,
                                                             child: const Center(
-                                                              child: Icon(Icons
-                                                                  .play_arrow, color: Colors.white,),
+                                                              child: Icon(
+                                                                Icons
+                                                                    .play_arrow,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
                                                             ),
                                                           ),
                                                         );
@@ -660,7 +680,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                   }).toList(),
                                 ),
                               ),
-                            
                           ],
                         ),
                       ),

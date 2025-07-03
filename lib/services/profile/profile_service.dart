@@ -37,12 +37,32 @@ class ProfileService {
     return response;
   }
 
+  Future<ApiResponse> likeProfile(int id) async{
+    String accessToken = await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().getData('profiles/like_or_dislike/profile/$id/', accessToken);
+
+    return response;
+  }
+
   Future<ApiResponse> getAllProfiles() async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response =
         await ApiService().getData('/profiles/', accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> updateProfileFeeling(String emoji, String caption) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postData(
+        endpoint: '/profiles/my/profile/update-feeling/',
+        token: accessToken,
+        body: {"feeling_caption": caption, "feeling_emojis": emoji});
 
     return response;
   }

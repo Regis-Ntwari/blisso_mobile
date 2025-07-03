@@ -127,6 +127,7 @@ class TargetProfileModel {
       profileImages: map['profile_images'] != null
           ? List<dynamic>.from((map['profile_images'] as List<dynamic>))
           : null,
+          feeling: map['feeling_caption'] != null ? '${map['feeling_caption']}${map['feeling_emojis']}' : null
     );
   }
 

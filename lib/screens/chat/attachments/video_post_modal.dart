@@ -41,6 +41,7 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
 
   @override
   Widget build(BuildContext context) {
+    final addVideoRef = ref.watch(addVideoPostProviderImpl);
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       return Padding(
@@ -85,10 +86,14 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
                     ),
                     IconButton(
                         onPressed: () => postShortVideoStory(),
-                        icon: const Icon(
-                          Icons.send,
-                          color: GlobalColors.primaryColor,
-                        ))
+                        icon: addVideoRef.isLoading
+                            ? const CircularProgressIndicator(
+                                color: GlobalColors.primaryColor,
+                              )
+                            : const Icon(
+                                Icons.send,
+                                color: GlobalColors.primaryColor,
+                              ))
                   ],
                 ),
               ),

@@ -456,11 +456,11 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                                   .myDarkReplyMessageColor
                                               : Colors.grey[700],
                                       child: Text(
-                                          widget.message['parent_content']),
+                                          'Click to View ${widget.message['parent_content']}'),
                                     ),
                                   ),
                                   Text(
-                                    widget.message['content']!,
+                                    '${widget.message['content']!}',
                                     textAlign: TextAlign.justify,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -520,7 +520,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                           Icons.play_arrow,
                                           color: Colors.white,
                                         ),
-                                        title: Text(widget.message['content']),
+                                        title: Text('View ${widget.message['content']}'),
                                       )
                                     : Wrap(
                                         children: [

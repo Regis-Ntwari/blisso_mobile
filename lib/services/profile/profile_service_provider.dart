@@ -64,6 +64,22 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
+  Future<void> likeProfile(int id) async{
+    //state = ApiState(isLoading: true);
+
+    try {
+      final response = await profileService.likeProfile(id);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        //state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        //state = ApiState(data: response.result, isLoading: false);
+      }
+    } catch (e) {
+      //state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
   Future<void> getAllProfiles() async {
     state = ApiState(isLoading: true);
 

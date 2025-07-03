@@ -6,6 +6,8 @@ import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
 import 'package:blisso_mobile/screens/home/components/home_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
+import 'package:blisso_mobile/screens/home/feeling_popup_component.dart';
+import 'package:blisso_mobile/services/feeling/feeling_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -66,10 +68,24 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   void initState() {
     super.initState();
     initializeSocket();
+
+    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (profiles == null) {
         getProfiles();
       }
+
+      if (ref.read(feelingProviderImpl)) {
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierColor: Colors.black.withOpacity(0.5),
+          builder: (_) => const FeelingPopupComponent(),
+        );
+        ref.read(feelingProviderImpl.notifier).updateState();
+      }
+      
     });
   }
 
@@ -531,33 +547,33 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                       ],
                                     ),
                                   ),
-                                  if (searchValue.text.isNotEmpty)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 8),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: isLightTheme
-                                            ? Colors.grey[100]
-                                            : Colors.grey[900],
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: isLightTheme
-                                              ? Colors.grey[300]!
-                                              : Colors.grey[700]!,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Searching by: $searchAttribute',
-                                        style: TextStyle(
-                                          color: isLightTheme
-                                              ? Colors.grey[600]
-                                              : Colors.grey[400],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
+                                  // if (searchValue.text.isNotEmpty)
+                                  //   Container(
+                                  //     margin: const EdgeInsets.only(top: 8),
+                                  //     padding: const EdgeInsets.symmetric(
+                                  //         horizontal: 16, vertical: 8),
+                                  //     decoration: BoxDecoration(
+                                  //       color: isLightTheme
+                                  //           ? Colors.grey[100]
+                                  //           : Colors.grey[900],
+                                  //       borderRadius: BorderRadius.circular(12),
+                                  //       border: Border.all(
+                                  //         color: isLightTheme
+                                  //             ? Colors.grey[300]!
+                                  //             : Colors.grey[700]!,
+                                  //         width: 1,
+                                  //       ),
+                                  //     ),
+                                  //     child: Text(
+                                  //       'Searching by: $searchAttribute',
+                                  //       style: TextStyle(
+                                  //         color: isLightTheme
+                                  //             ? Colors.grey[600]
+                                  //             : Colors.grey[400],
+                                  //         fontSize: 14,
+                                  //       ),
+                                  //     ),
+                                  //   ),
                                 ],
                               ),
                             ),

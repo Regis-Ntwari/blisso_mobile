@@ -51,6 +51,10 @@ class Routing {
         )),
     '/homepage/target-profile': (route) =>
         const MaterialPage(child: TargetProfileComponent()),
+      '/homepage/target-profile/video-player': (route) => MaterialPage(
+            child: VideoPlayerScreen(
+          videoUrl: route.queryParameters['videoUrl'],
+        )),
     '/favorite-profile/:username': (route) => MaterialPage(
         child: FavoriteProfileScreen(
             profileUsername: route.pathParameters['username']!)),
@@ -74,6 +78,10 @@ class Routing {
           username: route.pathParameters['username'],
           videoUrl: route.queryParameters['videoUrl'],
           bytes: route.queryParameters['bytes'],
+        )),
+    '/homepage/video-player': (route) => MaterialPage(
+            child: VideoPlayerScreen(
+          videoUrl: route.queryParameters['videoUrl'],
         )),
     '/homepage/view-story': (_) =>
         const MaterialPage(child: ViewStoryComponent()),

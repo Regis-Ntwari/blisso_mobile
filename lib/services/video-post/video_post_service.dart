@@ -7,8 +7,18 @@ class VideoPostService {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
+    String username = await SharedPreferencesService.getPreference('username');
+
     ApiResponse response =
-        await ApiService().getData('posts/user/video-posts/', accessToken);
+        await ApiService().getData('posts/user/$username/video-posts/', accessToken);
+
+    return response;
+  }
+
+  Future<ApiResponse> getTargetVideos(String username) async{
+    String accessToken = await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().getData('posts/user/$username/video-posts/', accessToken);
 
     return response;
   }

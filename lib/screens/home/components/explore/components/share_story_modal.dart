@@ -15,18 +15,19 @@ class ShareStoryModal extends ConsumerStatefulWidget {
   ShareStoryModal({super.key, required this.story});
 
   @override
-  ConsumerState<ShareStoryModal> createState() =>
-      _MessageRequestModalState();
+  ConsumerState<ShareStoryModal> createState() => _MessageRequestModalState();
 }
 
 class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
   TextEditingController searchController = TextEditingController();
 
   Future<void> getUsers() async {
-    final messageRequestRef =
-        ref.read(messageRequestServiceProviderImpl.notifier);
+    if (ref.read(messageRequestServiceProviderImpl).data == null) {
+      final messageRequestRef =
+          ref.read(messageRequestServiceProviderImpl.notifier);
 
-    await messageRequestRef.mapApprovedUsers();
+      await messageRequestRef.mapApprovedUsers();
+    }
   }
 
   @override
@@ -98,7 +99,7 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
       child: SafeArea(
           child: Padding(
         padding: const EdgeInsets.all(10),
-        child: messageRequestRef.isLoading 
+        child: messageRequestRef.isLoading
             ? const Center(
                 child: CircularProgressIndicator(
                   color: GlobalColors.primaryColor,
@@ -142,7 +143,8 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
                       final usersList = messageRequestRef.data.keys.toList();
                       return InkWell(
                         onTap: () {
-                          shareVideo(messageRequestRef.data[usersList[index]]['username']);
+                          shareVideo(messageRequestRef.data[usersList[index]]
+                              ['username']);
                         },
                         child: ListTile(
                             leading: CircleAvatar(
@@ -162,8 +164,7 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
   }
 }
 
-void showShareVideoModal(
-    BuildContext context, ShortStoryModel story) {
+void showShareVideoModal(BuildContext context, ShortStoryModel story) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,

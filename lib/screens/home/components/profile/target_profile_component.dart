@@ -5,6 +5,7 @@ import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
+import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -77,7 +78,8 @@ class _TargetProfileComponentState
                 chatDetailsRef.updateChatDetails({
                   'username': targetUsername,
                   'profile_picture': targetProfile.profilePictureUri,
-                  'full_name': '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                  'full_name':
+                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
                   'nickname': targetProfile.nickname,
                   'messages': chat['messages']
                 });
@@ -95,8 +97,7 @@ class _TargetProfileComponentState
                 context: context,
                 icon: Icons.verified,
                 iconColor: Colors.green[800],
-                message:
-                    'Message request sent to ${targetProfile.nickname}!');
+                message: 'Message request sent to ${targetProfile.nickname}!');
           } else {
             setState(() {
               isLoading = false;
@@ -135,12 +136,25 @@ class _TargetProfileComponentState
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final targetProfile = ref.watch(targetProfileProvider);
+      ref
+          .read(videoPostServiceProviderImpl.notifier)
+          .getTargetVideos(targetProfile.user!['username']);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final targetProfile = ref.watch(targetProfileProvider);
     double width = MediaQuery.sizeOf(context).width;
     double height = MediaQuery.sizeOf(context).height;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final videoState = ref.watch(videoPostServiceProviderImpl);
     return SafeArea(
       child: Scaffold(
         backgroundColor:
@@ -199,7 +213,7 @@ class _TargetProfileComponentState
                             ),
                           ),
                           SizedBox(
-                            height: height * 0.1,
+                            height: height * 0.07,
                             width: width * 0.85,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 10.0),
@@ -212,11 +226,14 @@ class _TargetProfileComponentState
                                         fontSize: scaler.scale(24),
                                       ),
                                     ),
-                                    Text(
-                                      'Feeling ${targetProfile.feeling!}',
-                                      style: TextStyle(
-                                          color: GlobalColors.secondaryColor),
-                                    )
+                                    targetProfile.feeling == null
+                                        ? const SizedBox.shrink()
+                                        : Text(
+                                            'Feeling ${targetProfile.feeling!}',
+                                            style: TextStyle(
+                                                color: GlobalColors
+                                                    .secondaryColor),
+                                          )
                                   ]),
                             ),
                           ),
@@ -365,33 +382,119 @@ class _TargetProfileComponentState
                 child: Column(
                   children: [
                     SizedBox(
-                        height: 150,
+                        height: 400,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: targetProfile.profileImages!.length,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 2.0),
-                                child: SizedBox(
-                                  height: 100,
-                                  width: 100,
-                                  child: InkWell(
-                                    onTap: () => showPictureDialog(
-                                      context: context,
-                                      image:
-                                          targetProfile.profileImages![index],
-                                    ),
-                                    child: CachedNetworkImage(
-                                        imageUrl:
-                                            targetProfile.profileImages![index]
-                                                ['image_url']),
+                          child: SizedBox(
+                            height: 300,
+                            child: DefaultTabController(
+                              length: 2,
+                              child: Column(
+                                children: [
+                                  TabBar(
+                                    tabs: const [
+                                      Tab(text: 'Profile Pictures'),
+                                      Tab(text: 'Video Posts'),
+                                    ],
+                                    labelColor: GlobalColors.primaryColor,
+                                    unselectedLabelColor:
+                                        GlobalColors.secondaryColor,
                                   ),
-                                ),
-                              );
-                            },
+                                  SizedBox(
+                                    height: 250,
+                                    child: TabBarView(
+                                      children: [
+                                        // Pictures Tab
+                                        GridView.builder(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 3,
+                                            crossAxisSpacing: 4,
+                                            mainAxisSpacing: 4,
+                                          ),
+                                          itemCount: targetProfile
+                                              .profileImages!.length,
+                                          itemBuilder: (context, index) {
+                                            return InkWell(
+                                              onTap: () => showPictureDialog(
+                                                context: context,
+                                                image: targetProfile
+                                                    .profileImages![index],
+                                                isEdit: true,
+                                                chosenPicture: null,
+                                                updatePicture: null,
+                                                savePicture: null,
+                                              ),
+                                              child: CachedNetworkImage(
+                                                imageUrl: targetProfile
+                                                        .profileImages![index]
+                                                    ['image_url'],
+                                                fit: BoxFit.cover,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        // Videos Tab
+                                        videoState.isLoading
+                                            ? const Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  color:
+                                                      GlobalColors.primaryColor,
+                                                ),
+                                              )
+                                            : videoState.data.isEmpty
+                                                ? Center(
+                                                    child: Text(
+                                                      'No videos yet',
+                                                      style: TextStyle(
+                                                        color: GlobalColors
+                                                            .secondaryColor,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : GridView.builder(
+                                                    gridDelegate:
+                                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount: 3,
+                                                      crossAxisSpacing: 4,
+                                                      mainAxisSpacing: 4,
+                                                    ),
+                                                    itemCount: videoState
+                                                        .data.length,
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      return InkWell(
+                                                        onTap: () {
+                                                          Routemaster.of(
+                                                                  context)
+                                                              .push(
+                                                                  '/homepage/target-profile/video-player?videoUrl=${Uri.encodeComponent(videoState.data[index]['post_file_url'])}');
+                                                        },
+                                                        child: Container(
+                                                          color: isLightTheme
+                                                              ? Colors.black
+                                                              : Colors
+                                                                  .grey[800],
+                                                          height: 50,
+                                                          width: 50,
+                                                          child: const Center(
+                                                            child: Icon(
+                                                              Icons.play_arrow,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         )),
                     InkWell(

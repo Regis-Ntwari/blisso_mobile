@@ -5,7 +5,6 @@ import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
-import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
@@ -135,7 +134,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     });
   }
 
-  void sendReply(String toUsername) async {
+  void sendReply(String toUsername, String name) async {
     setState(() {
       isSendingReply = true;
     });
@@ -187,7 +186,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
               context: context,
               icon: Icons.verified,
               iconColor: Colors.green[800],
-              message: 'Message request sent to $username!');
+              message: 'Message request sent to $name!');
         } else {
           setState(() {
             isSendingReply = false;
@@ -332,7 +331,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
 
   @override
   Widget build(BuildContext context) {
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Scaffold(
       backgroundColor: Colors.black,
       body: !_isDataLoaded
@@ -491,23 +489,28 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                     right: 10,
                     child: stories[currentIndex]['caption'] != null
                         ? Container(
+                          color: Colors.black.withOpacity(0.6),
                             constraints: BoxConstraints(
                               maxWidth: MediaQuery.of(context).size.width - 20,
                             ),
                             child: 
-                                Center(
-                                  child: ExpandableTextComponent(
-                                    text: stories[currentIndex]['caption'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      shadows: [
-                                        Shadow(
-                                          offset: Offset(1, 1),
-                                          blurRadius: 3.0,
-                                          color: Colors.black54,
-                                        ),
-                                      ],
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                  child: Center(
+                                    child: ExpandableTextComponent(
+                                      text: stories[currentIndex]['caption'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                            offset: Offset(1, 1),
+                                            blurRadius: 3.0,
+                                            color: Colors.black54,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -576,16 +579,15 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                         decoration: BoxDecoration(
                                           borderRadius:
                                               BorderRadius.circular(60),
-                                          color: isLightTheme
-                                              ? Colors.grey[900]
-                                              : Colors.grey[200],
+                                          color: 
+                                              Colors.grey[900]
                                         ),
                                         child: TextField(
                                           controller: replyController,
-                                          style: TextStyle(
-                                              color: isLightTheme
-                                                  ? Colors.black
-                                                  : Colors.white),
+                                          style: const TextStyle(
+                                              color: 
+                                                  Colors.white
+                                                  ),
                                           decoration: const InputDecoration(
                                             hintText: 'Reply...',
                                             hintStyle:
@@ -608,7 +610,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                       onPressed: () {
                                         if (replyController.text.isNotEmpty) {
                                           sendReply(stories[currentIndex]
-                                              ['username']);
+                                              ['username'], stories[currentIndex]['name']);
                                         }
                                       },
                                       icon: const Icon(Icons.send,

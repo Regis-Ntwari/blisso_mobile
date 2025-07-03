@@ -1,5 +1,7 @@
 import 'package:blisso_mobile/services/api_state.dart';
 import 'package:blisso_mobile/services/chat/chat_service.dart';
+import 'package:blisso_mobile/services/message_requests/message_request_service_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,7 +34,7 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  void _applyMessageToChat(String chatKey, dynamic message) {
+  void _applyMessageToChat(String chatKey, dynamic message) async {
     List<Map<String, dynamic>> updatedChats = List.from(state.data ?? []);
     bool isUpdated = false;
 
@@ -66,12 +68,26 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     if (!isUpdated &&
         message['action'] != 'edited' &&
         message['action'] != 'deleted') {
+      if (ref.read(messageRequestServiceProviderImpl).data == null) {
+        await ref
+            .read(messageRequestServiceProviderImpl.notifier)
+            .mapApprovedUsers();
+      }
+
+      final users = ref.read(messageRequestServiceProviderImpl).data;
+
+      String username = await SharedPreferencesService.getPreference('username');
+
+      String chatUser = username == message['receiver'] ? message['sender'] : message['receiver'];
+
+
 
       final newChat = {
-        'username': message['receiver'],
-        'full_name': '',
-        'profile_picture_url': '',
-        'nickname': '',
+        'username': chatUser,
+        'full_name': users[chatUser]['fullname'],
+        'profile_picture_url': users[chatUser]
+            ['profile_picture_url'],
+        'nickname': users[chatUser]['nickname'],
         'messages': [message]
       };
       updatedChats.insert(0, newChat);
@@ -102,7 +118,7 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     return [];
   }
 
-  void initializeChat(String username) {
+  void initializeChat(String username) async{
     final currentState = state;
     List<Map<String, dynamic>> currentData = List.from(currentState.data ?? []);
 
@@ -115,11 +131,22 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     }
 
     if (!chatExists) {
+      if (ref.read(messageRequestServiceProviderImpl).data == null) {
+        await ref
+            .read(messageRequestServiceProviderImpl.notifier)
+            .mapApprovedUsers();
+      }
+
+      final users = ref.read(messageRequestServiceProviderImpl).data;
+
+      String username = await SharedPreferencesService.getPreference('username');
+
       currentData.add({
         'username': username,
-        'full_name': '',
-        'profile_picture_url': '',
-        'nickname': '',
+        'full_name': users[username]['fullname'],
+        'profile_picture_url': users[username]
+            ['profile_picture_url'],
+        'nickname': users[username]['nickname'],
         'messages': []
       });
       state = ApiState(data: currentData);

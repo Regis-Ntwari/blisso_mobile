@@ -1,4 +1,3 @@
-import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/share_story_modal.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
@@ -66,6 +65,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    double height = MediaQuery.sizeOf(context).height;
+    double width = MediaQuery.sizeOf(context).width;
     return Stack(
       children: [
         _isLoading
@@ -245,6 +246,35 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     )
                   : InkWell(
                       onTap: () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierColor: Colors.black.withOpacity(0.8),
+                          builder: (_) => Dialog(
+                            backgroundColor: Colors.transparent,
+                            child: Center(
+                              child: Container(
+                                width: width * 0.95,
+                                height: height * 0.5,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Scrollbar(
+                                  thumbVisibility: true,
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      widget.video.description,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
                         setState(() {
                           showCaption = !showCaption;
                         });
@@ -260,22 +290,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
             ],
           ),
         ),
-        showCaption
-            ? Positioned(
-                bottom: 30,
-                left: MediaQuery.sizeOf(context).width / 2 - 50,
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      showCaption = !showCaption;
-                    });
-                  },
-                  child: ExpandableTextComponent(
-                    text: widget.video.description,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ))
-            : Container(),
+        
         isProfileLoading
             ? const Center(
                 child: CircularProgressIndicator(
