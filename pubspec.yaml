@@ -59,7 +59,6 @@ dependencies:
   video_player: ^2.9.2
   chewie: ^1.10.0
   shimmer: ^3.0.0
-  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
