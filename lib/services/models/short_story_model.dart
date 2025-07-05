@@ -9,6 +9,7 @@ class ShortStoryModel {
   final String videoUrl;
   final String description;
   final int likes;
+  final int shares;
   final List<dynamic> peopleLiked;
   final bool likedThisStory;
 
@@ -21,6 +22,7 @@ class ShortStoryModel {
     required this.description,
     required this.likes,
     required this.peopleLiked,
+    required this.shares,
     required this.likedThisStory,
   });
 
@@ -32,6 +34,7 @@ class ShortStoryModel {
     String? videoUrl,
     String? description,
     int? likes,
+    int? shares,
     List<dynamic>? peopleLiked,
     bool? likedThisStory,
   }) {
@@ -43,6 +46,7 @@ class ShortStoryModel {
         videoUrl: videoUrl ?? this.videoUrl,
         description: description ?? this.description,
         likes: likes ?? this.likes,
+        shares: shares ?? this.shares,
         peopleLiked: peopleLiked ?? this.peopleLiked,
         likedThisStory: likedThisStory ?? this.likedThisStory);
   }
@@ -69,6 +73,7 @@ class ShortStoryModel {
         videoUrl: map['post_file_url'] as String,
         description: map['description'] as String,
         likes: map['likes'] as int? ?? 0,
+        shares: map['shares'] as int? ?? 0,
         peopleLiked: map['people_liked'] as List<dynamic>,
         likedThisStory: map['liked_this_story'] as bool);
   }

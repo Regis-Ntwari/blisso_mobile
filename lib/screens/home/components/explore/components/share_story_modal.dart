@@ -4,6 +4,7 @@ import 'package:blisso_mobile/services/message_requests/message_request_service_
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/stories/update_story_share_count_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -142,7 +143,10 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
                     itemBuilder: (context, index) {
                       final usersList = messageRequestRef.data.keys.toList();
                       return InkWell(
-                        onTap: () {
+                        onTap: () async{
+                          final shareRef = ref.read(updateStoryShareCountProviderImpl.notifier);
+
+                          await shareRef.updateStoryShareCount(int.parse(widget.story.id));
                           shareVideo(messageRequestRef.data[usersList[index]]
                               ['username']);
                         },

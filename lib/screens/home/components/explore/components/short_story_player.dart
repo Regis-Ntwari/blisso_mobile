@@ -16,7 +16,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ShortStoryPlayer extends ConsumerStatefulWidget {
   final ShortStoryModel video;
-  const ShortStoryPlayer({super.key, required this.video});
+  bool showStory;
+  ShortStoryPlayer({super.key, required this.video, this.showStory = true});
 
   @override
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
@@ -65,8 +66,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.sizeOf(context).height;
-    double width = MediaQuery.sizeOf(context).width;
     return Stack(
       children: [
         _isLoading
@@ -99,7 +98,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
           child: Column(
             children: [
               // Profile picture
-              _isLoading
+              _isLoading && widget.showStory
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,
@@ -112,7 +111,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         ),
                       ),
                     )
-                  : IconButton(
+                  : widget.showStory ? IconButton(
                       onPressed: () async {
                         setState(() {
                           isProfileLoading = true;
@@ -148,7 +147,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                           ),
                           onBackgroundImageError: (_, __) {},
                           child: Container()),
-                    ),
+                    ) : const SizedBox.shrink(),
               // Like button
               _isLoading
                   ? Shimmer.fromColors(
@@ -228,6 +227,30 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                           size: 32,
                         ),
                       )),
+                      _isLoading
+                  ? Shimmer.fromColors(
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
+                      child: Container(
+                        width: 40,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 1.0),
+                      child: Text(
+                        '${widget.video.shares}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
               const SizedBox(
                 height: 5,
               ),
@@ -246,35 +269,64 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     )
                   : InkWell(
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          barrierColor: Colors.black.withOpacity(0.8),
-                          builder: (_) => Dialog(
-                            backgroundColor: Colors.transparent,
-                            child: Center(
-                              child: Container(
-                                width: width * 0.95,
-                                height: height * 0.5,
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.6),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Scrollbar(
-                                  thumbVisibility: true,
-                                  child: SingleChildScrollView(
-                                    child: Text(
-                                      widget.video.description,
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
+                        showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.black.withOpacity(0.6),
+                            builder: (ctx) {
+                              return SingleChildScrollView(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Column(
+                                    children: [
+                                      Align(
+                                          alignment: Alignment.topRight,
+                                          child: IconButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              icon: const Icon(
+                                                Icons.close,
+                                                color: Colors.white,
+                                              ))),
+                                      Text(
+                                        widget.video.description,
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        );
+                              );
+                            });
+                        // showDialog(
+                        //   context: context,
+                        //   barrierDismissible: true,
+                        //   barrierColor: Colors.black.withOpacity(0.8),
+                        //   builder: (_) => Dialog(
+                        //     backgroundColor: Colors.transparent,
+                        //     child: Center(
+                        //       child: Container(
+                        //         width: width * 0.95,
+                        //         height: height * 0.5,
+                        //         padding: const EdgeInsets.all(16),
+                        //         decoration: BoxDecoration(
+                        //           color: Colors.black.withOpacity(0.6),
+                        //           borderRadius: BorderRadius.circular(12),
+                        //         ),
+                        //         child: Scrollbar(
+                        //           thumbVisibility: true,
+                        //           child: SingleChildScrollView(
+                        //             child: Text(
+                        //               widget.video.description,
+                        //               style:
+                        //                   const TextStyle(color: Colors.white),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // );
                         setState(() {
                           showCaption = !showCaption;
                         });
@@ -290,7 +342,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
             ],
           ),
         ),
-        
+
         isProfileLoading
             ? const Center(
                 child: CircularProgressIndicator(

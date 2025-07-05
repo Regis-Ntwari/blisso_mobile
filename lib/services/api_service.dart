@@ -124,7 +124,7 @@ class ApiService {
           request.files.add(await http.MultipartFile.fromPath(key, file.path));
         }
       } else {
-        request.fields[key] = value;
+        request.fields[key] = value.toString();
       }
     }
 

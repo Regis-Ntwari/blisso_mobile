@@ -126,8 +126,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     final videoPostState = ref.watch(videoPostServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    print(videoPostState.data);
-    print(videoPostState.isLoading);
     return SafeArea(
       child: Scaffold(
         backgroundColor:
@@ -149,16 +147,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           height: width * 0.85,
                           width: width * 0.85,
                           child: InkWell(
-                            onTap: () => showPictureDialog(
-                                context: context,
-                                image: {
-                                  'image_url':
-                                      profileState.data['profile_picture_url']
-                                },
-                                isEdit: true,
-                                chosenPicture: chosenPicture,
-                                updatePicture: updateChosenPicture,
-                                savePicture: updateProfilePicture),
+                            onTap: () => Routemaster.of(context).push(
+                                '/homepage/image-viewer?url=${profileState.data['profile_picture_url']}'),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: Image(
@@ -520,16 +510,10 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                 .data['profile_images'].length,
                                             itemBuilder: (context, index) {
                                               return InkWell(
-                                                onTap: () => showPictureDialog(
-                                                  context: context,
-                                                  image: profileState.data[
-                                                      'profile_images'][index],
-                                                  isEdit: true,
-                                                  chosenPicture: chosenPicture,
-                                                  updatePicture:
-                                                      updateChosenPicture,
-                                                  savePicture: replaceImage,
-                                                ),
+                                                onTap: () => Routemaster.of(
+                                                        context)
+                                                    .push(
+                                                        '/homepage/image-viewer?url=${profileState.data['profile_images'][index]['image_url']}'),
                                                 child: CachedNetworkImage(
                                                   imageUrl: profileState.data[
                                                           'profile_images']
@@ -574,7 +558,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                             Routemaster.of(
                                                                     context)
                                                                 .push(
-                                                                    '/homepage/video-player?videoUrl=${Uri.encodeComponent(videoPostState.data[index]['post_file_url'])}');
+                                                                    '/homepage/video-player?id=${Uri.encodeComponent(videoPostState.data[index]['id'].toString())}');
                                                           },
                                                           child: Container(
                                                             color: isLightTheme

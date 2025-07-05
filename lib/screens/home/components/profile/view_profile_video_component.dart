@@ -5,15 +5,15 @@ import 'package:blisso_mobile/services/stories/get_one_story_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChatViewVideo extends ConsumerStatefulWidget {
+class ViewProfileVideoComponent extends ConsumerStatefulWidget {
   final int videoId;
-  const ChatViewVideo({super.key, required this.videoId});
+  const ViewProfileVideoComponent({super.key, required this.videoId});
 
   @override
-  ConsumerState<ChatViewVideo> createState() => _ChatViewVideoState();
+  ConsumerState<ViewProfileVideoComponent> createState() => _ChatViewVideoState();
 }
 
-class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
+class _ChatViewVideoState extends ConsumerState<ViewProfileVideoComponent> {
   @override
   void initState() {
     super.initState();
@@ -73,7 +73,7 @@ class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
               context: context,
               removeLeft: true,
               removeRight: true,
-              child: ShortStoryPlayer(video: story))),
+              child: ShortStoryPlayer(video: story, showStory: false,))),
     );
   }
 }

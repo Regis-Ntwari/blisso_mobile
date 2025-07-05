@@ -40,6 +40,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
           videoUrl: video['post_file_url'],
           description: video['caption'] ?? '',
           likes: video['likes'] ?? 0,
+          shares: video['shares'] ?? 0,
           peopleLiked: video['people_liked'] ?? [],
           likedThisStory: video['liked_this_story']);
     }).toList();

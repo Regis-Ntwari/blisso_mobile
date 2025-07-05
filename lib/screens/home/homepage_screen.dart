@@ -8,7 +8,9 @@ import 'package:blisso_mobile/screens/home/components/home_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
 import 'package:blisso_mobile/screens/home/feeling_popup_component.dart';
 import 'package:blisso_mobile/services/feeling/feeling_provider.dart';
+import 'package:blisso_mobile/services/profile/location_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
+import 'package:blisso_mobile/services/profile/update_location_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
@@ -69,9 +71,14 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     super.initState();
     initializeSocket();
 
-    
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (ref.read(locationProviderImpl)) {
+        await ref
+            .read(updateLocationServiceProviderImpl.notifier)
+            .updateLocation();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(locationProviderImpl.notifier).updateState();
+      }
       if (profiles == null) {
         getProfiles();
       }
@@ -85,7 +92,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         );
         ref.read(feelingProviderImpl.notifier).updateState();
       }
-      
     });
   }
 
@@ -284,81 +290,109 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                           Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 5.0, vertical: 5.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _selectedScreenIndex == 3
-                                      ? 'Profile'
-                                      : _selectedScreenIndex == 1
-                                          ? 'Matching Recommendations'
-                                          : 'Blisso',
-                                  style: TextStyle(
-                                    color: GlobalColors.primaryColor,
-                                    fontSize: scaler.scale(24),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (_selectedScreenIndex == 0) ...[
-                                      IconButton(
-                                        icon: const Icon(Icons.search),
-                                        onPressed: () {
-                                          setState(() {
-                                            isSearchVisible = !isSearchVisible;
-                                          });
-                                          if (!isSearchVisible) {
-                                            searchValue.clear();
-                                            _onSearchChange();
-                                          }
-                                        },
+                            child: _selectedScreenIndex == 1
+                                ? Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Blisso',
+                                        style: TextStyle(
+                                            fontSize: scaler.scale(24),
+                                            color: GlobalColors.primaryColor,
+                                            fontWeight: FontWeight.bold),
                                       ),
-                                      IconButton(
-                                        icon: const Icon(Icons.notifications),
-                                        onPressed: () {},
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.chat),
-                                        onPressed: () {
-                                          Routemaster.of(context).push('/chat');
-                                        },
-                                      ),
-                                    ] else if (_selectedScreenIndex == 2) ...[
-                                      IconButton(
-                                        icon: const Row(
-                                          children: [
-                                            Icon(
-                                              Icons.add,
-                                              color: Colors.white,
-                                            ),
-                                            SizedBox(
-                                              width: 5,
-                                            ),
-                                            Text(
-                                              'New Post',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            )
-                                          ],
+                                      const Text(
+                                        'Matching Recommendations',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: GlobalColors.primaryColor),
+                                      )
+                                    ],
+                                  )
+                                : Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        _selectedScreenIndex == 3
+                                            ? 'Profile'
+                                            : _selectedScreenIndex == 1
+                                                ? 'Matching Recommendations'
+                                                : 'Blisso',
+                                        style: TextStyle(
+                                          color: GlobalColors.primaryColor,
+                                          fontSize: scaler.scale(24),
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        onPressed: () async {
-                                          final picker = ImagePicker();
-                                          final pickedFile =
-                                              await picker.pickVideo(
-                                                  source: ImageSource.gallery);
-                                          if (pickedFile != null) {
-                                            showVideoPostModal(
-                                                context, File(pickedFile.path));
-                                          }
-                                        },
                                       ),
-                                    ]
-                                  ],
-                                ),
-                              ],
-                            ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          if (_selectedScreenIndex == 0) ...[
+                                            IconButton(
+                                              icon: const Icon(Icons.search),
+                                              onPressed: () {
+                                                setState(() {
+                                                  isSearchVisible =
+                                                      !isSearchVisible;
+                                                });
+                                                if (!isSearchVisible) {
+                                                  searchValue.clear();
+                                                  _onSearchChange();
+                                                }
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                  Icons.notifications),
+                                              onPressed: () {},
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.chat),
+                                              onPressed: () {
+                                                Routemaster.of(context)
+                                                    .push('/chat');
+                                              },
+                                            ),
+                                          ] else if (_selectedScreenIndex ==
+                                              2) ...[
+                                            IconButton(
+                                              icon: const Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.add,
+                                                    color: Colors.white,
+                                                  ),
+                                                  SizedBox(
+                                                    width: 5,
+                                                  ),
+                                                  Text(
+                                                    'New Post',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  )
+                                                ],
+                                              ),
+                                              onPressed: () async {
+                                                final picker = ImagePicker();
+                                                final pickedFile =
+                                                    await picker.pickVideo(
+                                                        source: ImageSource
+                                                            .gallery);
+                                                if (pickedFile != null) {
+                                                  showVideoPostModal(context,
+                                                      File(pickedFile.path));
+                                                }
+                                              },
+                                            ),
+                                          ]
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                           ),
                           if (isSearchVisible)
                             AnimatedContainer(

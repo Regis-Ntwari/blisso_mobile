@@ -105,7 +105,40 @@ class _ViewSharedStoryScreenState
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            _story!['caption'] != null || _story!['caption'] != '' ? Positioned(bottom: 50, left: MediaQuery.sizeOf(context).width / 2 - 50 , child: ExpandableTextComponent(text: _story!['caption'])) : const SizedBox.shrink()
+            Positioned(
+                    bottom: 100,
+                    left: 10,
+                    right: 10,
+                    child: _story!['caption'] != null
+                        ? Container(
+                          color: Colors.black.withOpacity(0.6),
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.of(context).size.width - 20,
+                            ),
+                            child: 
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                  child: Center(
+                                    child: ExpandableTextComponent(
+                                      text: _story!['caption'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                            offset: Offset(1, 1),
+                                            blurRadius: 3.0,
+                                            color: Colors.black54,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          )
+                        : const SizedBox.shrink(),
+                  )
           ],
         ),
       ),

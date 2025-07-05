@@ -191,12 +191,8 @@ class _TargetProfileComponentState
                             height: width * 0.85,
                             width: width * 0.85,
                             child: InkWell(
-                              onTap: () => showPictureDialog(
-                                context: context,
-                                image: {
-                                  'image_url': targetProfile.profilePictureUri!
-                                },
-                              ),
+                              onTap: () => Routemaster.of(context).push(
+                                  '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}'),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
                                 child: CachedNetworkImage(
@@ -213,7 +209,7 @@ class _TargetProfileComponentState
                             ),
                           ),
                           SizedBox(
-                            height: height * 0.07,
+                            height: height * 0.09,
                             width: width * 0.85,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 10.0),
@@ -416,15 +412,9 @@ class _TargetProfileComponentState
                                               .profileImages!.length,
                                           itemBuilder: (context, index) {
                                             return InkWell(
-                                              onTap: () => showPictureDialog(
-                                                context: context,
-                                                image: targetProfile
-                                                    .profileImages![index],
-                                                isEdit: true,
-                                                chosenPicture: null,
-                                                updatePicture: null,
-                                                savePicture: null,
-                                              ),
+                                              onTap: () =>
+                                                  Routemaster.of(context).push(
+                                                      '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}'),
                                               child: CachedNetworkImage(
                                                 imageUrl: targetProfile
                                                         .profileImages![index]
@@ -460,8 +450,8 @@ class _TargetProfileComponentState
                                                       crossAxisSpacing: 4,
                                                       mainAxisSpacing: 4,
                                                     ),
-                                                    itemCount: videoState
-                                                        .data.length,
+                                                    itemCount:
+                                                        videoState.data.length,
                                                     itemBuilder:
                                                         (context, index) {
                                                       return InkWell(
@@ -469,7 +459,7 @@ class _TargetProfileComponentState
                                                           Routemaster.of(
                                                                   context)
                                                               .push(
-                                                                  '/homepage/target-profile/video-player?videoUrl=${Uri.encodeComponent(videoState.data[index]['post_file_url'])}');
+                                                                  '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
                                                         },
                                                         child: Container(
                                                           color: isLightTheme

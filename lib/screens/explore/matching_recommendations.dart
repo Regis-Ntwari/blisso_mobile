@@ -50,8 +50,8 @@ class _MatchingRecommendationsState
         itemCount: matchingState.data.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
+          crossAxisSpacing: 0.1,
+          mainAxisSpacing: 0.1,
           childAspectRatio: 3 / 4,
         ),
         itemBuilder: (context, index) {

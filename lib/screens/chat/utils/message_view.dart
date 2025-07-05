@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blisso_mobile/components/view_picture_bytes_component.dart';
-import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/screens/utils/audio_player.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
@@ -88,21 +87,24 @@ class _MessageViewState extends ConsumerState<MessageView> {
                             )
                           : const SizedBox.shrink(),
                       InkWell(
-                        onTap: () => showPictureDialog(
-                            context: context,
-                            image: {
-                              'image_uri': widget.message['content_file_url']
-                            },
-                            isEdit: false,
-                            chosenPicture: null,
-                            updatePicture: () {},
-                            savePicture: () {}),
-                        child: CachedNetworkImage(
-                            placeholder: (context, url) =>
-                                const CircularProgressIndicator(
-                                  color: GlobalColors.primaryColor,
-                                ),
-                            imageUrl: widget.message['content_file_url']),
+                        onTap: () {
+                          String chatUser =
+                              username! == widget.message['sender']
+                                  ? widget.message['receiver']
+                                  : widget.message['sender'];
+                          Routemaster.of(context)
+                              .push('/chat-detail/$chatUser/image-viewer');
+                        },
+                        child: SizedBox(
+                          height: 100,
+                          child: CachedNetworkImage(
+                            fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const CircularProgressIndicator(
+                                    color: GlobalColors.primaryColor,
+                                  ),
+                              imageUrl: widget.message['content_file_url']),
+                        ),
                       ),
                       Text(widget.message['content'])
                     ],
@@ -431,7 +433,8 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                           username! == widget.message['sender']
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
-                                      Routemaster.of(context).push('/chat-detail/$chatUser/story-player?id=${widget.message['content_file_type']}');
+                                      Routemaster.of(context).push(
+                                          '/chat-detail/$chatUser/story-player?id=${widget.message['content_file_type']}');
                                       // final shortStoryRef = ref.read(
                                       //     getOneStoryProviderImpl.notifier);
 
@@ -510,17 +513,19 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                         'Video_post'
                                     ? ListTile(
                                         onTap: () {
-                                          String chatUser =
-                                          username! == widget.message['sender']
+                                          String chatUser = username! ==
+                                                  widget.message['sender']
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
-                                          Routemaster.of(context).push('/chat-detail/$chatUser/${widget.message['parent_content']}');
+                                          Routemaster.of(context).push(
+                                              '/chat-detail/$chatUser/${widget.message['parent_content']}');
                                         },
                                         leading: const Icon(
                                           Icons.play_arrow,
                                           color: Colors.white,
                                         ),
-                                        title: Text('View ${widget.message['content']}'),
+                                        title: Text(
+                                            'View ${widget.message['content']}'),
                                       )
                                     : Wrap(
                                         children: [
