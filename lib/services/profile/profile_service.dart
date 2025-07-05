@@ -101,4 +101,15 @@ class ProfileService {
 
     return response;
   }
+
+  Future<ApiResponse> changeLocation(
+      Map<String, dynamic> myProfile) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService().postFormDataRequest(
+        endpoint: '/profiles/my/profile/update-location', body: myProfile, token: accessToken);
+
+    return response;
+  }
 }

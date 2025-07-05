@@ -6,6 +6,7 @@ import 'package:blisso_mobile/screens/chat/attachments/audio_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/file_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/image_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/video_modal.dart';
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -60,6 +61,10 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
       final messageRef = ref.read(webSocketNotifierProvider.notifier);
 
       messageRef.sendMessage(messageModel);
+
+      final getMessageDetailRef = ref.read(getChatDetailsProviderImpl.notifier);
+
+      getMessageDetailRef.addMessageToChat(messageModel.toMap());
 
       Navigator.of(context).pop();
     } catch (e) {

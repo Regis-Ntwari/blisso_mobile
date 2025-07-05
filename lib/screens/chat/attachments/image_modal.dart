@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -61,10 +62,13 @@ class _ImageModalState extends ConsumerState<ImageModal> {
 
       messageRef.sendMessage(messageModel);
 
+      final getMessageDetailRef = ref.read(getChatDetailsProviderImpl.notifier);
+
+      getMessageDetailRef.addMessageToChat(messageModel.toMap());
+
       Navigator.of(context).pop();
     } catch (e) {
       debugPrint(e.toString());
-      print(e);
     }
   }
 

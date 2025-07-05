@@ -79,6 +79,12 @@ class Routing {
             ViewSharedStoryScreen(id: int.parse(route.queryParameters['id']!))),
     '/chat-detail/:username/profile': (route) =>
         const MaterialPage(child: TargetProfileComponent()),
+    '/chat-detail/:username/image-viewer': (route) => MaterialPage(
+            child: ViewPhotoScreen(
+          imageURL: route.queryParameters['url']!,
+          isBytes: bool.parse(
+              route.queryParameters['bytes'] == null ? 'false' : 'true'),
+        )),
     '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
           username: route.pathParameters['username'],

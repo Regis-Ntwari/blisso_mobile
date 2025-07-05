@@ -8,6 +8,7 @@ import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/utils/byte_image_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -87,16 +88,17 @@ class _MessageViewState extends ConsumerState<MessageView> {
                             )
                           : const SizedBox.shrink(),
                       InkWell(
-                        onTap: () {
+                        onTap: () async{
+                          String username = await SharedPreferencesService.getPreference('username');
                           String chatUser =
-                              username! == widget.message['sender']
+                              username == widget.message['sender']
                                   ? widget.message['receiver']
                                   : widget.message['sender'];
                           Routemaster.of(context)
-                              .push('/chat-detail/$chatUser/image-viewer');
+                              .push('/chat-detail/$chatUser/image-viewer?url=${widget.message['content_file_url']}');
                         },
                         child: SizedBox(
-                          height: 100,
+                          height: 400,
                           child: CachedNetworkImage(
                             fit: BoxFit.cover,
                               placeholder: (context, url) =>
@@ -110,6 +112,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                     ],
                   )
                 : Wrap(
+                  direction: Axis.vertical,
                     children: [
                       widget.message['parent_id'] != '000000000000000000000000'
                           ? InkWell(
@@ -130,13 +133,26 @@ class _MessageViewState extends ConsumerState<MessageView> {
                             )
                           : const SizedBox.shrink(),
                       InkWell(
-                        onTap: () {
-                          showPictureBytesDialog(
-                              context: context,
-                              image: widget.message['content_file']);
+                        onTap: () async{
+                          // showPictureBytesDialog(
+                          //     context: context,
+                          //     image: widget.message['content_file']);
+                          String username = await SharedPreferencesService.getPreference('username');
+                          String chatUser =
+                              username == widget.message['sender']
+                                  ? widget.message['receiver']
+                                  : widget.message['sender'];
+
+                          ref.read(byteImageProviderImpl.notifier).updateState(widget.message['content_file']);
+                          Routemaster.of(context)
+                              .push('/chat-detail/$chatUser/image-viewer?url=hellothere&bytes=true');
+                          
                         },
-                        child: Image.memory(Uint8List.fromList(
-                            base64Decode(widget.message['content_file']))),
+                        child: SizedBox(
+                          height: 400,
+                          child: Image.memory(Uint8List.fromList(
+                              base64Decode(widget.message['content_file']))),
+                        ),
                       ),
                       Text(widget.message['content'])
                     ],
