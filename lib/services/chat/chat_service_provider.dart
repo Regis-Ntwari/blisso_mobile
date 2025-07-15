@@ -37,8 +37,10 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
   void _applyMessageToChat(String chatKey, dynamic message) async {
     List<Map<String, dynamic>> updatedChats = List.from(state.data ?? []);
     bool isUpdated = false;
+    int index = -1;
 
     for (var chat in updatedChats) {
+      index = index + 1;
       if (chat['username'] == chatKey) {
         List messages = List.from(chat['messages']);
         if (message['action'] == 'edited') {
@@ -60,7 +62,11 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
         chat['messages'] = messages;
 
         updatedChats.remove(chat);
-        updatedChats.insert(0, chat);
+        if (message['action'] == 'created') {
+          updatedChats.insert(0, chat);
+        } else {
+          updatedChats.insert(index, chat);
+        }
         break;
       }
     }
@@ -76,17 +82,17 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
 
       final users = ref.read(messageRequestServiceProviderImpl).data;
 
-      String username = await SharedPreferencesService.getPreference('username');
+      String username =
+          await SharedPreferencesService.getPreference('username');
 
-      String chatUser = username == message['receiver'] ? message['sender'] : message['receiver'];
-
-
+      String chatUser = username == message['receiver']
+          ? message['sender']
+          : message['receiver'];
 
       final newChat = {
         'username': chatUser,
         'full_name': users[chatUser]['fullname'],
-        'profile_picture_url': users[chatUser]
-            ['profile_picture_url'],
+        'profile_picture_url': users[chatUser]['profile_picture_url'],
         'nickname': users[chatUser]['nickname'],
         'messages': [message]
       };
@@ -118,7 +124,7 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     return [];
   }
 
-  void initializeChat(String username) async{
+  void initializeChat(String username) async {
     final currentState = state;
     List<Map<String, dynamic>> currentData = List.from(currentState.data ?? []);
 
@@ -139,13 +145,13 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
 
       final users = ref.read(messageRequestServiceProviderImpl).data;
 
-      String username = await SharedPreferencesService.getPreference('username');
+      String username =
+          await SharedPreferencesService.getPreference('username');
 
       currentData.add({
         'username': username,
         'full_name': users[username]['fullname'],
-        'profile_picture_url': users[username]
-            ['profile_picture_url'],
+        'profile_picture_url': users[username]['profile_picture_url'],
         'nickname': users[username]['nickname'],
         'messages': []
       });

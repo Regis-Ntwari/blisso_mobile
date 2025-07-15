@@ -12,6 +12,7 @@ import 'package:blisso_mobile/screens/auth/register_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_view_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_view_video.dart';
+import 'package:blisso_mobile/screens/home/components/profile/my_profile_settings.dart';
 import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/view_profile_video_component.dart';
 import 'package:blisso_mobile/screens/home/components/stories/view_shared_story_screen.dart';
@@ -52,11 +53,20 @@ class Routing {
           route.pathParameters['route']!,
         )),
     '/homepage/image-viewer': (route) => MaterialPage(
-        child: ViewPhotoScreen(imageURL: route.queryParameters['url']!)),
+            child: ViewPhotoScreen(
+          imageURL: route.queryParameters['url']!,
+          isMe: bool.parse(route.queryParameters['isMe']!),
+          id: int.parse(route.queryParameters['id']!),
+          isProfilePic: bool.parse(route.queryParameters['isProfilePic']!),
+        )),
     '/homepage/target-profile': (route) =>
         const MaterialPage(child: TargetProfileComponent()),
     '/homepage/target-profile/image-viewer': (route) => MaterialPage(
-        child: ViewPhotoScreen(imageURL: route.queryParameters['url']!)),
+            child: ViewPhotoScreen(
+          imageURL: route.queryParameters['url']!,
+          isMe: bool.parse(route.queryParameters['isMe']!),
+          isProfilePic: bool.parse(route.queryParameters['isProfilePic']!),
+        )),
     '/homepage/target-profile/video-player': (route) => MaterialPage(
             child: ChatViewVideo(
           videoId: int.parse(route.queryParameters['id']!),
@@ -84,6 +94,8 @@ class Routing {
           imageURL: route.queryParameters['url']!,
           isBytes: bool.parse(
               route.queryParameters['bytes'] == null ? 'false' : 'true'),
+          isMe: bool.parse(route.queryParameters['isMe']!),
+          isProfilePic: bool.parse(route.queryParameters['isProfilePic']!),
         )),
     '/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
@@ -97,5 +109,7 @@ class Routing {
         )),
     '/homepage/view-story': (_) =>
         const MaterialPage(child: ViewStoryComponent()),
+    '/homepage/edit-profile': (_) =>
+        const MaterialPage(child: MyProfileSettings())
   });
 }

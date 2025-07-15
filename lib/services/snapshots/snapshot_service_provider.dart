@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:blisso_mobile/services/api_state.dart';
+import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
@@ -8,8 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SnapshotServiceProvider extends StateNotifier<ApiState> {
   final SnapshotService snapshotService;
+  final Ref ref;
 
-  SnapshotServiceProvider({required this.snapshotService}) : super(ApiState());
+  SnapshotServiceProvider({required this.snapshotService, required this.ref}) : super(ApiState());
 
   Future<void> getLifeSnapshots() async {
     try {
@@ -42,6 +44,27 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
       }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);
+    }
+  }
+
+  Future<void> editProfileSnapshots(List<dynamic> snaps) async{
+    try {
+      state = ApiState(isLoading: true);
+
+      final response = await snapshotService.editSnapshots(snaps);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        //state = ApiState(error: response.errorMessage, isLoading: false);
+      } else {
+        //state = ApiState(data: response.result, isLoading: false);
+        await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
+
+        //SharedPreferencesService.setPreference('is_my_snapshots', true);
+        state = ApiState(isLoading: true, data: state.data, statusCode: 200);
+      }
+
+    } catch (e) {
+      state = ApiState(isLoading: false);
     }
   }
 
@@ -86,5 +109,5 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
 final snapshotServiceProviderImpl =
     StateNotifierProvider<SnapshotServiceProvider, ApiState>((ref) {
-  return SnapshotServiceProvider(snapshotService: SnapshotService());
+  return SnapshotServiceProvider(snapshotService: SnapshotService(), ref: ref);
 });

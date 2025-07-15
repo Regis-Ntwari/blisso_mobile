@@ -203,6 +203,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
                                   if (messages != null && messages.isNotEmpty) {
                                     lastMessage = messages[messages.length - 1];
+                                    print(lastMessage);
                                   } else {
                                     lastMessage = {
                                       'content': 'No messages yet',

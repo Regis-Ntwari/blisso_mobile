@@ -70,6 +70,8 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     try {
       final response = await profileService.likeProfile(id);
 
+      print(response);
+
       if (!StatusCodes.codes.contains(response.statusCode)) {
         //state = ApiState(error: response.errorMessage, isLoading: false);
       } else {

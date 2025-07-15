@@ -40,8 +40,12 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   @override
   bool get wantKeepAlive => true;
 
-  Future<void> getProfiles() async {
+  Future<void> getProfiles(bool? refresh) async {
     final state = ref.read(profileServiceProviderImpl.notifier);
+
+    if(refresh!) {
+      await state.getAllProfiles();
+    } 
 
     if (ref.read(profileServiceProviderImpl).data == null) {
       await state.getAllProfiles();
@@ -63,7 +67,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   }
 
   Future<void> refetchProfiles() async {
-    getProfiles();
+    getProfiles(false);
   }
 
   @override
@@ -80,7 +84,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         ref.read(locationProviderImpl.notifier).updateState();
       }
       if (profiles == null) {
-        getProfiles();
+        getProfiles(false);
       }
 
       if (ref.read(feelingProviderImpl)) {

@@ -52,6 +52,7 @@ class _ImageModalState extends ConsumerState<ImageModal> {
           contentFile: base64Bytes,
           parentId: '000000000000000000000000',
           sender: widget.sender,
+          messageStatus: 'unseen',
           receiver: widget.receiver,
           action: 'created',
           content: captionController.text,

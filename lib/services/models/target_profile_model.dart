@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
+import 'dart:io';
 
 class TargetProfileModel {
   Map<String, dynamic>? user;
@@ -20,6 +21,7 @@ class TargetProfileModel {
   String? homeAddress;
   String? profilePictureUri;
   String? feeling;
+  File? profilePic;
   Map<String, dynamic>? subscription;
   List<dynamic>? lifesnapshots;
   List<dynamic>? targetLifesnapshots;
@@ -28,6 +30,7 @@ class TargetProfileModel {
   TargetProfileModel(
       {this.user,
       this.id,
+      this.profilePic,
       this.gender,
       this.lang,
       this.maritalStatus,
@@ -67,6 +70,26 @@ class TargetProfileModel {
   }
 
   Map<String, dynamic> toMapNoProfile() {
+    return <String, dynamic>{
+      'gender': gender,
+      'lang': lang,
+      'marital_status': maritalStatus,
+      'show_me': showMe,
+      'nickname': nickname,
+      'dob': dob,
+      'profile_pic': profilePic,
+      'location': location,
+      'latitude': latitude,
+      'longitude': longitude,
+      'home_address': homeAddress,
+      'distance_measure': distanceMeasure,
+      'push_notifications': pushNotifications,
+      'hide_profile': hideProfile,
+      'login_code_enabled': loginCodeEnabled,
+    };
+  }
+
+  Map<String, dynamic> toMapNoProfiles() {
     return <String, dynamic>{
       'gender': gender,
       'lang': lang,
@@ -136,6 +159,35 @@ class TargetProfileModel {
             : null);
   }
 
+  factory TargetProfileModel.fromMapNewNoProfile(Map<String, dynamic> map) {
+    return TargetProfileModel(
+        gender: map['gender'] != null ? map['gender'] as String : null,
+        lang: map['lang'] != null ? map['lang'] as String : null,
+        maritalStatus: map['marital_status'] != null
+            ? map['marital_status'] as String
+            : null,
+        showMe: map['show_me'] != null ? map['show_me'] as String : null,
+        nickname: map['nickname'] != null ? map['nickname'] as String : null,
+        dob: map['dob'] != null ? map['dob'] as String : null,
+        location: map['location'] != null ? map['location'] as String : null,
+        latitude: map['latitude']?.toString(),
+        longitude: map['longitude']?.toString(),
+        distanceMeasure: map['distance_measure'] != null
+            ? map['distance_measure'] as String
+            : null,
+        pushNotifications: map['push_notifications'] != null
+            ? map['push_notifications'] as bool
+            : null,
+        hideProfile:
+            map['hide_profile'] != null ? map['hide_profile'] as bool : null,
+        loginCodeEnabled: map['login_code_enabled'] != null
+            ? map['login_code_enabled'] as bool
+            : null,
+        homeAddress:
+            map['home_address'] != null ? map['home_address'] as String : null);
+        
+  }
+
   factory TargetProfileModel.fromMapNew(Map<String, dynamic> map) {
     return TargetProfileModel(
         gender: map['gender'] != null ? map['gender'] as String : null,
@@ -160,6 +212,7 @@ class TargetProfileModel {
         loginCodeEnabled: map['login_code_enabled'] != null
             ? map['login_code_enabled'] as bool
             : null,
+        profilePic: map['profilePic'],
         homeAddress:
             map['home_address'] != null ? map['home_address'] as String : null);
         

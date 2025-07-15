@@ -192,7 +192,7 @@ class _TargetProfileComponentState
                             width: width * 0.85,
                             child: InkWell(
                               onTap: () => Routemaster.of(context).push(
-                                  '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}'),
+                                  '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
                                 child: CachedNetworkImage(
@@ -414,7 +414,7 @@ class _TargetProfileComponentState
                                             return InkWell(
                                               onTap: () =>
                                                   Routemaster.of(context).push(
-                                                      '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}'),
+                                                      '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
                                               child: CachedNetworkImage(
                                                 imageUrl: targetProfile
                                                         .profileImages![index]

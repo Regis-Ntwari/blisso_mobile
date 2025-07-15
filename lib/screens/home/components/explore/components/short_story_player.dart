@@ -16,8 +16,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ShortStoryPlayer extends ConsumerStatefulWidget {
   final ShortStoryModel video;
-  bool showStory;
-  ShortStoryPlayer({super.key, required this.video, this.showStory = true});
+  final VideoPlayerController? videoController;
+  final bool showStory;
+
+  const ShortStoryPlayer({
+    super.key,
+    required this.video,
+    this.videoController,
+    this.showStory = true,
+  });
 
   @override
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
@@ -25,22 +32,24 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
 
 class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   late VideoPlayerController _controller;
-  bool _isLoading = true;
   late ChewieController _chewieController;
-
+  bool _isLoading = true;
   bool isProfileLoading = false;
   bool showCaption = false;
 
   @override
   void initState() {
     super.initState();
-    _controller =
-        VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl))
-          ..initialize().then((_) {
-            setState(() => _isLoading = false);
-          })
-          ..setLooping(true)
-          ..play();
+
+    _controller = widget.videoController ??
+        VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
+
+    _controller.initialize().then((_) {
+      setState(() => _isLoading = false);
+    });
+
+    _controller.setLooping(true);
+    _controller.play();
 
     _chewieController = ChewieController(
       videoPlayerController: _controller,
@@ -51,6 +60,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   }
 
   void _handleLike() {
+    widget.video.likes = widget.video.likedThisStory ? widget.video.likes - 1 : widget.video.likes + 1;
     ref
         .read(getVideoPostProviderImpl.notifier)
         .likeVideoPost(int.parse(widget.video.id));
@@ -59,7 +69,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.videoController == null) {
+      _controller.dispose(); // Only dispose if we created it
+    }
     _chewieController.dispose();
     super.dispose();
   }
@@ -111,43 +123,46 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         ),
                       ),
                     )
-                  : widget.showStory ? IconButton(
-                      onPressed: () async {
-                        setState(() {
-                          isProfileLoading = true;
-                        });
-                        try {
-                          final profileRef =
-                              ref.read(anyProfileServiceProviderImpl.notifier);
-                          await profileRef.getAnyProfile(widget.video.username);
+                  : widget.showStory
+                      ? IconButton(
+                          onPressed: () async {
+                            setState(() {
+                              isProfileLoading = true;
+                            });
+                            try {
+                              final profileRef = ref
+                                  .read(anyProfileServiceProviderImpl.notifier);
+                              await profileRef
+                                  .getAnyProfile(widget.video.username);
 
-                          final targetProfile =
-                              ref.read(targetProfileProvider.notifier);
-                          final profileData =
-                              ref.read(anyProfileServiceProviderImpl);
+                              final targetProfile =
+                                  ref.read(targetProfileProvider.notifier);
+                              final profileData =
+                                  ref.read(anyProfileServiceProviderImpl);
 
-                          targetProfile.updateTargetProfile(
-                              TargetProfileModel.fromMap(
-                                  profileData.data as Map<String, dynamic>));
-                          setState(() {
-                            isProfileLoading = false;
-                          });
-                          if (mounted) {
-                            Routemaster.of(context)
-                                .push('/homepage/target-profile');
-                          }
-                        } catch (e) {
-                          showSnackBar(context, 'Failed to load profile');
-                        }
-                      },
-                      icon: CircleAvatar(
-                          radius: 20,
-                          backgroundImage: CachedNetworkImageProvider(
-                            widget.video.profilePicture,
-                          ),
-                          onBackgroundImageError: (_, __) {},
-                          child: Container()),
-                    ) : const SizedBox.shrink(),
+                              targetProfile.updateTargetProfile(
+                                  TargetProfileModel.fromMap(profileData.data
+                                      as Map<String, dynamic>));
+                              setState(() {
+                                isProfileLoading = false;
+                              });
+                              if (mounted) {
+                                Routemaster.of(context)
+                                    .push('/homepage/target-profile');
+                              }
+                            } catch (e) {
+                              showSnackBar(context, 'Failed to load profile');
+                            }
+                          },
+                          icon: CircleAvatar(
+                              radius: 20,
+                              backgroundImage: CachedNetworkImageProvider(
+                                widget.video.profilePicture,
+                              ),
+                              onBackgroundImageError: (_, __) {},
+                              child: Container()),
+                        )
+                      : const SizedBox.shrink(),
               // Like button
               _isLoading
                   ? Shimmer.fromColors(
@@ -227,7 +242,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                           size: 32,
                         ),
                       )),
-                      _isLoading
+              _isLoading
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,

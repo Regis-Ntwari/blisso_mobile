@@ -47,34 +47,43 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
   }
 
   Future<void> replaceImage(File newImage, int oldImage) async {
-    state = ApiState(isLoading: true);
+    //state = ApiState(isLoading: true);
 
     try {
       final response = await profileService.replaceImage(newImage, oldImage);
+      print(response);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        state = ApiState(error: response.errorMessage, isLoading: false);
+        //state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
-        state = ApiState(data: response.result, isLoading: false);
+        //state = ApiState(data: response.result, isLoading: false);
+        getMyProfile();
       }
     } catch (e) {
-      state = ApiState(error: e.toString(), isLoading: false);
+      //state = ApiState(error: e.toString(), isLoading: false);
     }
   }
 
+  void updateField(String fieldname, String value) {
+    Map<String, dynamic> updatedProfile = {...state.data, fieldname: value};
+    state = ApiState(isLoading: false, data: updatedProfile, statusCode: 200);
+  }
+
   Future<void> updateProfile(TargetProfileModel profileModel) async {
-    state = ApiState(isLoading: true);
+    // state = ApiState(isLoading: true);
 
     try {
       final response = await profileService.updateProfile(profileModel);
+      print(response);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        state = ApiState(error: response.errorMessage, isLoading: false);
+        //state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
-        state = ApiState(data: response.result, isLoading: false);
+        //state = ApiState(data: response.result, isLoading: false);
+        getMyProfile();
       }
     } catch (e) {
-      state = ApiState(error: e.toString(), isLoading: false);
+      //state = ApiState(error: e.toString(), isLoading: false);
     }
   }
 

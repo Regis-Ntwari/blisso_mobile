@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
-import 'package:blisso_mobile/components/view_picture_component.dart';
-import 'package:blisso_mobile/screens/home/components/profile/edit_my_profile_component.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -148,7 +148,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           width: width * 0.85,
                           child: InkWell(
                             onTap: () => Routemaster.of(context).push(
-                                '/homepage/image-viewer?url=${profileState.data['profile_picture_url']}'),
+                                '/homepage/image-viewer?url=${profileState.data['profile_picture_url']}&isProfilePic=true&isMe=true'),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: Image(
@@ -190,12 +190,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                         ),
                                       ]),
                                   IconButton(
-                                      onPressed: () =>
-                                          showEditMyProfileComponent(
-                                              context: context,
-                                              targetProfileModel:
-                                                  TargetProfileModel.fromMap(
-                                                      profileState.data)),
+                                      onPressed: () => Routemaster.of(context)
+                                          .push('/homepage/edit-profile'),
                                       icon: const Icon(
                                         Icons.edit_note,
                                         size: 50,
@@ -513,7 +509,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                 onTap: () => Routemaster.of(
                                                         context)
                                                     .push(
-                                                        '/homepage/image-viewer?url=${profileState.data['profile_images'][index]['image_url']}'),
+                                                        '/homepage/image-viewer?url=${profileState.data['profile_images'][index]['image_url']}&isMe=true&isProfilePic=false&id=${profileState.data['profile_images'][index]['id']}'),
                                                 child: CachedNetworkImage(
                                                   imageUrl: profileState.data[
                                                           'profile_images']
@@ -613,16 +609,39 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             if (expandedField == 'interest')
                               SingleChildScrollView(
                                 child: Wrap(
-                                  children: profileState.data['lifesnapshots']
-                                      .map<Widget>((snapshot) {
-                                    return ListTile(
-                                      title: Text(snapshot['name']),
-                                      trailing: const Icon(
-                                        Icons.delete,
-                                        color: GlobalColors.primaryColor,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        final snaps = ref.read(
+                                            addedSnapsProviderImpl.notifier);
+                                        snaps.reset();
+                                        for (var snap in profileState
+                                            .data['lifesnapshots']) {
+                                          snaps.addSnapshot(snap['id']);
+                                        }
+                                        showSnapshotDialog(context, ref);
+                                      },
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.add),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          Text('Edit Snapshots')
+                                        ],
                                       ),
-                                    );
-                                  }).toList(),
+                                    ),
+                                    ...profileState.data['lifesnapshots']
+                                        .map<Widget>((snapshot) {
+                                      return ListTile(
+                                        title: Text(snapshot['name']),
+                                        // trailing: const Icon(
+                                        //   Icons.delete,
+                                        //   color: GlobalColors.primaryColor,
+                                        // ),
+                                      );
+                                    }).toList()
+                                  ],
                                 ),
                               ),
                             InkWell(
@@ -650,9 +669,18 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             ),
                             if (expandedField == 'target')
                               SingleChildScrollView(
-                                child: Wrap(
-                                  children: profileState
-                                      .data['target_lifesnapshots']
+                                child: Wrap(children: [
+                                  InkWell(
+                                    onTap: () {},
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.add),
+                                        SizedBox(width: 10),
+                                        Text('Add Target Snapshot')
+                                      ],
+                                    ),
+                                  ),
+                                  ...profileState.data['target_lifesnapshots']
                                       .map<Widget>((snapshot) {
                                     return ListTile(
                                       title: Text(snapshot['name']),
@@ -662,7 +690,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                       ),
                                     );
                                   }).toList(),
-                                ),
+                                ]),
                               ),
                           ],
                         ),
@@ -670,7 +698,48 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       SwitchListTile(
                         title: const Text('Hide Profile'),
                         value: profileState.data['hide_profile'],
-                        onChanged: (value) {},
+                        onChanged: (value) async {
+                          setState(() {
+                            profileState.data['hide_profile'] = value;
+                          });
+
+                          await ref
+                              .read(myProfileServiceProviderImpl.notifier)
+                              .updateProfile(TargetProfileModel.fromMapNewNoProfile({
+                                ...profileState.data,
+                                'hide_profile': value
+                              }));
+                        },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Push Notifications'),
+                        value: profileState.data['push_notifications'],
+                        onChanged: (value) async {
+                          setState(() {
+                            profileState.data['push_notifications'] = value;
+                          });
+                          await ref
+                              .read(myProfileServiceProviderImpl.notifier)
+                              .updateProfile(TargetProfileModel.fromMapNewNoProfile({
+                                ...profileState.data,
+                                'push_notifications': value
+                              }));
+                        },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Login Code Enabled'),
+                        value: profileState.data['login_code_enabled'],
+                        onChanged: (value) async {
+                          setState(() {
+                            profileState.data['login_code_enabled'] = value;
+                          });
+                          await ref
+                              .read(myProfileServiceProviderImpl.notifier)
+                              .updateProfile(TargetProfileModel.fromMapNewNoProfile({
+                                ...profileState.data,
+                                'login_code_enabled': value
+                              }));
+                        },
                       )
                     ],
                   ),

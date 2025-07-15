@@ -46,4 +46,15 @@ class SnapshotService {
 
     return response;
   }
+
+  Future<ApiResponse> editSnapshots(List<dynamic> snaps) async {
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    final response = await ApiService().postData(
+        endpoint: '/profiles/my/profile/add/life-snapshots/',
+        body: {'life_snapshots': snaps},
+        token: token);
+
+    return response;
+  }
 }

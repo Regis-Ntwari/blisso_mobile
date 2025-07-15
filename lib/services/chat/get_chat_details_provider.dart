@@ -59,12 +59,14 @@ class GetChatDetailsProvider extends StateNotifier<Map<String, dynamic>> {
         break;
       }
 
-      if (msg['message_status'] == 'unseen' && msg['sender'] == username) {
+      if ((msg['message_status'] == 'unseen' || msg['message_status'] == "") && msg['sender'] == username) {
         final updatedMsg = {
           ...msg,
           'action': 'edited',
           'message_status': 'seen',
         };
+
+        print(updatedMsg);
 
         newMessages[i] = updatedMsg;
 

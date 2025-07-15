@@ -95,7 +95,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   ? widget.message['receiver']
                                   : widget.message['sender'];
                           Routemaster.of(context)
-                              .push('/chat-detail/$chatUser/image-viewer?url=${widget.message['content_file_url']}');
+                              .push('/chat-detail/$chatUser/image-viewer?url=${widget.message['content_file_url']}&isMe=false&isProfilePic=false');
                         },
                         child: SizedBox(
                           height: 400,

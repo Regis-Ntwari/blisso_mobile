@@ -37,10 +37,14 @@ class ProfileService {
     return response;
   }
 
-  Future<ApiResponse> likeProfile(int id) async{
-    String accessToken = await SharedPreferencesService.getPreference('accessToken');
+  Future<ApiResponse> likeProfile(int id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().getData('profiles/like_or_dislike/profile/$id/', accessToken);
+    ApiResponse response = await ApiService().postData(
+        endpoint: 'profiles/like_or_dislike/profile/$id/',
+        token: accessToken,
+        body: {});
 
     return response;
   }
@@ -85,7 +89,9 @@ class ProfileService {
 
     ApiResponse response = await ApiService().postFormDataRequest(
         endpoint: '/profiles/my/profile/',
-        body: myProfile.toMapNoProfile(),
+        body: myProfile.profilePic == null
+            ? myProfile.toMapNoProfiles()
+            : myProfile.toMapNoProfile(),
         token: accessToken);
 
     return response;
@@ -102,13 +108,14 @@ class ProfileService {
     return response;
   }
 
-  Future<ApiResponse> changeLocation(
-      Map<String, dynamic> myProfile) async {
+  Future<ApiResponse> changeLocation(Map<String, dynamic> myProfile) async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response = await ApiService().postFormDataRequest(
-        endpoint: '/profiles/my/profile/update-location', body: myProfile, token: accessToken);
+        endpoint: '/profiles/my/profile/update-location',
+        body: myProfile,
+        token: accessToken);
 
     return response;
   }

@@ -8,8 +8,8 @@ class ShortStoryModel {
   final String profilePicture;
   final String videoUrl;
   final String description;
-  final int likes;
-  final int shares;
+  int likes;
+  int shares;
   final List<dynamic> peopleLiked;
   final bool likedThisStory;
 

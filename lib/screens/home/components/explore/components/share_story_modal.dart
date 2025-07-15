@@ -169,6 +169,7 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
 }
 
 void showShareVideoModal(BuildContext context, ShortStoryModel story) {
+  story.shares = story.shares + 1;
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,

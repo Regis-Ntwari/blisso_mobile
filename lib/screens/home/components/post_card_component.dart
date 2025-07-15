@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:blisso_mobile/components/button_component.dart';
+import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
@@ -8,12 +9,14 @@ import 'package:blisso_mobile/services/message_requests/add_message_request_serv
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PostCardComponent extends ConsumerStatefulWidget {
   final Map<String, dynamic> profile;
@@ -27,6 +30,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   late final PageController _pageController;
   int _currentPage = 0;
   bool isLoading = false;
+  bool isLiked = false;
 
   @override
   void initState() {
@@ -180,15 +184,22 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
               child: ListTile(
                   trailing: widget.profile['feeling_caption'] != null
                       ? Padding(
-                        padding: const EdgeInsets.only(right: 10.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(widget.profile['feeling_emojis'], style: const TextStyle(fontSize: 24),),
-                              Text(widget.profile['feeling_caption'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),)
+                              Text(
+                                widget.profile['feeling_emojis'],
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                              Text(
+                                widget.profile['feeling_caption'],
+                                style: const TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600),
+                              )
                             ],
                           ),
-                      )
+                        )
                       : const SizedBox.shrink(),
                   leading: CircleAvatar(
                     backgroundImage: CachedNetworkImageProvider(
@@ -274,9 +285,29 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.favorite_border),
-                          onPressed: () async{
-                            final likeRef = ref.read(profileServiceProviderImpl.notifier);
+                          icon: widget.profile['liked_this_profile'] || isLiked
+                              ? const Icon(
+                                  Icons.favorite,
+                                  color: GlobalColors.primaryColor,
+                                )
+                              : const Icon(Icons.favorite_border),
+                          onPressed: () async {
+                            final likeRef =
+                                ref.read(profileServiceProviderImpl.notifier);
+
+                            final nickname = await SharedPreferencesService.getPreference('nickname');
+
+                            setState(() {
+                              if(widget.profile['liked_this_profile']) {
+                                widget.profile['likes'] = widget.profile['likes'] - 1;
+                                widget.profile['people_liked'].remove(nickname);
+                              } else {
+                                widget.profile['likes'] = widget.profile['likes'] + 1;
+                                widget.profile['people_liked'].add(nickname);
+                              }
+                              widget.profile['liked_this_profile'] = !widget.profile['liked_this_profile'];
+                              isLiked = !isLiked;
+                            });
 
                             await likeRef.likeProfile(widget.profile['id']);
                           },
@@ -308,6 +339,18 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     )
                   ],
                 )),
+            widget.profile['likes'] == 0
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: 5, left: 10),
+                    child: widget.profile['likes'] == 1
+                        ? ExpandableTextComponent(
+                            text:
+                                'Liked by ${widget.profile['people_liked'][0]}')
+                        : ExpandableTextComponent(
+                            text:
+                                'Liked by ${widget.profile['people_liked'][0]} and others'),
+                  ),
             Padding(
                 padding: const EdgeInsets.all(10),
                 child: widget.profile['target_lifesnapshots'].length > 0

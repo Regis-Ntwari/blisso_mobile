@@ -161,6 +161,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                 contentFileType: stories[currentIndex]['id'].toString(),
                 sender: username!,
                 receiver: toUsername,
+                messageStatus: 'unseen',
                 action: 'created',
                 content: replyController.text,
                 isFileIncluded: false,

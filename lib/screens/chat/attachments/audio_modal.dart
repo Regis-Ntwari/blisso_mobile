@@ -47,6 +47,7 @@ class _AudioModalState extends ConsumerState<AudioModal> {
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'audio/$extension',
           contentFile: base64Bytes,
+          messageStatus: 'unseen',
           sender: widget.sender,
           receiver: widget.receiver,
           parentId: '000000000000000000000000',
