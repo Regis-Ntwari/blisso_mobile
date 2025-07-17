@@ -17,6 +17,12 @@ class ApiService {
   }
 
   Future<ApiResponse> _processRequest(Response response) async {
+    if (response.statusCode == 204) {
+      return ApiResponse.success(
+        result: null,
+        statusCode: 204,
+      );
+    }
     final Uint8List bodyBytes = response.bodyBytes;
     final String utf8DecodedBody = utf8.decode(bodyBytes);
 
@@ -65,6 +71,38 @@ class ApiService {
     } catch (e) {
       return ApiResponse.failure(
           errorMessage: 'Error processing the request ${e.toString()}');
+    }
+  }
+
+  Future<ApiResponse> deleteData(
+      {required String endpoint,
+      required Map<String, dynamic> body,
+      String? token,
+      bool isChat = false}) async {
+    try {
+      dynamic configs = await loadVariables();
+
+      dynamic url;
+      if (!isChat) {
+        url = Uri.parse("${configs['BACKEND_URL']}/$endpoint");
+      } else {
+        url = Uri.parse("${configs['CHAT_URL']}/$endpoint");
+      }
+      final headers = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response =
+          await http.delete(url, headers: headers, body: jsonEncode(body));
+
+      return _processRequest(response);
+    } catch (e) {
+      return ApiResponse.failure(
+          errorMessage: 'Error processing the request : ${e.toString()}');
     }
   }
 

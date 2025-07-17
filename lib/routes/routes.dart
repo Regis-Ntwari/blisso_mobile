@@ -21,6 +21,11 @@ import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
 import 'package:blisso_mobile/screens/utils/autowrite_screen.dart';
+import 'package:blisso_mobile/screens/utils/subscription/card_form_subscription.dart';
+import 'package:blisso_mobile/screens/utils/subscription/pay_subsription_screen.dart';
+import 'package:blisso_mobile/screens/utils/subscription/verify_card_address.dart';
+import 'package:blisso_mobile/screens/utils/subscription/verify_card_pin.dart';
+import 'package:blisso_mobile/screens/utils/subscription/verify_otp.dart';
 import 'package:blisso_mobile/screens/utils/video_player_screen.dart';
 import 'package:blisso_mobile/screens/utils/view_photo_screen.dart';
 import 'package:blisso_mobile/screens/welcome/welcome_screen.dart';
@@ -74,7 +79,7 @@ class Routing {
     '/favorite-profile/:username': (route) => MaterialPage(
         child: FavoriteProfileScreen(
             profileUsername: route.pathParameters['username']!)),
-    '/webview-complete/:url': (route) => MaterialPage(
+    '/homepage/webview-complete/:url': (route) => MaterialPage(
         child: WebviewVerification(url: route.pathParameters['url']!)),
     '/chat': (_) => const MaterialPage(child: ChatScreen()),
     '/chat-detail/:username': (route) => MaterialPage(
@@ -110,6 +115,19 @@ class Routing {
     '/homepage/view-story': (_) =>
         const MaterialPage(child: ViewStoryComponent()),
     '/homepage/edit-profile': (_) =>
-        const MaterialPage(child: MyProfileSettings())
+        const MaterialPage(child: MyProfileSettings()),
+    '/homepage/subscription': (route) => MaterialPage(
+        child: PaySubsriptionScreen(
+            code: route.queryParameters['code']!,
+            name: route.queryParameters['name']!,
+            rwPrice: double.parse(route.queryParameters['rwPrice']!),
+            usdPrice: route.queryParameters['usdPrice']!,
+            months: int.parse(route.queryParameters['months']!),
+            currency: route.queryParameters['currency']!)),
+    '/homepage/card': (_) =>
+        const MaterialPage(child: CardFormSubscription()),
+    '/homepage/verify-card-address' : (_) => const MaterialPage(child: VerifyCardAddress()),
+    '/homepage/verify-card-pin' : (_) => const MaterialPage(child: VerifyCardPin()),
+    '/homepage/verify-otp': (_) => const MaterialPage(child: VerifyOtp()),
   });
 }

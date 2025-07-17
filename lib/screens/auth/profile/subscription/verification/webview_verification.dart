@@ -28,12 +28,6 @@ class _WebviewVerificationState extends State<WebviewVerification> {
           onPageFinished: (String url) {},
           onHttpError: (HttpResponseError error) {},
           onWebResourceError: (WebResourceError error) {},
-          // onNavigationRequest: (NavigationRequest request) {
-          //   if (request.url.startsWith('https://www.youtube.com/')) {
-          //     return NavigationDecision.prevent;
-          //   }
-          //   return NavigationDecision.navigate;
-          // },
         ),
       )
       ..loadRequest(Uri.parse(decodedURL));
@@ -48,6 +42,7 @@ class _WebviewVerificationState extends State<WebviewVerification> {
             'Blisso',
             style: TextStyle(color: GlobalColors.primaryColor),
           ),
+          centerTitle: true,
         ),
         body: WebViewWidget(
           controller: controller,

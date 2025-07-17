@@ -21,7 +21,6 @@ class ButtonLoadingComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     double height = MediaQuery.sizeOf(context).height;
     double width = MediaQuery.sizeOf(context).width;
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -31,17 +30,7 @@ class ButtonLoadingComponent extends StatelessWidget {
             const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(5),
-            gradient: LinearGradient(
-              colors: !isLightTheme
-                  ? [
-                      GlobalColors.lightBackgroundColor,
-                      GlobalColors.primaryColor,
-                    ]
-                  : [
-                      GlobalColors.primaryColor,
-                      Colors.black87,
-                    ],
-            )),
+            color: GlobalColors.primaryColor),
         child: Align(alignment: Alignment.center, child: widget),
       ),
     );

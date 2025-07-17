@@ -64,6 +64,10 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
+  void deleteSnapshot() {
+    
+  }
+
   void updateField(String fieldname, String value) {
     Map<String, dynamic> updatedProfile = {...state.data, fieldname: value};
     state = ApiState(isLoading: false, data: updatedProfile, statusCode: 200);

@@ -97,7 +97,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     final verifyProvider = ref.read(subscriptionServiceProviderImpl.notifier);
 
-    await verifyProvider.verifyCardDetails(paymentModel!);
+    await verifyProvider.verifyCardDetails(paymentModel!.toVerificationMap());
 
     final paymentstate = ref.read(subscriptionServiceProviderImpl);
 
@@ -132,7 +132,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       if (paymentstate.data['validation_mode'] == 'redirect') {
         final encodedURL =
             Uri.encodeComponent(paymentstate.data['redirect_link']);
-        Routemaster.of(context).push('/webview-complete/$encodedURL');
+        Routemaster.of(context).push('/homepage/webview-complete/$encodedURL');
       }
     } else {
       showSnackBar(context, paymentstate.error!);
@@ -144,7 +144,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     final verifyProvider = ref.read(subscriptionServiceProviderImpl.notifier);
 
-    await verifyProvider.verifyCardDetails(paymentModel!);
+    await verifyProvider.verifyCardDetails(paymentModel!.toVerificationMap());
 
     final paymentState = ref.read(subscriptionServiceProviderImpl);
 

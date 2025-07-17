@@ -55,15 +55,43 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         //state = ApiState(error: response.errorMessage, isLoading: false);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
       } else {
         //state = ApiState(data: response.result, isLoading: false);
         await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
 
         //SharedPreferencesService.setPreference('is_my_snapshots', true);
-        state = ApiState(isLoading: true, data: state.data, statusCode: 200);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
       }
 
     } catch (e) {
+      state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+    }
+  }
+
+  Future<void> deleteProfileSnapshot(int id) async{
+    try {
+      state = ApiState(isLoading: true);
+
+      final response = await snapshotService.deleteSnapshot(id);
+      print(response);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        //state = ApiState(error: response.errorMessage, isLoading: false);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      } else {
+        //state = ApiState(data: response.result, isLoading: false);
+
+        await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
+
+        //SharedPreferencesService.setPreference('is_my_snapshots', true);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      }
+
+    } catch (e, stackTrace) {
+      print(e);
+      print(stackTrace);
+      state = ApiState(isLoading: false, data: state.data, statusCode: 200);
       state = ApiState(isLoading: false);
     }
   }

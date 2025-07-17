@@ -34,12 +34,23 @@ class SubscriptionService {
   }
 
   Future<ApiResponse> verifyCardPayment(
-      InitiatePaymentModel paymentModel) async {
+      Map<String, dynamic> payment) async {
     String token = await SharedPreferencesService.getPreference('accessToken');
 
     final response = await ApiService().postData(
         endpoint: '/payment/initiate-card-auth-payment/',
-        body: paymentModel.toVerificationMap(),
+        body: payment,
+        token: token);
+
+    return response;
+  }
+
+  Future<ApiResponse> validateOtp(Map<String, dynamic> payment) async{
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    final response = await ApiService().postData(
+        endpoint: '/payment/validate-payment/',
+        body: payment,
         token: token);
 
     return response;

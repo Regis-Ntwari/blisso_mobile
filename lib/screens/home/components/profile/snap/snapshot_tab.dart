@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/new_snap.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,12 +28,12 @@ class _SnapshotTabState extends ConsumerState<SnapshotTab> {
       ),
       itemBuilder: (context, index) {
         final snap = widget.snapshots[index];
-        final isSelected = ref.read(addedSnapsProviderImpl).contains(snap.id);
+        final isSelected = ref.read(newSnapProviderImpl).contains(snap.id);
 
         return GestureDetector(
           onTap: () {
             setState(() {
-              ref.read(addedSnapsProviderImpl.notifier).addSnapshot(snap.id);
+              ref.read(newSnapProviderImpl.notifier).addSnapshot(snap.id);
               // if (isSelected) {
               //   selectedIds.remove(snap.id);
               // } else {

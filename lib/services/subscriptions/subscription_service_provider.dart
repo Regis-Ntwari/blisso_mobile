@@ -64,7 +64,7 @@ class SubscriptionServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  Future<void> verifyCardDetails(InitiatePaymentModel payment) async {
+  Future<void> verifyCardDetails(Map<String, dynamic> payment) async {
     try {
       state = ApiState(isLoading: true);
       final response = await subscriptionService.verifyCardPayment(payment);

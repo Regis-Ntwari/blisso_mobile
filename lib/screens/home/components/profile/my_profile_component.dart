@@ -1,12 +1,15 @@
 import 'dart:io';
 
+import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
+import 'package:blisso_mobile/screens/utils/subscription/chosen_options_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -30,6 +33,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
   String profilePicture = '';
   String expandedField = '';
   File? chosenPicture;
+  String selectedOption = 'RWF';
   Future<void> getNames() async {
     await SharedPreferencesService.getPreference('firstname').then((value) {
       setState(() {
@@ -121,9 +125,11 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
   Widget build(BuildContext context) {
     super.build(context);
     TextScaler scaler = MediaQuery.textScalerOf(context);
+    final profileRef = ref.read(myProfileServiceProviderImpl.notifier);
     final profileState = ref.watch(myProfileServiceProviderImpl);
     final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
     final videoPostState = ref.watch(videoPostServiceProviderImpl);
+    final snapshotState = ref.watch(snapshotServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
@@ -383,94 +389,189 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           height: 150,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 2.0),
-                            child: subscriptionState.isLoading ||
-                                    subscriptionState.data == null
-                                ? const Center(
-                                    child: CircularProgressIndicator(
-                                      color: GlobalColors.primaryColor,
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: subscriptionState.data.length,
-                                    itemBuilder: (context, index) {
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 2.0),
-                                        child: SizedBox(
-                                          height: 100,
-                                          width: 100,
-                                          child: InkWell(
-                                              onTap: () {},
-                                              child: Card(
-                                                color: isLightTheme
-                                                    ? Colors.grey[300]
-                                                    : Colors.grey[800],
-                                                child: SizedBox(
-                                                  height: 100,
-                                                  child: Stack(
-                                                    children: [
-                                                      // Main content
-                                                      Center(
-                                                        child: Column(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Text(
-                                                              subscriptionState
-                                                                          .data[
-                                                                      index]
-                                                                  ['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 14,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
+                            child:
+                                subscriptionState.isLoading ||
+                                        subscriptionState.data == null
+                                    ? const Center(
+                                        child: CircularProgressIndicator(
+                                          color: GlobalColors.primaryColor,
+                                        ),
+                                      )
+                                    : Center(
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount:
+                                              subscriptionState.data.length,
+                                          itemBuilder: (context, index) {
+                                            return subscriptionState.data[index]
+                                                        ['rw_price'] ==
+                                                    0
+                                                ? const SizedBox.shrink()
+                                                : Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 2.0),
+                                                    child: SizedBox(
+                                                      height: 100,
+                                                      width: 100,
+                                                      child: InkWell(
+                                                          onTap: () {
+                                                            showDialog(
+                                                              context: context,
+                                                              builder:
+                                                                  (context) {
+                                                                String?
+                                                                    tempSelected =
+                                                                    selectedOption; // local copy to update inside dialog
+
+                                                                return StatefulBuilder(
+                                                                  builder: (context,
+                                                                      setState) {
+                                                                    return Dialog(
+                                                                      child:
+                                                                          Padding(
+                                                                        padding: const EdgeInsets
+                                                                            .all(
+                                                                            16),
+                                                                        child:
+                                                                            Column(
+                                                                          mainAxisSize:
+                                                                              MainAxisSize.min,
+                                                                          children: [
+                                                                            const Text('Choose Currency'),
+                                                                            const SizedBox(height: 10),
+                                                                            RadioListTile<String>(
+                                                                              title: const Text('RWF'),
+                                                                              value: 'RWF',
+                                                                              groupValue: tempSelected,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  tempSelected = value!;
+                                                                                });
+                                                                              },
+                                                                            ),
+                                                                            RadioListTile<String>(
+                                                                              title: const Text('USD'),
+                                                                              value: 'USD',
+                                                                              groupValue: tempSelected,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  tempSelected = value!;
+                                                                                });
+                                                                              },
+                                                                            ),
+                                                                            const SizedBox(height: 20),
+                                                                            ButtonComponent(
+                                                                              text: 'Submit',
+                                                                              backgroundColor: Colors.white,
+                                                                              foregroundColor: Colors.black,
+                                                                              onTap: () {
+                                                                                Navigator.pop(context);
+                                                                                // Update the actual selectedOption in parent
+                                                                                setState(() {
+                                                                                  selectedOption = tempSelected!;
+                                                                                });
+                                                                                final chosenOptionRef = ref.read(chosenOptionsProviderImpl.notifier);
+                                                                                chosenOptionRef.addOption('currency', selectedOption);
+                                                                                chosenOptionRef.addOption('amount', selectedOption == 'RWF' ? subscriptionState.data[index]['rw_price'] : subscriptionState.data[index]['usd_price']);
+
+                                                                                chosenOptionRef.addOption('code', subscriptionState.data[index]['code']);
+                                                                                Routemaster.of(context).push(
+                                                                                  '/homepage/subscription'
+                                                                                  '?code=${subscriptionState.data[index]['code']}'
+                                                                                  '&name=${subscriptionState.data[index]['name']}'
+                                                                                  '&rwPrice=${subscriptionState.data[index]['rw_price']}'
+                                                                                  '&usdPrice=${subscriptionState.data[index]['usd_price']}'
+                                                                                  '&months=${subscriptionState.data[index]['months']}'
+                                                                                  '&currency=$selectedOption',
+                                                                                );
+                                                                              },
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                );
+                                                              },
+                                                            );
+                                                          },
+                                                          child: Card(
+                                                            color: isLightTheme
+                                                                ? Colors
+                                                                    .grey[300]
+                                                                : Colors
+                                                                    .grey[800],
+                                                            child: SizedBox(
+                                                              height: 100,
+                                                              child: Stack(
+                                                                children: [
+                                                                  // Main content
+                                                                  Center(
+                                                                    child:
+                                                                        Column(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .center,
+                                                                      children: [
+                                                                        Text(
+                                                                          subscriptionState.data[index]
+                                                                              [
+                                                                              'name'],
+                                                                          style:
+                                                                              const TextStyle(
+                                                                            fontSize:
+                                                                                14,
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(
+                                                                            height:
+                                                                                10),
+                                                                        Text(
+                                                                            '${subscriptionState.data[index]['rw_price']} RWF'),
+                                                                        const SizedBox(
+                                                                            height:
+                                                                                10),
+                                                                        Text(
+                                                                            '${subscriptionState.data[index]['usd_price']} USD'),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+
+                                                                  if (subscriptionState.data[index]
+                                                                              [
+                                                                              'code'] ==
+                                                                          profileState.data['subscription']
+                                                                              [
+                                                                              'plan_code'] &&
+                                                                      profileState.data['subscription']
+                                                                              [
+                                                                              'status'] ==
+                                                                          'active')
+                                                                    const Positioned(
+                                                                      top: 8,
+                                                                      right: 8,
+                                                                      child:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .check_circle,
+                                                                        color: Colors
+                                                                            .green,
+                                                                        size:
+                                                                            20,
+                                                                      ),
+                                                                    ),
+                                                                ],
                                                               ),
                                                             ),
-                                                            const SizedBox(
-                                                                height: 10),
-                                                            Text(
-                                                                '${subscriptionState.data[index]['rw_price']} RWF'),
-                                                            const SizedBox(
-                                                                height: 10),
-                                                            Text(
-                                                                '${subscriptionState.data[index]['usd_price']} USD'),
-                                                          ],
-                                                        ),
-                                                      ),
-
-                                                      if (subscriptionState
-                                                                          .data[
-                                                                      index]
-                                                                  ['code'] ==
-                                                              profileState.data[
-                                                                      'subscription']
-                                                                  [
-                                                                  'plan_code'] &&
-                                                          profileState.data[
-                                                                      'subscription']
-                                                                  ['status'] ==
-                                                              'active')
-                                                        const Positioned(
-                                                          top: 8,
-                                                          right: 8,
-                                                          child: Icon(
-                                                            Icons.check_circle,
-                                                            color: Colors.green,
-                                                            size: 20,
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              )),
+                                                          )),
+                                                    ),
+                                                  );
+                                          },
                                         ),
-                                      );
-                                    },
-                                  ),
+                                      ),
                           )),
                       SizedBox(
                         child: Column(
@@ -608,41 +709,59 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             ),
                             if (expandedField == 'interest')
                               SingleChildScrollView(
-                                child: Wrap(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        final snaps = ref.read(
-                                            addedSnapsProviderImpl.notifier);
-                                        snaps.reset();
-                                        for (var snap in profileState
-                                            .data['lifesnapshots']) {
-                                          snaps.addSnapshot(snap['id']);
-                                        }
-                                        showSnapshotDialog(context, ref);
-                                      },
-                                      child: const Row(
+                                child: snapshotState.isLoading
+                                    ? const CircularProgressIndicator(
+                                        color: GlobalColors.primaryColor,
+                                      )
+                                    : Wrap(
                                         children: [
-                                          Icon(Icons.add),
-                                          SizedBox(
-                                            width: 10,
+                                          InkWell(
+                                            onTap: () {
+                                              final snaps = ref.read(
+                                                  addedSnapsProviderImpl
+                                                      .notifier);
+                                              snaps.reset();
+                                              for (var snap in profileState
+                                                  .data['lifesnapshots']) {
+                                                snaps.addSnapshot(
+                                                    snap['lifesnapshot_id']);
+                                              }
+                                              showSnapshotDialog(context, ref);
+                                            },
+                                            child: const Row(
+                                              children: [
+                                                Icon(Icons.add),
+                                                SizedBox(
+                                                  width: 10,
+                                                ),
+                                                Text('Add Snapshots')
+                                              ],
+                                            ),
                                           ),
-                                          Text('Edit Snapshots')
+                                          ...profileState.data['lifesnapshots']
+                                              .map<Widget>((snapshot) {
+                                            return ListTile(
+                                              title: Text(snapshot['name']),
+                                              trailing: IconButton(
+                                                onPressed: () async {
+                                                  await ref
+                                                      .read(
+                                                          snapshotServiceProviderImpl
+                                                              .notifier)
+                                                      .deleteProfileSnapshot(
+                                                          snapshot[
+                                                              'id']);
+                                                },
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color:
+                                                      GlobalColors.primaryColor,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList()
                                         ],
                                       ),
-                                    ),
-                                    ...profileState.data['lifesnapshots']
-                                        .map<Widget>((snapshot) {
-                                      return ListTile(
-                                        title: Text(snapshot['name']),
-                                        // trailing: const Icon(
-                                        //   Icons.delete,
-                                        //   color: GlobalColors.primaryColor,
-                                        // ),
-                                      );
-                                    }).toList()
-                                  ],
-                                ),
                               ),
                             InkWell(
                               onTap: () {
@@ -705,7 +824,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
 
                           await ref
                               .read(myProfileServiceProviderImpl.notifier)
-                              .updateProfile(TargetProfileModel.fromMapNewNoProfile({
+                              .updateProfile(
+                                  TargetProfileModel.fromMapNewNoProfile({
                                 ...profileState.data,
                                 'hide_profile': value
                               }));
@@ -720,7 +840,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           });
                           await ref
                               .read(myProfileServiceProviderImpl.notifier)
-                              .updateProfile(TargetProfileModel.fromMapNewNoProfile({
+                              .updateProfile(
+                                  TargetProfileModel.fromMapNewNoProfile({
                                 ...profileState.data,
                                 'push_notifications': value
                               }));
@@ -735,7 +856,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           });
                           await ref
                               .read(myProfileServiceProviderImpl.notifier)
-                              .updateProfile(TargetProfileModel.fromMapNewNoProfile({
+                              .updateProfile(
+                                  TargetProfileModel.fromMapNewNoProfile({
                                 ...profileState.data,
                                 'login_code_enabled': value
                               }));

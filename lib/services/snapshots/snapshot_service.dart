@@ -57,4 +57,15 @@ class SnapshotService {
 
     return response;
   }
+
+  Future<ApiResponse> deleteSnapshot(int id) async{
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    final response = await ApiService().deleteData(
+        endpoint: '/profiles/my/profile/delete/life-snapshots/$id/',
+        body: {},
+        token: token);
+
+    return response;
+  }
 }

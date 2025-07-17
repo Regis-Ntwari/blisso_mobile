@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/new_snap.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot_tab.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
@@ -12,14 +13,21 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
   }
   final snapshots = ref.watch(snapshotServiceProviderImpl).data;
 
+  final addedSnaps = ref.read(addedSnapsProviderImpl);
+
   final Map<String, List<Snapshot>> grouped = {};
   for (var snap in snapshots) {
-    grouped.putIfAbsent(snap['sub_category'], () => []).add(Snapshot(
+  if (!addedSnaps.contains(snap['id'])) {
+    grouped.putIfAbsent(snap['sub_category'], () => []).add(
+      Snapshot(
         id: snap['id'],
         category: snap['category'],
         subCategory: snap['sub_category'],
-        name: snap['name']));
+        name: snap['name'],
+      ),
+    );
   }
+}
 
 
   final subCategories = grouped.keys.toList();
@@ -58,7 +66,6 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
           actions: [
             TextButton(
               onPressed: () {
-                ref.read(addedSnapsProviderImpl.notifier).reset();
                 Navigator.of(context).pop();
               },
               child: const Text(
@@ -70,9 +77,9 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
               onPressed: () async {
                 await ref
                     .read(snapshotServiceProviderImpl.notifier)
-                    .editProfileSnapshots(ref.read(addedSnapsProviderImpl));
+                    .editProfileSnapshots(ref.read(newSnapProviderImpl));
 
-                ref.read(addedSnapsProviderImpl.notifier).reset();
+                //ref.read(addedSnapsProviderImpl.notifier).reset();
                 Navigator.of(context).pop();
               },
               child: snapshotWatch.isLoading
