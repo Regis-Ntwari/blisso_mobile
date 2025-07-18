@@ -295,17 +295,22 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                             final likeRef =
                                 ref.read(profileServiceProviderImpl.notifier);
 
-                            final nickname = await SharedPreferencesService.getPreference('nickname');
+                            final nickname =
+                                await SharedPreferencesService.getPreference(
+                                    'nickname');
 
                             setState(() {
-                              if(widget.profile['liked_this_profile']) {
-                                widget.profile['likes'] = widget.profile['likes'] - 1;
+                              if (widget.profile['liked_this_profile']) {
+                                widget.profile['likes'] =
+                                    widget.profile['likes'] - 1;
                                 widget.profile['people_liked'].remove(nickname);
                               } else {
-                                widget.profile['likes'] = widget.profile['likes'] + 1;
+                                widget.profile['likes'] =
+                                    widget.profile['likes'] + 1;
                                 widget.profile['people_liked'].add(nickname);
                               }
-                              widget.profile['liked_this_profile'] = !widget.profile['liked_this_profile'];
+                              widget.profile['liked_this_profile'] =
+                                  !widget.profile['liked_this_profile'];
                               isLiked = !isLiked;
                             });
 
@@ -354,9 +359,26 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
             Padding(
                 padding: const EdgeInsets.all(10),
                 child: widget.profile['target_lifesnapshots'].length > 0
-                    ? Text(
-                        textAlign: TextAlign.start,
-                        "${widget.profile['nickname']} is interested in ${widget.profile['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}")
+                    ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                          children: [
+                            Text(
+                                textAlign: TextAlign.start,
+                                "${widget.profile['nickname']} is interested in "),
+                            ...widget.profile['target_lifesnapshots']
+                                .map((snap) => Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                                      decoration: BoxDecoration(
+                                        color: GlobalColors.primaryColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                      padding: const EdgeInsets.all(5),
+                                      child: Text(snap['name']),
+                                    ))
+                          ],
+                        ),
+                    )
                     : const SizedBox.shrink()),
           ])),
     );

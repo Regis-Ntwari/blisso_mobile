@@ -19,7 +19,6 @@ class _FeelingPopupComponentState extends ConsumerState<FeelingPopupComponent> {
   ];
   @override
   Widget build(BuildContext context) {
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Center(
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -58,10 +57,9 @@ class _FeelingPopupComponentState extends ConsumerState<FeelingPopupComponent> {
                           style: const TextStyle(fontSize: 32)),
                       const SizedBox(height: 6),
                       Text(feeling['label']!,
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 14,
-                              color:
-                                  isLightTheme ? Colors.black : Colors.white)),
+                              color: Colors.black)),
                     ],
                   ),
                 );

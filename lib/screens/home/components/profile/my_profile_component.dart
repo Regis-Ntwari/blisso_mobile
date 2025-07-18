@@ -752,8 +752,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               10),
-                                                      color: GlobalColors
-                                                          .primaryColor),
+                                                      color: const Color.fromARGB(255, 139, 42, 42)),
                                                   child: Text(
                                                     snapshot['name'],
                                                     textAlign: TextAlign.center,
