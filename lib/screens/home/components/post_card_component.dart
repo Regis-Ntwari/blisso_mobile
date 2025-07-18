@@ -135,7 +135,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
             showPopupComponent(
               context: context,
               icon: Icons.error,
-              iconColor: Colors.red,
+              iconColor: GlobalColors.primaryColor,
               message: messageRequestResponse.error!,
             );
           }
