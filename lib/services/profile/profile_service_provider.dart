@@ -64,24 +64,7 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  void addSnapshot(Map<String, dynamic> snap) {
-    state = ApiState(data: {...state.data, 'lifesnapshots' : [...state.data['lifesnapshots'], snap]}, isLoading: false);
-  }
-
-  void removeSnapshotById(int id) {
-  final current = List<Map<String, dynamic>>.from(state.data['lifesnapshots'] ?? []);
-  final updated = current.where((s) => s['id'] != id).toList();
-
-  state = ApiState(
-    data: {
-      ...state.data,
-      'lifesnapshots': updated,
-    },
-    isLoading: false,
-  );
-}
-
-  Future<void> likeProfile(int id) async{
+  Future<void> likeProfile(int id) async {
     //state = ApiState(isLoading: true);
 
     try {

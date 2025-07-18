@@ -68,4 +68,26 @@ class SnapshotService {
 
     return response;
   }
+
+  Future<ApiResponse> deleteTargetSnapshot(int id) async{
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    final response = await ApiService().deleteData(
+        endpoint: '/profiles/my/profile/delete/target-life-snapshots/$id/',
+        body: {},
+        token: token);
+
+    return response;
+  }
+
+  Future<ApiResponse> addTargetSnapshots(List<dynamic> snaps) async{
+    String token = await SharedPreferencesService.getPreference('accessToken');
+
+    final response = await ApiService().postData(
+        endpoint: '/profiles/my/profile/add/target-life-snapshots/',
+        body: {'target_life_snapshots' : snaps},
+        token: token);
+
+    return response;
+  }
 }

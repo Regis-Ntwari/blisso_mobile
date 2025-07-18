@@ -64,8 +64,46 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  void deleteSnapshot() {
-    
+  void addSnapshot(Map<String, dynamic> snap) {
+    state = ApiState(data: {
+      ...state.data,
+      'lifesnapshots': [...state.data['lifesnapshots'], snap]
+    }, isLoading: false);
+  }
+
+  void removeSnapshotById(int id) {
+    final current =
+        List<Map<String, dynamic>>.from(state.data['lifesnapshots'] ?? []);
+    final updated = current.where((s) => s['id'] != id).toList();
+
+    state = ApiState(
+      data: {
+        ...state.data,
+        'lifesnapshots': updated,
+      },
+      isLoading: false,
+    );
+  }
+
+  void addTargetSnapshot(Map<String, dynamic> target) {
+    state = ApiState(data: {
+      ...state.data,
+      'target_lifesnapshots': [...state.data['target_lifesnapshots'], target]
+    }, isLoading: false);
+  }
+
+  void removeTargetSnapshot(int id) {
+    final current =
+        List<Map<String, dynamic>>.from(state.data['target_lifesnapshots'] ?? []);
+    final updated = current.where((s) => s['id'] != id).toList();
+
+    state = ApiState(
+      data: {
+        ...state.data,
+        'target_lifesnapshots': updated,
+      },
+      isLoading: false,
+    );
   }
 
   void updateField(String fieldname, String value) {

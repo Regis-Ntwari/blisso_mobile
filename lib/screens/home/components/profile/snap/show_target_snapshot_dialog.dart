@@ -1,20 +1,20 @@
-import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
-import 'package:blisso_mobile/screens/home/components/profile/snap/new_snap.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/added_target_snaps_provider.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/new_target_snap.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot.dart';
-import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot_tab.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/target_snapshot_tab.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
+void showTargetSnapshotDialog(BuildContext context, WidgetRef ref) async {
   if (ref.read(snapshotServiceProviderImpl).data == null) {
     await ref.read(snapshotServiceProviderImpl.notifier).getLifeSnapshots();
   }
   final snapshots = ref.watch(snapshotServiceProviderImpl).data;
 
-  final addedSnaps = ref.read(addedSnapsProviderImpl);
+  final addedSnaps = ref.read(addedTargetSnapsProviderImpl);
 
   final Map<String, List<Snapshot>> grouped = {};
   for (var snap in snapshots) {
@@ -29,8 +29,6 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
     );
   }
 }
-
-
   final subCategories = grouped.keys.toList();
 
   showDialog(
@@ -57,7 +55,7 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
                 Expanded(
                   child: TabBarView(
                     children: subCategories.map((sub) {
-                      return SnapshotTab(snapshots: grouped[sub]!);
+                      return TargetSnapshotTab(snapshots: grouped[sub]!);
                     }).toList(),
                   ),
                 ),
@@ -76,13 +74,13 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
             ),
             TextButton(
               onPressed: () async {
-                final newSnaps = ref.read(newSnapProviderImpl);
+                final newSnaps = ref.read(newTargetSnapProviderImpl);
                 await ref
                     .read(snapshotServiceProviderImpl.notifier)
-                    .editProfileSnapshots(newSnaps);
+                    .addTargetSnapshot(newSnaps);
 
                 for(var sn in newSnaps) {
-                  ref.read(myProfileServiceProviderImpl.notifier).addSnapshot(sn);
+                  ref.read(myProfileServiceProviderImpl.notifier).addTargetSnapshot(sn);
                 }
 
                 Navigator.of(context).pop();

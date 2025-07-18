@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class NewSnap extends StateNotifier<List<Map<String, dynamic>>> {
-  NewSnap() : super([]);
+class NewTargetSnap extends StateNotifier<List<Map<String, dynamic>>> {
+  NewTargetSnap() : super([]);
 
   addSnapshot(dynamic snap) {
     int check = 0;
@@ -19,6 +19,6 @@ class NewSnap extends StateNotifier<List<Map<String, dynamic>>> {
   }
 }
 
-final newSnapProviderImpl = StateNotifierProvider<NewSnap, List>((_) {
-  return NewSnap();
+final newTargetSnapProviderImpl = StateNotifierProvider<NewTargetSnap, List>((_) {
+  return NewTargetSnap();
 });

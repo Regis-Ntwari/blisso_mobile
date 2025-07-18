@@ -39,6 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String firstname = '';
   String? username;
   String? profilePicture;
+  bool? isLoginCodeEnabled;
   Future<void> getFirstnameAndUsername() async {
     await SharedPreferencesService.getPreference('firstname').then(
       (value) {
@@ -61,6 +62,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       setState(() {
         profilePicture = value;
       });
+    });
+
+    await SharedPreferencesService.getPreference('login_code_enabled')
+        .then((value) async {
+      if (value == null) {
+        await SharedPreferencesService.setPreference(
+            'login_code_enabled', true);
+
+        getFirstnameAndUsername();
+      } else {
+        setState(() {
+          isLoginCodeEnabled = value;
+        });
+      }
     });
   }
 
@@ -198,77 +213,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           )
                         : Container(),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: ButtonComponent(
-                          text: !isCodeClicked
-                              ? AppLocalizations.of(context)!.generateCode
-                              : AppLocalizations.of(context)!.login,
-                          backgroundColor: GlobalColors.primaryColor,
-                          foregroundColor:
-                              const Color.fromRGBO(255, 255, 255, 1),
-                          onTap: () async {
-                            if (!isCodeClicked) {
-                              await ref
-                                  .read(userServiceProviderImpl.notifier)
-                                  .generateLoginCode();
+                    isLoginCodeEnabled == null || !isLoginCodeEnabled!
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: ButtonComponent(
+                                text: !isCodeClicked
+                                    ? AppLocalizations.of(context)!.generateCode
+                                    : AppLocalizations.of(context)!.login,
+                                backgroundColor: GlobalColors.primaryColor,
+                                foregroundColor:
+                                    const Color.fromRGBO(255, 255, 255, 1),
+                                onTap: () async {
+                                  if (!isCodeClicked) {
+                                    await ref
+                                        .read(userServiceProviderImpl.notifier)
+                                        .generateLoginCode();
 
-                              final userState =
-                                  ref.read(userServiceProviderImpl);
-                              if (userState.error != null) {
-                                showSnackBar(context, userState.error!);
-                              }
-                            } else {
-                              await ref
-                                  .read(userServiceProviderImpl.notifier)
-                                  .loginUser(username!, _codeController.text);
+                                    final userState =
+                                        ref.read(userServiceProviderImpl);
+                                    if (userState.error != null) {
+                                      showSnackBar(context, userState.error!);
+                                    }
+                                  } else {
+                                    await ref
+                                        .read(userServiceProviderImpl.notifier)
+                                        .loginUser(
+                                            username!, _codeController.text);
 
-                              final userState =
-                                  ref.read(userServiceProviderImpl);
-                              if (userState.error != null) {
-                                showSnackBar(context, userState.error!);
-                              } else {
-                                SharedPreferences prefs =
-                                    await SharedPreferencesService
-                                        .getSharedPreferences();
+                                    final userState =
+                                        ref.read(userServiceProviderImpl);
+                                    if (userState.error != null) {
+                                      showSnackBar(context, userState.error!);
+                                    } else {
+                                      SharedPreferences prefs =
+                                          await SharedPreferencesService
+                                              .getSharedPreferences();
 
-                                if (prefs
-                                        .get('is_profile_completed')
-                                        .toString() ==
-                                    'true') {
-                                  Routemaster.of(context).replace('/homepage');
-                                } else if (prefs
-                                        .get('is_target_snapshots')
-                                        .toString() ==
-                                    'true') {
-                                  Routemaster.of(context)
-                                      .push('/profile-pictures');
-                                } else if (prefs
-                                        .get('is_my_snapshots')
-                                        .toString() ==
-                                    'true') {
-                                  Routemaster.of(context)
-                                      .push('/target-snapshot');
-                                } else if (prefs
-                                        .get('is_profile_created')
-                                        .toString() ==
-                                    'true') {
-                                  Routemaster.of(context).replace('/snapshots');
-                                } else if (prefs
-                                        .get('isRegistered')
-                                        .toString() ==
-                                    'true') {
-                                  Routemaster.of(context).replace('/profile/');
-                                }
-                              }
-                            }
-                            setState(() {
-                              if (!isCodeClicked) {
-                                isCodeClicked = !isCodeClicked;
-                              }
-                            });
-                          }),
-                    ),
+                                      if (prefs
+                                              .get('is_profile_completed')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .replace('/homepage');
+                                      } else if (prefs
+                                              .get('is_target_snapshots')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .push('/profile-pictures');
+                                      } else if (prefs
+                                              .get('is_my_snapshots')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .push('/target-snapshot');
+                                      } else if (prefs
+                                              .get('is_profile_created')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .replace('/snapshots');
+                                      } else if (prefs
+                                              .get('isRegistered')
+                                              .toString() ==
+                                          'true') {
+                                        Routemaster.of(context)
+                                            .replace('/profile/');
+                                      }
+                                    }
+                                  }
+                                  setState(() {
+                                    if (!isCodeClicked) {
+                                      isCodeClicked = !isCodeClicked;
+                                    }
+                                  });
+                                }),
+                          ),
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
                       child: Stack(

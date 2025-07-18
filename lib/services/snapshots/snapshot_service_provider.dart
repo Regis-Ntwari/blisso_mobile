@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:blisso_mobile/services/api_state.dart';
-import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
@@ -58,7 +57,53 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
         state = ApiState(isLoading: false, data: state.data, statusCode: 200);
       } else {
         //state = ApiState(data: response.result, isLoading: false);
-        await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
+        //await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
+
+        //SharedPreferencesService.setPreference('is_my_snapshots', true);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      }
+
+    } catch (e) {
+      state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+    }
+  }
+
+  Future<void> deleteTargetSnapshot(int id) async{
+    try {
+      state = ApiState(isLoading: true);
+
+      final response = await snapshotService.deleteTargetSnapshot(id);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        //state = ApiState(error: response.errorMessage, isLoading: false);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      } else {
+        //state = ApiState(data: response.result, isLoading: false);
+
+        //await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
+
+        //SharedPreferencesService.setPreference('is_my_snapshots', true);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      }
+
+    } catch (e) {
+      state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      state = ApiState(isLoading: false);
+    }
+  }
+
+  Future<void> addTargetSnapshot(List<dynamic> snaps) async{
+    try {
+      state = ApiState(isLoading: true);
+
+      final response = await snapshotService.addTargetSnapshots(snaps);
+
+      if (!StatusCodes.codes.contains(response.statusCode)) {
+        //state = ApiState(error: response.errorMessage, isLoading: false);
+        state = ApiState(isLoading: false, data: state.data, statusCode: 200);
+      } else {
+        //state = ApiState(data: response.result, isLoading: false);
+        //await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
 
         //SharedPreferencesService.setPreference('is_my_snapshots', true);
         state = ApiState(isLoading: false, data: state.data, statusCode: 200);
@@ -82,7 +127,7 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
       } else {
         //state = ApiState(data: response.result, isLoading: false);
 
-        await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
+        //await ref.read(profileServiceProviderImpl.notifier).getMyProfile();
 
         //SharedPreferencesService.setPreference('is_my_snapshots', true);
         state = ApiState(isLoading: false, data: state.data, statusCode: 200);

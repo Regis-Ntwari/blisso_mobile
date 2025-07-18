@@ -5,6 +5,7 @@ import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/show_target_snapshot_dialog.dart';
 import 'package:blisso_mobile/screens/utils/subscription/chosen_options_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
@@ -728,20 +729,37 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                               }
                                               showSnapshotDialog(context, ref);
                                             },
-                                            child: const Row(
-                                              children: [
-                                                Icon(Icons.add),
-                                                SizedBox(
-                                                  width: 10,
-                                                ),
-                                                Text('Add Snapshots')
-                                              ],
+                                            child: const Padding(
+                                              padding:  EdgeInsets.symmetric(vertical: 20.0),
+                                              child:  Row(
+                                                children: [
+                                                  Icon(Icons.add),
+                                                  SizedBox(
+                                                    width: 10,
+                                                  ),
+                                                  Text('Add Snapshots')
+                                                ],
+                                              ),
                                             ),
                                           ),
                                           ...profileState.data['lifesnapshots']
                                               .map<Widget>((snapshot) {
                                             return ListTile(
-                                              title: Text(snapshot['name']),
+                                              title: Container(
+                                                  padding:
+                                                      const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      color: GlobalColors
+                                                          .primaryColor),
+                                                  child: Text(
+                                                    snapshot['name'],
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                        color: Colors.white),
+                                                  )),
                                               trailing: IconButton(
                                                 onPressed: () async {
                                                   await ref
@@ -749,8 +767,13 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                           snapshotServiceProviderImpl
                                                               .notifier)
                                                       .deleteProfileSnapshot(
-                                                          snapshot[
-                                                              'id']);
+                                                          snapshot['id']);
+                                                  ref
+                                                      .read(
+                                                          myProfileServiceProviderImpl
+                                                              .notifier)
+                                                      .removeSnapshotById(
+                                                          snapshot['id']);
                                                 },
                                                 icon: const Icon(
                                                   Icons.delete,
@@ -790,22 +813,52 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               SingleChildScrollView(
                                 child: Wrap(children: [
                                   InkWell(
-                                    onTap: () {},
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.add),
-                                        SizedBox(width: 10),
-                                        Text('Add Target Snapshot')
-                                      ],
+                                    onTap: () {
+                                      showTargetSnapshotDialog(context, ref);
+                                    },
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 20.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.add),
+                                          SizedBox(width: 10),
+                                          Text('Add Target Snapshot')
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   ...profileState.data['target_lifesnapshots']
                                       .map<Widget>((snapshot) {
                                     return ListTile(
-                                      title: Text(snapshot['name']),
-                                      trailing: const Icon(
-                                        Icons.delete,
-                                        color: GlobalColors.primaryColor,
+                                      title: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: GlobalColors.primaryColor),
+                                          child: Text(
+                                            '${snapshot['name']} - ${snapshot['target_scale']}/10',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          )),
+                                      trailing: IconButton(
+                                        onPressed: () async {
+                                          await ref
+                                              .read(snapshotServiceProviderImpl
+                                                  .notifier)
+                                              .deleteTargetSnapshot(
+                                                  snapshot['id']);
+                                          ref
+                                              .read(myProfileServiceProviderImpl
+                                                  .notifier)
+                                              .removeTargetSnapshot(
+                                                  snapshot['id']);
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: GlobalColors.primaryColor,
+                                        ),
                                       ),
                                     );
                                   }).toList(),
@@ -815,6 +868,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                         ),
                       ),
                       SwitchListTile(
+                        activeColor: GlobalColors.primaryColor,
                         title: const Text('Hide Profile'),
                         value: profileState.data['hide_profile'],
                         onChanged: (value) async {
@@ -832,6 +886,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                         },
                       ),
                       SwitchListTile(
+                        activeColor: GlobalColors.primaryColor,
                         title: const Text('Push Notifications'),
                         value: profileState.data['push_notifications'],
                         onChanged: (value) async {
@@ -848,12 +903,14 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                         },
                       ),
                       SwitchListTile(
+                        activeColor: GlobalColors.primaryColor,
                         title: const Text('Login Code Enabled'),
                         value: profileState.data['login_code_enabled'],
                         onChanged: (value) async {
                           setState(() {
                             profileState.data['login_code_enabled'] = value;
                           });
+                          await SharedPreferencesService.setPreference('login_code_enabled', value);
                           await ref
                               .read(myProfileServiceProviderImpl.notifier)
                               .updateProfile(
