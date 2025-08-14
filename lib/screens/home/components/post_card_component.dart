@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class PostCardComponent extends ConsumerStatefulWidget {
   final Map<String, dynamic> profile;
@@ -360,25 +359,27 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                 padding: const EdgeInsets.all(10),
                 child: widget.profile['target_lifesnapshots'].length > 0
                     ? SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
                           children: [
-                            Text(
-                                textAlign: TextAlign.start,
-                                "${widget.profile['nickname']} is interested in "),
                             ...widget.profile['target_lifesnapshots']
                                 .map((snap) => Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                                      margin: const EdgeInsets.only(
+                                          right: 2),
                                       decoration: BoxDecoration(
-                                        color: GlobalColors.primaryColor,
+                                          color: GlobalColors.primaryColor,
                                           borderRadius:
                                               BorderRadius.circular(10)),
-                                      padding: const EdgeInsets.all(5),
-                                      child: Text(snap['name']),
+                                      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 5),
+                                      child: Text(
+                                        snap['name'],
+                                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        textAlign: TextAlign.start,
+                                      ),
                                     ))
                           ],
                         ),
-                    )
+                      )
                     : const SizedBox.shrink()),
           ])),
     );

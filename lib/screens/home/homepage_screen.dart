@@ -284,7 +284,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                             : Colors.white
                         : Colors.black,
                     snap: true,
-                    expandedHeight: isSearchVisible ? 120 : 60,
+                    expandedHeight: isSearchVisible ? 110 : 60,
                     automaticallyImplyLeading: false,
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
@@ -402,42 +402,46 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 8.0),
+                                  horizontal: 1.0, vertical: 5.0),
                               child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Container(
-                                    height: 45,
+                                    height: 35,
                                     decoration: BoxDecoration(
                                       color: isLightTheme
-                                          ? Colors.grey[100]
-                                          : Colors.grey[900],
-                                      borderRadius: BorderRadius.circular(25),
-                                      border: Border.all(
-                                        color: isLightTheme
-                                            ? Colors.grey[300]!
-                                            : Colors.grey[700]!,
-                                        width: 1,
-                                      ),
+                                          ? const Color(0xFFF5F5F5)
+                                          : const Color(0xFF111112),
+                                      borderRadius: BorderRadius.circular(10),
+                                      // border: Border.all(
+                                      //   color: isLightTheme
+                                      //       ? Colors.grey[300]!
+                                      //       : Colors.grey[700]!,
+                                      // ),
                                     ),
                                     child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         // Dropdown
                                         Container(
                                           height: 45,
                                           constraints: const BoxConstraints(
-                                              minWidth: 100, maxWidth: 150),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              right: BorderSide(
-                                                color: isLightTheme
-                                                    ? Colors.grey[300]!
-                                                    : Colors.grey[700]!,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                              minWidth: 50, maxWidth: 100),
+                                          padding: const EdgeInsets.only(
+                                              left: 8, right: 1),
+                                          // decoration: BoxDecoration(
+                                          //   border: Border(
+                                          //     right: BorderSide(
+                                          //       color: isLightTheme
+                                          //           ? Colors.grey[300]!
+                                          //           : Colors.grey[700]!,
+                                          //       width: 1,
+                                          //     ),
+                                          //   ),
+                                          // ),
                                           child: DropdownButtonHideUnderline(
                                             child: DropdownButton<String>(
                                               value: searchAttribute,
@@ -445,7 +449,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                                   Icons.arrow_drop_down),
                                               elevation: 8,
                                               borderRadius:
-                                                  BorderRadius.circular(25),
+                                                  BorderRadius.circular(10),
                                               padding:
                                                   const EdgeInsets.symmetric(
                                                       horizontal: 4),
@@ -453,8 +457,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                               isExpanded:
                                                   true, // Makes dropdown text responsive
                                               dropdownColor: isLightTheme
-                                                  ? Colors.white
-                                                  : Colors.grey[900],
+                                                  ? const Color(0xFFF5F5F5)
+                                                  : const Color(0xFF111112),
                                               style: TextStyle(
                                                 color: isLightTheme
                                                     ? Colors.black87
@@ -475,7 +479,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                                     value,
                                                     style: TextStyle(
                                                       color: isLightTheme
-                                                          ? Colors.black87
+                                                          ? Colors.grey[500]
                                                           : Colors.white,
                                                       fontSize: 14,
                                                     ),
@@ -501,48 +505,53 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                               alignment: Alignment.center,
                                               child: Align(
                                                 alignment: Alignment.center,
-                                                child: TextField(
-                                                  maxLines: 1,
-                                                  controller: searchValue,
-                                                  onChanged: (value) =>
-                                                      _onSearchChange(),
-                                                  style: TextStyle(
-                                                    color: isLightTheme
-                                                        ? Colors.black87
-                                                        : Colors.white,
-                                                    fontSize: 14,
-                                                  ),
-                                                  decoration: InputDecoration(
-                                                    isDense: true,
-                                                    contentPadding:
-                                                        EdgeInsets.zero,
-                                                    hintText:
-                                                        'Search by $searchAttribute...',
-                                                    hintStyle: TextStyle(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(top: 5.0),
+                                                  child: TextField(
+                                                    maxLines: 1,
+                                                    controller: searchValue,
+                                                    onChanged: (value) =>
+                                                        _onSearchChange(),
+                                                    style: TextStyle(
                                                       color: isLightTheme
-                                                          ? Colors.grey[600]
-                                                          : Colors.grey[400],
+                                                          ? Colors.black87
+                                                          : Colors.white,
                                                       fontSize: 14,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
                                                     ),
-                                                    border: InputBorder.none,
-                                                    prefixIcon: Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8),
-                                                      child: Icon(
-                                                        Icons.search,
+                                                    decoration: InputDecoration(
+                                                      isDense: true,
+                                                      contentPadding:
+                                                          EdgeInsets.zero,
+                                                          
+                                                      hintText:
+                                                          'Search by $searchAttribute...',
+                                                      hintStyle: TextStyle(
                                                         color: isLightTheme
-                                                            ? Colors.grey[600]
+                                                            ? Colors.grey[500]
                                                             : Colors.grey[400],
-                                                        size: 20,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
+                                                        overflow:
+                                                            TextOverflow.ellipsis,
                                                       ),
-                                                    ),
-                                                    prefixIconConstraints:
-                                                        const BoxConstraints(
-                                                      minWidth: 40,
-                                                      minHeight: 40,
+                                                      border: InputBorder.none,
+                                                      prefixIcon: Padding(
+                                                        padding: const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 8),
+                                                        child: Icon(
+                                                          Icons.search,
+                                                          color: isLightTheme
+                                                              ? Colors.grey[600]
+                                                              : Colors.grey[400],
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                      prefixIconConstraints:
+                                                          const BoxConstraints(
+                                                        minWidth: 40,
+                                                        minHeight: 40,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -552,16 +561,16 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                         Container(
                                           height: 45,
                                           width: 40,
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              left: BorderSide(
-                                                color: isLightTheme
-                                                    ? Colors.grey[300]!
-                                                    : Colors.grey[700]!,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                          // decoration: BoxDecoration(
+                                          //   border: Border(
+                                          //     left: BorderSide(
+                                          //       color: isLightTheme
+                                          //           ? Colors.grey[300]!
+                                          //           : Colors.grey[700]!,
+                                          //       width: 1,
+                                          //     ),
+                                          //   ),
+                                          // ),
                                           child: IconButton(
                                             padding: EdgeInsets.zero,
                                             constraints:
