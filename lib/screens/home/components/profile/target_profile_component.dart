@@ -1,6 +1,5 @@
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
-import 'package:blisso_mobile/components/view_picture_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
@@ -155,26 +154,24 @@ class _TargetProfileComponentState
     double height = MediaQuery.sizeOf(context).height;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     final videoState = ref.watch(videoPostServiceProviderImpl);
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-        appBar: AppBar(
-          backgroundColor:
-              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-          leading: InkWell(
-            //onTap: () => Routemaster.of(context).push('/homepage'),
-            onTap: () => Routemaster.of(context).pop(),
-            child: const Icon(Icons.keyboard_arrow_left),
-          ),
-          centerTitle: true,
-          title: Text(
-            '${targetProfile.nickname}',
-            style: TextStyle(
-                color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
-          ),
+    return Scaffold(
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      appBar: AppBar(
+        backgroundColor: isLightTheme ? Colors.white : Colors.black,
+        leading: InkWell(
+          //onTap: () => Routemaster.of(context).push('/homepage'),
+          onTap: () => Routemaster.of(context).pop(),
+          child: const Icon(Icons.keyboard_arrow_left),
         ),
-        body: SingleChildScrollView(
+        centerTitle: true,
+        title: Text(
+          '${targetProfile.nickname}',
+          style: TextStyle(
+              color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -240,81 +237,72 @@ class _TargetProfileComponentState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Date of Birth',
-                                            style: TextStyle(
-                                                color: GlobalColors
-                                                    .secondaryColor),
-                                          ),
-                                          Text(DateFormat('MMMM d, y').format(
-                                              DateTime.parse(
-                                                  targetProfile.dob!)))
-                                        ],
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Gender',
-                                            style: TextStyle(
-                                                color: GlobalColors
-                                                    .secondaryColor),
-                                          ),
-                                          Text(targetProfile.gender!
-                                              .toUpperCase())
-                                        ],
-                                      )
-                                    ],
-                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Date of Birth',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(DateFormat('MMMM d, y').format(
+                                            DateTime.parse(targetProfile.dob!)))
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Gender',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(
+                                            targetProfile.gender!.toUpperCase())
+                                      ],
+                                    )
+                                  ],
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Marital Status',
-                                            style: TextStyle(
-                                                color: GlobalColors
-                                                    .secondaryColor),
-                                          ),
-                                          Text('${targetProfile.maritalStatus}')
-                                        ],
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Home Address',
-                                            style: TextStyle(
-                                                color: GlobalColors
-                                                    .secondaryColor),
-                                          ),
-                                          Text(targetProfile.homeAddress!
-                                              .toUpperCase())
-                                        ],
-                                      )
-                                    ],
-                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Marital Status',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text('${targetProfile.maritalStatus}')
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Home Address',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(targetProfile.homeAddress!
+                                            .toUpperCase())
+                                      ],
+                                    )
+                                  ],
                                 ),
                                 // Row(
                                 //   mainAxisAlignment:
@@ -378,11 +366,11 @@ class _TargetProfileComponentState
                 child: Column(
                   children: [
                     SizedBox(
-                        height: 400,
+                        height: 250,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: SizedBox(
-                            height: 300,
+                            height: 200,
                             child: DefaultTabController(
                               length: 2,
                               child: Column(
@@ -397,89 +385,95 @@ class _TargetProfileComponentState
                                         GlobalColors.secondaryColor,
                                   ),
                                   SizedBox(
-                                    height: 250,
-                                    child: TabBarView(
-                                      children: [
-                                        // Pictures Tab
-                                        GridView.builder(
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 3,
-                                            crossAxisSpacing: 4,
-                                            mainAxisSpacing: 4,
-                                          ),
-                                          itemCount: targetProfile
-                                              .profileImages!.length,
-                                          itemBuilder: (context, index) {
-                                            return InkWell(
-                                              onTap: () =>
-                                                  Routemaster.of(context).push(
-                                                      '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
-                                              child: CachedNetworkImage(
-                                                imageUrl: targetProfile
-                                                        .profileImages![index]
-                                                    ['image_url'],
-                                                fit: BoxFit.cover,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        // Videos Tab
-                                        videoState.isLoading
-                                            ? const Center(
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  color:
-                                                      GlobalColors.primaryColor,
+                                    height: 200,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 10.0),
+                                      child: TabBarView(
+                                        children: [
+                                          // Pictures Tab
+                                          GridView.builder(
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: 3,
+                                              crossAxisSpacing: 4,
+                                              mainAxisSpacing: 4,
+                                            ),
+                                            itemCount: targetProfile
+                                                .profileImages!.length,
+                                            itemBuilder: (context, index) {
+                                              return InkWell(
+                                                onTap: () => Routemaster.of(
+                                                        context)
+                                                    .push(
+                                                        '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
+                                                child: CachedNetworkImage(
+                                                  imageUrl: targetProfile
+                                                          .profileImages![index]
+                                                      ['image_url'],
+                                                  fit: BoxFit.cover,
                                                 ),
-                                              )
-                                            : videoState.data.isEmpty
-                                                ? Center(
-                                                    child: Text(
-                                                      'No videos yet',
-                                                      style: TextStyle(
-                                                        color: GlobalColors
-                                                            .secondaryColor,
+                                              );
+                                            },
+                                          ),
+                                          // Videos Tab
+                                          videoState.isLoading
+                                              ? const Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    color: GlobalColors
+                                                        .primaryColor,
+                                                  ),
+                                                )
+                                              : videoState.data.isEmpty
+                                                  ? Center(
+                                                      child: Text(
+                                                        'No videos yet',
+                                                        style: TextStyle(
+                                                          color: GlobalColors
+                                                              .secondaryColor,
+                                                        ),
                                                       ),
-                                                    ),
-                                                  )
-                                                : GridView.builder(
-                                                    gridDelegate:
-                                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                                      crossAxisCount: 3,
-                                                      crossAxisSpacing: 4,
-                                                      mainAxisSpacing: 4,
-                                                    ),
-                                                    itemCount:
-                                                        videoState.data.length,
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      return InkWell(
-                                                        onTap: () {
-                                                          Routemaster.of(
-                                                                  context)
-                                                              .push(
-                                                                  '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
-                                                        },
-                                                        child: Container(
-                                                          color: isLightTheme
-                                                              ? Colors.black
-                                                              : Colors
-                                                                  .grey[800],
-                                                          height: 50,
-                                                          width: 50,
-                                                          child: const Center(
-                                                            child: Icon(
-                                                              Icons.play_arrow,
-                                                              color:
-                                                                  Colors.white,
+                                                    )
+                                                  : GridView.builder(
+                                                      gridDelegate:
+                                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                                        crossAxisCount: 3,
+                                                        crossAxisSpacing: 4,
+                                                        mainAxisSpacing: 4,
+                                                      ),
+                                                      itemCount: videoState
+                                                          .data.length,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return InkWell(
+                                                          onTap: () {
+                                                            Routemaster.of(
+                                                                    context)
+                                                                .push(
+                                                                    '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
+                                                          },
+                                                          child: Container(
+                                                            color: isLightTheme
+                                                                ? Colors.black
+                                                                : Colors
+                                                                    .grey[800],
+                                                            height: 50,
+                                                            width: 50,
+                                                            child: const Center(
+                                                              child: Icon(
+                                                                Icons
+                                                                    .play_arrow,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                      ],
+                                                        );
+                                                      },
+                                                    ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -501,7 +495,7 @@ class _TargetProfileComponentState
                       },
                       child: ListTile(
                         title: Text(
-                          'What ${targetProfile.nickname} like',
+                          "${targetProfile.nickname}'s interests",
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(targetProfile.lifesnapshots!
@@ -513,15 +507,26 @@ class _TargetProfileComponentState
                       ),
                     ),
                     if (expandedField == 'interest')
-                      SingleChildScrollView(
-                        child: Wrap(
-                          children: targetProfile.lifesnapshots!
-                              .map<Widget>((snapshot) {
-                            return ListTile(
-                              title: Text(snapshot['name']),
-                            );
-                          }).toList(),
-                        ),
+                      Wrap(
+                        children: targetProfile.lifesnapshots!
+                            .map<Widget>((snapshot) {
+                          return IntrinsicWidth(
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 2),
+                              decoration: BoxDecoration(
+                                  color: GlobalColors.primaryColor,
+                                  borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 3, horizontal: 5),
+                              child: Text(
+                                snapshot['name'],
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 12),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     InkWell(
                       onTap: () {
@@ -537,7 +542,7 @@ class _TargetProfileComponentState
                       },
                       child: ListTile(
                         title: Text(
-                            'What ${targetProfile.nickname} want in a person',
+                            "${targetProfile.nickname}'s interests in a person",
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(targetProfile.targetLifesnapshots!
@@ -549,15 +554,27 @@ class _TargetProfileComponentState
                       ),
                     ),
                     if (expandedField == 'target')
-                      SingleChildScrollView(
-                        child: Wrap(
-                          children: targetProfile.targetLifesnapshots!
-                              .map<Widget>((snapshot) {
-                            return ListTile(
-                              title: Text(snapshot['name']),
-                            );
-                          }).toList(),
-                        ),
+                      Wrap(
+                        alignment: WrapAlignment.start,
+                        children: targetProfile.targetLifesnapshots!
+                            .map<Widget>((snapshot) {
+                          return IntrinsicWidth(
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 2),
+                              decoration: BoxDecoration(
+                                  color: GlobalColors.primaryColor,
+                                  borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 3, horizontal: 5),
+                              child: Text(
+                                snapshot['name'],
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 12),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                   ],
                 ),

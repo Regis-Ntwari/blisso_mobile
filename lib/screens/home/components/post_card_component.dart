@@ -364,16 +364,17 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                           children: [
                             ...widget.profile['target_lifesnapshots']
                                 .map((snap) => Container(
-                                      margin: const EdgeInsets.only(
-                                          right: 2),
+                                      margin: const EdgeInsets.only(right: 2),
                                       decoration: BoxDecoration(
                                           color: GlobalColors.primaryColor,
                                           borderRadius:
                                               BorderRadius.circular(10)),
-                                      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 5),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 3, horizontal: 5),
                                       child: Text(
                                         snap['name'],
-                                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 12),
                                         textAlign: TextAlign.start,
                                       ),
                                     ))

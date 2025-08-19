@@ -120,11 +120,11 @@ class _MatchingRecommendationsState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black87,
+                        color: const Color(0x99000000),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        user['score']!,
+                        "Matched at ${user['score']!}",
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
