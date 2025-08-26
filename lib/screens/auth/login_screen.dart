@@ -27,79 +27,80 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final state = ref.watch(userServiceProviderImpl);
 
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return SafeArea(
-        child: Scaffold(
-      backgroundColor:
-          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-      body: state.isLoading
-          ? const LoadingScreen()
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0, bottom: 16),
-                  child: Text(
-                    'Login',
-                    style: TextStyle(
-                        color: GlobalColors.primaryColor,
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold),
+    return Scaffold(
+          backgroundColor:
+      isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+          body: state.isLoading
+      ? const LoadingScreen()
+      : SafeArea(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0, bottom: 16),
+                child: Text(
+                  'Login',
+                  style: TextStyle(
+                      color: GlobalColors.primaryColor,
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  "Provide email or phone number you used to generate a one time password to your account",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: scaler.scale(12),
                   ),
                 ),
-                Padding(
+              ),
+              Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Text(
-                    "Provide email or phone number you used to generate a one time password to your account",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: scaler.scale(12),
-                    ),
-                  ),
-                ),
-                Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Form(
-                        key: _formKey,
-                        child: Column(children: [
-                          TextInputComponent(
-                              controller: usernameController,
-                              labelText: 'Username *',
-                              hintText: 'Enter your username',
-                              validatorFunction: (value) {
-                                return (value!.isEmpty
-                                    ? 'Your username should be present'
-                                    : null);
-                              }),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: ButtonComponent(
-                                text: 'Generate Code',
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                onTap: () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    await SharedPreferencesService
-                                        .setPreference('username',
-                                            usernameController.text);
-
-                                    await ref
-                                        .read(userServiceProviderImpl.notifier)
-                                        .generateLoginCode();
-
-                                    final userState =
-                                        ref.read(userServiceProviderImpl);
-
-                                    if (userState.error != null) {
-                                      showSnackBar(context, userState.error!);
-                                    } else {
-                                      Routemaster.of(context).push("/password");
-                                    }
+                  child: Form(
+                      key: _formKey,
+                      child: Column(children: [
+                        TextInputComponent(
+                            controller: usernameController,
+                            labelText: 'Username *',
+                            hintText: 'Enter your username',
+                            validatorFunction: (value) {
+                              return (value!.isEmpty
+                                  ? 'Your username should be present'
+                                  : null);
+                            }),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: ButtonComponent(
+                              text: 'Generate Code',
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              onTap: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  await SharedPreferencesService
+                                      .setPreference('username',
+                                          usernameController.text);
+            
+                                  await ref
+                                      .read(userServiceProviderImpl.notifier)
+                                      .generateLoginCode();
+            
+                                  final userState =
+                                      ref.read(userServiceProviderImpl);
+            
+                                  if (userState.error != null) {
+                                    showSnackBar(context, userState.error!);
+                                  } else {
+                                    Routemaster.of(context).push("/password");
                                   }
-                                }),
-                          ),
-                        ])))
-              ],
-            ),
-    ));
+                                }
+                              }),
+                        ),
+                      ])))
+            ],
+          ),
+      ),
+        );
   }
 }

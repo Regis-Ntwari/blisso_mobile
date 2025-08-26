@@ -348,6 +348,12 @@ class _TargetProfileComponentState
                   ),
                 ),
               ),
+              Padding(padding: const EdgeInsets.only( top: 10), child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
+                ],
+              ),),
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: SizedBox(

@@ -351,7 +351,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   }
 
   String formatMessageTime(String dateString) {
-    final date = DateTime.parse(dateString);
+    final date = DateTime.parse(dateString).toLocal();
     return DateFormat('h:mm a').format(date);
   }
 
@@ -361,9 +361,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = DateTime(now.year, now.month, now.day - 1);
 
-    if (date.isAfter(today)) {
+    if (date.day == today.day) {
       return 'Today';
-    } else if (date.isAfter(yesterday)) {
+    } else if (date.day == yesterday.day) {
       return 'Yesterday';
     } else {
       return DateFormat('EEEE, MMMM d').format(date);
@@ -385,49 +385,50 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
     final chatDetailsRef = ref.watch(getChatDetailsProviderImpl);
 
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor:
+          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leadingWidth: 30,
         backgroundColor:
             isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leadingWidth: 30,
-          backgroundColor:
-              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-          leading: Align(
+        leading: Align(
+          alignment: Alignment.center,
+          child: Container(
             alignment: Alignment.center,
-            child: Container(
-              alignment: Alignment.center,
-              child: IconButton(
-                onPressed: () {
-                  Routemaster.of(context).replace('/chat');
-                },
-                icon: const Icon(
-                  Icons.keyboard_arrow_left,
-                  size: 20,
-                ),
+            child: IconButton(
+              onPressed: () {
+                Routemaster.of(context).replace('/chat');
+              },
+              icon: const Icon(
+                Icons.keyboard_arrow_left,
+                size: 20,
               ),
             ),
           ),
-          title: Row(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(right: 5),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey,
-                  backgroundImage: CachedNetworkImageProvider(
-                      chatDetailsRef['profile_picture']),
-                ),
-              ),
-              Expanded(
-                child: ExpandableTextComponent(
-                  text: chatDetailsRef['full_name'],
-                ),
-              ),
-            ],
-          ),
         ),
-        body: Column(
+        elevation: 8,
+        title: Row(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(right: 5),
+              child: CircleAvatar(
+                backgroundColor: Colors.grey,
+                backgroundImage: CachedNetworkImageProvider(
+                    chatDetailsRef['profile_picture']),
+              ),
+            ),
+            Expanded(
+              child: ExpandableTextComponent(
+                text: chatDetailsRef['full_name'],
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
           children: [
             Expanded(
               child: chatDetailsRef['messages'].isEmpty
@@ -448,39 +449,39 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                               DateTime.parse(message['created_at']);
                           final dateKey =
                               DateFormat('yyyy-MM-dd').format(messageDate);
-
+            
                           if (!messagesByDate.containsKey(dateKey)) {
                             messagesByDate[dateKey] = [];
                           }
                           messagesByDate[dateKey]!.add(message);
                         }
-
+            
                         // Create a list of all dates
                         final dateKeys = messagesByDate.keys.toList()..sort();
-
+            
                         // Create a list of all items (date headers + messages)
                         List<dynamic> allItems = [];
                         for (var dateKey in dateKeys) {
                           // Add date header
                           allItems.add({'type': 'header', 'date': dateKey});
-
+            
                           // Add messages for this date
                           for (var message in messagesByDate[dateKey]!) {
                             allItems.add({'type': 'message', 'data': message});
                           }
                         }
-
+            
                         return ListView.builder(
                           controller: scrollController,
                           itemCount: allItems.length,
                           itemBuilder: (context, index) {
                             final item = allItems[index];
-
+            
                             // Handle date headers
                             if (item['type'] == 'header') {
                               final date =
                                   DateTime.parse('${item['date']} 00:00:00');
-
+            
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 8.0),
@@ -504,11 +505,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                 ),
                               );
                             }
-
+            
                             // Handle messages
                             final message = item['data'];
                             final isSender = message['sender'] == username;
-
+            
                             return Column(
                               crossAxisAlignment: isSender
                                   ? CrossAxisAlignment.end
@@ -822,7 +823,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                             final message =
                                                 messageController.text.trim();
                                             sendTextMessage(message);
-
+            
                                             if (message.isNotEmpty) {
                                               messageController.clear();
                                               WidgetsBinding.instance

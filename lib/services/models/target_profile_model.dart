@@ -26,6 +26,7 @@ class TargetProfileModel {
   List<dynamic>? lifesnapshots;
   List<dynamic>? targetLifesnapshots;
   List<dynamic>? profileImages;
+  String? distanceAnnot;
 
   TargetProfileModel(
       {this.user,
@@ -49,6 +50,7 @@ class TargetProfileModel {
       this.subscription,
       this.lifesnapshots,
       this.targetLifesnapshots,
+      this.distanceAnnot,
       this.profileImages,
       this.feeling = 'Lucky \u{1F60A}'});
 
@@ -131,6 +133,7 @@ class TargetProfileModel {
         pushNotifications: map['push_notifications'] != null
             ? map['push_notifications'] as bool
             : null,
+        distanceAnnot: map['distance_annot'],
         hideProfile:
             map['hide_profile'] != null ? map['hide_profile'] as bool : null,
         loginCodeEnabled: map['login_code_enabled'] != null
@@ -185,7 +188,6 @@ class TargetProfileModel {
             : null,
         homeAddress:
             map['home_address'] != null ? map['home_address'] as String : null);
-        
   }
 
   factory TargetProfileModel.fromMapNew(Map<String, dynamic> map) {
@@ -215,7 +217,6 @@ class TargetProfileModel {
         profilePic: map['profilePic'],
         homeAddress:
             map['home_address'] != null ? map['home_address'] as String : null);
-        
   }
 
   String toJson() => json.encode(toMap());

@@ -157,9 +157,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(
-                        height: 150,
+                        height: 100,
                         width: 300,
-                        child: Image.asset('assets/images/blisso.png')),
+                        child: Image.asset('assets/images/logo-new.png')),
                     Padding(
                       padding: const EdgeInsets.only(top: 30.0),
                       child: Row(

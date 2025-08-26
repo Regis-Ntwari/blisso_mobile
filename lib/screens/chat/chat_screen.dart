@@ -46,7 +46,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   String formatDate(String dateTimeString) {
-    final DateTime dateTime = DateTime.parse(dateTimeString);
+    final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
     final DateTime now = DateTime.now();
     final DateFormat timeFormat = DateFormat("hh:mm");
 
@@ -117,37 +117,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     return DefaultTabController(
       length: 2,
-      child: SafeArea(
-        child: Scaffold(
-          backgroundColor:
-              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-          appBar: AppBar(
-            backgroundColor: isLightTheme ? Colors.white : Colors.black,
-            centerTitle: true,
-            leading: IconButton(
-              onPressed: () {
-                Routemaster.of(context).replace('/homepage');
-              },
-              icon: const Icon(Icons.keyboard_arrow_left),
-            ),
-            title: Text(
-              'Chat',
-              style: TextStyle(
-                fontSize: scaler.scale(24),
-                color: GlobalColors.primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            bottom: const TabBar(
-              indicatorColor: GlobalColors.primaryColor,
-              labelStyle: TextStyle(color: GlobalColors.primaryColor),
-              tabs: [
-                Tab(text: "Chats"),
-                Tab(text: "Message Requests"),
-              ],
+      child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+        appBar: AppBar(
+          backgroundColor: isLightTheme ? Colors.white : Colors.black,
+          centerTitle: true,
+          leading: IconButton(
+            onPressed: () {
+              Routemaster.of(context).replace('/homepage');
+            },
+            icon: const Icon(Icons.keyboard_arrow_left),
+          ),
+          title: Text(
+            'Chat',
+            style: TextStyle(
+              fontSize: scaler.scale(24),
+              color: GlobalColors.primaryColor,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          body: TabBarView(
+          bottom: const TabBar(
+            indicatorColor: GlobalColors.primaryColor,
+            labelStyle: TextStyle(color: GlobalColors.primaryColor),
+            tabs: [
+              Tab(text: "Chats"),
+              Tab(text: "Message Requests"),
+            ],
+          ),
+        ),
+        body: SafeArea(
+          child: TabBarView(
             children: [
               // First tab - Chat List
               chatRef.isLoading
@@ -200,7 +200,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   List<dynamic>? messages =
                                       chatRef.data[index]['messages'];
                                   Map<String, dynamic> lastMessage = {};
-
+                
                                   if (messages != null && messages.isNotEmpty) {
                                     lastMessage = messages[messages.length - 1];
                                     print(lastMessage);
@@ -212,7 +212,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                           .toIso8601String()
                                     };
                                   }
-
+                
                                   return InkWell(
                                     onTap: () => chooseChat(
                                         username,
@@ -275,22 +275,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               const ChatMessageRequest()
             ],
           ),
-          floatingActionButton: InkWell(
-            onTap: () {
-              showMessageRequestModal(context, null);
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(35),
-                color: GlobalColors.primaryColor,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Icon(
-                  Icons.add,
-                  color: GlobalColors.whiteColor,
-                  size: 40,
-                ),
+        ),
+        floatingActionButton: InkWell(
+          onTap: () {
+            showMessageRequestModal(context, null);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(35),
+              color: GlobalColors.primaryColor,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                Icons.add,
+                color: GlobalColors.whiteColor,
+                size: 40,
               ),
             ),
           ),
