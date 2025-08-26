@@ -284,7 +284,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     Row(
                       children: [
                         IconButton(
-                          icon: widget.profile['liked_this_profile'] || isLiked
+                          icon: widget.profile['liked_this_profile']
                               ? const Icon(
                                   Icons.favorite,
                                   color: GlobalColors.primaryColor,
@@ -310,7 +310,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                               }
                               widget.profile['liked_this_profile'] =
                                   !widget.profile['liked_this_profile'];
-                              isLiked = !isLiked;
+                              //isLiked = !isLiked;
                             });
 
                             await likeRef.likeProfile(widget.profile['id']);

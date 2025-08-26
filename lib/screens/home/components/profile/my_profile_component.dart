@@ -126,7 +126,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
   Widget build(BuildContext context) {
     super.build(context);
     TextScaler scaler = MediaQuery.textScalerOf(context);
-    final profileRef = ref.read(myProfileServiceProviderImpl.notifier);
     final profileState = ref.watch(myProfileServiceProviderImpl);
     final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
     final videoPostState = ref.watch(videoPostServiceProviderImpl);
@@ -135,8 +134,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return SafeArea(
       child: Scaffold(
-        backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+        backgroundColor: isLightTheme ? Colors.white : Colors.black,
         body: profileState.isLoading || profileState.data == null
             ? const LoadingScreen()
             : SingleChildScrollView(
@@ -155,7 +153,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           width: width * 0.85,
                           child: InkWell(
                             onTap: () => Routemaster.of(context).push(
-                                '/homepage/image-viewer?url=${profileState.data['profile_picture_url']}&isProfilePic=true&isMe=true'),
+                                '/homepage/image-viewer?url=${profileState.data['profile_picture_url']}&id=-1&isProfilePic=true&isMe=true'),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: Image(
@@ -170,7 +168,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       Row(
                         children: [
                           const SizedBox(
-                            width: 30,
+                            width: 10,
                           ),
                           SizedBox(
                             child: Padding(
@@ -212,7 +210,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       ),
                       profileState.data['feeling_caption'] != null
                           ? Padding(
-                              padding: const EdgeInsets.only(left: 30),
+                              padding: const EdgeInsets.only(left: 10),
                               child: Text(
                                   'Feeling ${profileState.data['feeling_caption']}${profileState.data['feeling_emojis']}'),
                             )
@@ -220,13 +218,13 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       Row(
                         children: [
                           const SizedBox(
-                            width: 30,
+                            width: 10,
                           ),
                           SizedBox(
                             width: width * 0.85,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const SizedBox(
                                   height: 10,
@@ -261,7 +259,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                               color:
                                                   GlobalColors.secondaryColor),
                                         ),
-                                        Text(profileState.data['gender']
+                                        Text(profileState.data['gender'].toString()
                                             .toUpperCase())
                                       ],
                                     ),
@@ -285,7 +283,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                   GlobalColors.secondaryColor),
                                         ),
                                         Text(
-                                            '${profileState.data['marital_status']}')
+                                            profileState.data['marital_status'].toString().toUpperCase())
                                       ],
                                     ),
                                     Column(
@@ -730,8 +728,9 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                               showSnapshotDialog(context, ref);
                                             },
                                             child: const Padding(
-                                              padding:  EdgeInsets.symmetric(vertical: 20.0),
-                                              child:  Row(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 20.0),
+                                              child: Row(
                                                 children: [
                                                   Icon(Icons.add),
                                                   SizedBox(
@@ -752,7 +751,12 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               10),
-                                                      color: const Color.fromARGB(255, 139, 42, 42)),
+                                                      color:
+                                                          const Color.fromARGB(
+                                                              255,
+                                                              139,
+                                                              42,
+                                                              42)),
                                                   child: Text(
                                                     snapshot['name'],
                                                     textAlign: TextAlign.center,
@@ -798,7 +802,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                 }
                               },
                               child: ListTile(
-                                title: const Text('What you wish in a person',
+                                title: const Text('My interests in a person',
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold)),
                                 subtitle: Text(
@@ -816,7 +820,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                       showTargetSnapshotDialog(context, ref);
                                     },
                                     child: const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 20.0),
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 20.0),
                                       child: Row(
                                         children: [
                                           Icon(Icons.add),
@@ -884,32 +889,34 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               }));
                         },
                       ),
+                      // SwitchListTile(
+                      //   activeColor: GlobalColors.primaryColor,
+                      //   title: const Text('Push Notifications'),
+                      //   value: profileState.data['push_notifications'],
+                      //   onChanged: (value) async {
+                      //     setState(() {
+                      //       profileState.data['push_notifications'] = value;
+                      //     });
+                      //     await ref
+                      //         .read(myProfileServiceProviderImpl.notifier)
+                      //         .updateProfile(
+                      //             TargetProfileModel.fromMapNewNoProfile({
+                      //           ...profileState.data,
+                      //           'push_notifications': value
+                      //         }));
+                      //   },
+                      // ),
                       SwitchListTile(
                         activeColor: GlobalColors.primaryColor,
-                        title: const Text('Push Notifications'),
-                        value: profileState.data['push_notifications'],
-                        onChanged: (value) async {
-                          setState(() {
-                            profileState.data['push_notifications'] = value;
-                          });
-                          await ref
-                              .read(myProfileServiceProviderImpl.notifier)
-                              .updateProfile(
-                                  TargetProfileModel.fromMapNewNoProfile({
-                                ...profileState.data,
-                                'push_notifications': value
-                              }));
-                        },
-                      ),
-                      SwitchListTile(
-                        activeColor: GlobalColors.primaryColor,
-                        title: const Text('Login Code Enabled'),
+                        title: Text(
+                            'Login Code is ${profileState.data['login_code_enabled'] ? 'enabled' : 'disabled'}'),
                         value: profileState.data['login_code_enabled'],
                         onChanged: (value) async {
                           setState(() {
                             profileState.data['login_code_enabled'] = value;
                           });
-                          await SharedPreferencesService.setPreference('login_code_enabled', value);
+                          await SharedPreferencesService.setPreference(
+                              'login_code_enabled', value);
                           await ref
                               .read(myProfileServiceProviderImpl.notifier)
                               .updateProfile(

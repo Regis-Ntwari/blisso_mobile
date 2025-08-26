@@ -214,7 +214,7 @@ class _TargetProfileComponentState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                                      '${targetProfile.user!['first_name'].toString().toUpperCase()} ${targetProfile.user!['last_name'].toString().toUpperCase()}',
                                       style: TextStyle(
                                         fontSize: scaler.scale(24),
                                       ),
@@ -285,7 +285,7 @@ class _TargetProfileComponentState
                                               color:
                                                   GlobalColors.secondaryColor),
                                         ),
-                                        Text('${targetProfile.maritalStatus}')
+                                        Text(targetProfile.maritalStatus!.toUpperCase())
                                       ],
                                     ),
                                     Column(

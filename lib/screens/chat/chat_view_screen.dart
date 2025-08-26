@@ -350,7 +350,25 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     }
   }
 
-  
+  String formatMessageTime(String dateString) {
+    final date = DateTime.parse(dateString);
+    return DateFormat('h:mm a').format(date);
+  }
+
+  String formatDateHeader(String dateString) {
+    final date = DateTime.parse(dateString);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+
+    if (date.isAfter(today)) {
+      return 'Today';
+    } else if (date.isAfter(yesterday)) {
+      return 'Yesterday';
+    } else {
+      return DateFormat('EEEE, MMMM d').format(date);
+    }
+  }
 
   dynamic deleteMessage;
 
@@ -360,11 +378,9 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
       scrollToBottom();
-      
     });
 
     final chatDetailsRef = ref.watch(getChatDetailsProviderImpl);
@@ -425,301 +441,176 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                     )
                   : Builder(
                       builder: (context) {
-                        // --- BEGIN UNREAD INDICATOR LOGIC ---
-                        int unreadCount = 0;
-                        int? firstUnreadIndex;
-                        for (int i = 0;
-                            i < chatDetailsRef['messages'].length;
-                            i++) {
-                          final msg = chatDetailsRef['messages'][i];
-                          if (msg['sender'] != username &&
-                              msg['message_status'] == 'unseen') {
-                            unreadCount++;
-                            firstUnreadIndex ??= i;
+                        // Group messages by date
+                        Map<String, List<dynamic>> messagesByDate = {};
+                        for (var message in chatDetailsRef['messages']) {
+                          final messageDate =
+                              DateTime.parse(message['created_at']);
+                          final dateKey =
+                              DateFormat('yyyy-MM-dd').format(messageDate);
+
+                          if (!messagesByDate.containsKey(dateKey)) {
+                            messagesByDate[dateKey] = [];
+                          }
+                          messagesByDate[dateKey]!.add(message);
+                        }
+
+                        // Create a list of all dates
+                        final dateKeys = messagesByDate.keys.toList()..sort();
+
+                        // Create a list of all items (date headers + messages)
+                        List<dynamic> allItems = [];
+                        for (var dateKey in dateKeys) {
+                          // Add date header
+                          allItems.add({'type': 'header', 'date': dateKey});
+
+                          // Add messages for this date
+                          for (var message in messagesByDate[dateKey]!) {
+                            allItems.add({'type': 'message', 'data': message});
                           }
                         }
-                        // --- END UNREAD INDICATOR LOGIC ---
+
                         return ListView.builder(
                           controller: scrollController,
-                          itemCount: chatDetailsRef['messages'].length,
+                          itemCount: allItems.length,
                           itemBuilder: (context, index) {
-                            final message = chatDetailsRef['messages'][index];
-                            final isSender = message['sender'] == username;
-                            // Insert unread indicator above the first unread message
-                            if (unreadCount > 0 && firstUnreadIndex == index) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Padding(
+                            final item = allItems[index];
+
+                            // Handle date headers
+                            if (item['type'] == 'header') {
+                              final date =
+                                  DateTime.parse('${item['date']} 00:00:00');
+
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Center(
+                                  child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Divider(
-                                            color: GlobalColors.primaryColor
-                                                .withOpacity(0.5),
-                                            thickness: 1.2,
-                                            endIndent: 8,
-                                            indent: 8,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: GlobalColors.primaryColor,
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: Text(
-                                            '$unreadCount unread message${unreadCount > 1 ? 's' : ''}',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Divider(
-                                            color: GlobalColors.primaryColor
-                                                .withOpacity(0.5),
-                                            thickness: 1.2,
-                                            endIndent: 8,
-                                            indent: 8,
-                                          ),
-                                        ),
-                                      ],
+                                        horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: isSender
-                                        ? const EdgeInsets.only(
-                                            top: 1.5,
-                                            bottom: 1.5,
-                                            left: 80.0,
-                                            right: 10)
-                                        : const EdgeInsets.only(
-                                            top: 1.5,
-                                            bottom: 1.5,
-                                            left: 10.0,
-                                            right: 80),
-                                    child: Align(
-                                      alignment: isSender
-                                          ? Alignment.centerRight
-                                          : Alignment.centerLeft,
-                                      child: GestureDetector(
-                                        onLongPress: () {
-                                          dynamic selectedMessage = message;
-                                          isSender
-                                              ? showMessageOption(
-                                                  context,
-                                                  () => deleteTextMessage(
-                                                      selectedMessage), () {
-                                                  messageController.text =
-                                                      selectedMessage[
-                                                          'content'];
-                                                  Navigator.of(context).pop();
-                                                  setState(() {
-                                                    editMessage =
-                                                        selectedMessage;
-                                                  });
-                                                })
-                                              : null;
-                                        },
-                                        onHorizontalDragUpdate: (details) {
-                                          setState(() {
-                                            dragDistances[index] =
-                                                (dragDistances[index] ?? 0) +
-                                                    details.primaryDelta!;
-                                          });
-                                        },
-                                        onHorizontalDragEnd: (details) {
-                                          if ((dragDistances[index] ?? 0) >
-                                              50) {
-                                            setState(() {
-                                              replyMessage = message;
-                                              dragDistances[index] = 0;
-                                            });
-                                          } else {
-                                            setState(() {
-                                              dragDistances[index] = 0;
-                                            });
-                                          }
-                                        },
-                                        child: Transform.translate(
-                                          offset: Offset(
-                                              dragDistances[index] ?? 0, 0),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 5.0,
-                                                horizontal: 10.0),
-                                            decoration: BoxDecoration(
-                                              color: isSender
-                                                  ? isLightTheme
-                                                      ? GlobalColors
-                                                          .myMessageColor
-                                                      : GlobalColors
-                                                          .primaryColor
-                                                  : isLightTheme
-                                                      ? Colors.grey[200]
-                                                      : GlobalColors
-                                                          .otherDarkMessageColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                MessageView(
-                                                  message: message,
-                                                  scrollToParent:
-                                                      _scrollToParent,
-                                                  username: widget.username,
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 5.0),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.end,
-                                                    children: [
-                                                      Align(
-                                                        alignment: Alignment
-                                                            .bottomRight,
-                                                        child: Text(
-                                                          formatDate(message[
-                                                              'created_at']!),
-                                                          textAlign:
-                                                              TextAlign.end,
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize: 9),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-                            // Default message rendering
-                            return Padding(
-                              padding: isSender
-                                  ? const EdgeInsets.only(
-                                      top: 1.5,
-                                      bottom: 1.5,
-                                      left: 80.0,
-                                      right: 10)
-                                  : const EdgeInsets.only(
-                                      top: 1.5,
-                                      bottom: 1.5,
-                                      left: 10.0,
-                                      right: 80),
-                              child: Align(
-                                alignment: isSender
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: GestureDetector(
-                                  onLongPress: () {
-                                    dynamic selectedMessage = message;
-                                    isSender
-                                        ? showMessageOption(
-                                            context,
-                                            () => deleteTextMessage(
-                                                selectedMessage), () {
-                                            messageController.text =
-                                                selectedMessage['content'];
-                                            Navigator.of(context).pop();
-                                            setState(() {
-                                              editMessage = selectedMessage;
-                                            });
-                                          })
-                                        : null;
-                                  },
-                                  onHorizontalDragUpdate: (details) {
-                                    setState(() {
-                                      dragDistances[index] =
-                                          (dragDistances[index] ?? 0) +
-                                              details.primaryDelta!;
-                                    });
-                                  },
-                                  onHorizontalDragEnd: (details) {
-                                    if ((dragDistances[index] ?? 0) > 50) {
-                                      setState(() {
-                                        replyMessage = message;
-                                        dragDistances[index] = 0;
-                                      });
-                                    } else {
-                                      setState(() {
-                                        dragDistances[index] = 0;
-                                      });
-                                    }
-                                  },
-                                  child: Transform.translate(
-                                    offset:
-                                        Offset(dragDistances[index] ?? 0, 0),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 5.0, horizontal: 10.0),
-                                      decoration: BoxDecoration(
-                                        color: isSender
-                                            ? isLightTheme
-                                                ? GlobalColors.myMessageColor
-                                                : GlobalColors.primaryColor
-                                            : isLightTheme
-                                                ? Colors.grey[200]
-                                                : GlobalColors
-                                                    .otherDarkMessageColor,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          MessageView(
-                                            message: message,
-                                            scrollToParent: _scrollToParent,
-                                            username: widget.username,
-                                          ),
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 5.0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                Align(
-                                                  alignment:
-                                                      Alignment.bottomRight,
-                                                  child: Text(
-                                                    formatDate(
-                                                        message['created_at']!),
-                                                    textAlign: TextAlign.end,
-                                                    style: const TextStyle(
-                                                        fontSize: 9),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        ],
+                                    child: Text(
+                                      formatDateHeader(item['date']),
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              );
+                            }
+
+                            // Handle messages
+                            final message = item['data'];
+                            final isSender = message['sender'] == username;
+
+                            return Column(
+                              crossAxisAlignment: isSender
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: isSender
+                                      ? const EdgeInsets.only(
+                                          top: 1.5,
+                                          bottom: 1.5,
+                                          left: 80.0,
+                                          right: 10)
+                                      : const EdgeInsets.only(
+                                          top: 1.5,
+                                          bottom: 1.5,
+                                          left: 10.0,
+                                          right: 80),
+                                  child: Align(
+                                    alignment: isSender
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: GestureDetector(
+                                      onLongPress: () {
+                                        dynamic selectedMessage = message;
+                                        isSender
+                                            ? showMessageOption(
+                                                context,
+                                                () => deleteTextMessage(
+                                                    selectedMessage), () {
+                                                messageController.text =
+                                                    selectedMessage['content'];
+                                                Navigator.of(context).pop();
+                                                setState(() {
+                                                  editMessage = selectedMessage;
+                                                });
+                                              })
+                                            : null;
+                                      },
+                                      onHorizontalDragUpdate: (details) {
+                                        setState(() {
+                                          dragDistances[index] =
+                                              (dragDistances[index] ?? 0) +
+                                                  details.primaryDelta!;
+                                        });
+                                      },
+                                      onHorizontalDragEnd: (details) {
+                                        if ((dragDistances[index] ?? 0) > 50) {
+                                          setState(() {
+                                            replyMessage = message;
+                                            dragDistances[index] = 0;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            dragDistances[index] = 0;
+                                          });
+                                        }
+                                      },
+                                      child: Transform.translate(
+                                        offset: Offset(
+                                            dragDistances[index] ?? 0, 0),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 5.0, horizontal: 10.0),
+                                          decoration: BoxDecoration(
+                                            color: isSender
+                                                ? isLightTheme
+                                                    ? GlobalColors
+                                                        .myMessageColor
+                                                    : GlobalColors.primaryColor
+                                                : isLightTheme
+                                                    ? Colors.grey[200]
+                                                    : GlobalColors
+                                                        .otherDarkMessageColor,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: MessageView(
+                                            message: message,
+                                            scrollToParent: _scrollToParent,
+                                            username: widget.username,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Time stamp positioned outside the message bubble
+                                Padding(
+                                  padding: isSender
+                                      ? const EdgeInsets.only(
+                                          right: 20.0, bottom: 8.0)
+                                      : const EdgeInsets.only(
+                                          left: 20.0, bottom: 8.0),
+                                  child: Text(
+                                    formatMessageTime(message['created_at']),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             );
                           },
                         );

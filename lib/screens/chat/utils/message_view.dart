@@ -102,8 +102,10 @@ class _MessageViewState extends ConsumerState<MessageView> {
                           child: CachedNetworkImage(
                             fit: BoxFit.cover,
                               placeholder: (context, url) =>
-                                  const CircularProgressIndicator(
-                                    color: GlobalColors.primaryColor,
+                                  const Center(
+                                    child: CircularProgressIndicator(
+                                      color: GlobalColors.primaryColor,
+                                    ),
                                   ),
                               imageUrl: widget.message['content_file_url']),
                         ),

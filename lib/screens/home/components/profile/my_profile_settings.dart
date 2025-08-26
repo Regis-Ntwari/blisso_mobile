@@ -33,7 +33,7 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
     'widowed'
   ];
   final List<String> showMeOptions = ['men', 'women', 'everyone'];
-  final List<String> distanceOptions = ['Miles', 'Km'];
+  final List<String> distanceOptions = ['miles', 'Km'];
 
   final TextEditingController addressController = TextEditingController();
 
@@ -123,60 +123,65 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
 
   @override
   Widget build(BuildContext context) {
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Scaffold(
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
       appBar: AppBar(
           centerTitle: true,
+          backgroundColor: isLightTheme ? Colors.white : Colors.black,
           leading: IconButton(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.keyboard_arrow_left)),
           title: const Text('Edit Profile Settings')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            _buildDropdown('Gender', gender!, genderOptions,
-                (val) => setState(() => gender = val!)),
-            const SizedBox(height: 16),
-            _buildDropdown(
-                'Marital Status',
-                maritalStatus!,
-                maritalStatusOptions,
-                (val) => setState(() => maritalStatus = val!)),
-            const SizedBox(height: 16),
-            _buildDropdown('Show Me', showMe!, showMeOptions,
-                (val) => setState(() => showMe = val!)),
-            const SizedBox(height: 16),
-            Center(
-              child: ListTile(
-                title: const Text('Date of Birth'),
-                subtitle: Text(DateFormat('yyyy-MM-dd').format(dob!)),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _pickDate,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              _buildDropdown('Gender', gender!, genderOptions,
+                  (val) => setState(() => gender = val!)),
+              const SizedBox(height: 16),
+              _buildDropdown(
+                  'Marital Status',
+                  maritalStatus!,
+                  maritalStatusOptions,
+                  (val) => setState(() => maritalStatus = val!)),
+              const SizedBox(height: 16),
+              _buildDropdown('Show Me', showMe!, showMeOptions,
+                  (val) => setState(() => showMe = val!)),
+              const SizedBox(height: 16),
+              Center(
+                child: ListTile(
+                  title: const Text('Date of Birth'),
+                  subtitle: Text(DateFormat('yyyy-MM-dd').format(dob!)),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: _pickDate,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildDropdown(
-                'Distance Measure',
-                distanceMeasure!,
-                distanceOptions,
-                (val) => setState(() => distanceMeasure = val!)),
-            const SizedBox(height: 16),
-            Center(
-              child: TextInputComponent(
-                controller: addressController,
-                labelText: 'Home address',
-                hintText: 'Enter Home address',
-                validatorFunction: () {},
+              const SizedBox(height: 16),
+              _buildDropdown(
+                  'Distance Measure',
+                  distanceMeasure!,
+                  distanceOptions,
+                  (val) => setState(() => distanceMeasure = val!)),
+              const SizedBox(height: 16),
+              Center(
+                child: TextInputComponent(
+                  controller: addressController,
+                  labelText: 'Home address',
+                  hintText: 'Enter Home address',
+                  validatorFunction: () {},
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Center(
-                child: isLoading ? const CircularProgressIndicator(color: GlobalColors.primaryColor,) : ButtonComponent(
-                    text: 'Save Changes',
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    onTap: _saveChanges))
-          ],
+              const SizedBox(height: 24),
+              Center(
+                  child: isLoading ? const CircularProgressIndicator(color: GlobalColors.primaryColor,) : ButtonComponent(
+                      text: 'Save Changes',
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      onTap: _saveChanges))
+            ],
+          ),
         ),
       ),
     );
