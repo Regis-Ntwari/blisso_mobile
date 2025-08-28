@@ -509,8 +509,9 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                     );
                                                   },
                                                   child: SubscriptionDesign(
-                                                    
-                                                    isActive: profileState.data['subscription']['plan_code'] != null && profileState.data['subscription']['plan_code'] == subscriptionState.data[index]['code'],
+                                                    rwPrice: double.parse(subscriptionState.data[index]['rw_price'].toString()),
+                                                    usdPrice: double.parse(subscriptionState.data[index]['usd_price'].toString()),
+                                                    isActive: profileState.data['subscription']['plan_code'] == subscriptionState.data[index]['code'],
                                                     title: subscriptionState.data[index]['name'],
                                                       isChat: subscriptionState
                                                                       .data[index]

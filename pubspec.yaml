@@ -59,10 +59,17 @@ dependencies:
   video_player: ^2.9.2
   chewie: ^1.10.0
   shimmer: ^3.0.0
+  
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/logo-new.png
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -93,6 +100,7 @@ flutter:
     - assets/config/config.json
     - assets/images/picture.jpg
     - assets/images/logo-new.png
+    - assets/images/blisso-logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -2,7 +2,9 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class SubscriptionDesign extends StatelessWidget {
-  bool isActive;
+  final double rwPrice;
+  final double usdPrice;
+  final bool isActive;
   final String title;
   final bool isChat;
   final bool postStory;
@@ -20,6 +22,8 @@ class SubscriptionDesign extends StatelessWidget {
       required this.title,
       required this.isChat,
       this.isActive = false,
+      required this.rwPrice,
+      required this.usdPrice,
       required this.postStory,
       required this.viewStory,
       required this.viewStoryCaption,
@@ -115,6 +119,9 @@ class SubscriptionDesign extends StatelessWidget {
                     value: shareVideos,
                   ),
 
+                  const SizedBox(height: 12),
+                  Text('${rwPrice} RWF', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: GlobalColors.primaryColor),),
+                  Text('${usdPrice} USD', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: GlobalColors.primaryColor)),
                   const SizedBox(height: 24),
                   Row(
                     children: [
