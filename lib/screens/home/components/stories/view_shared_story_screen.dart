@@ -71,6 +71,7 @@ class _ViewSharedStoryScreenState
 
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Colors.black,
         body: Stack(
           children: [
             Positioned.fill(
@@ -101,7 +102,7 @@ class _ViewSharedStoryScreenState
               top: 50,
               left: 10,
               child: IconButton(
-                icon: Icon(Icons.close, color: isLightTheme ? Colors.black : Colors.white),
+                icon: Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -138,7 +139,7 @@ class _ViewSharedStoryScreenState
                                 ),
                           )
                         : const SizedBox.shrink(),
-                  )
+                  ),
           ],
         ),
       ),

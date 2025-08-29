@@ -23,6 +23,26 @@ class MessageRequestModal extends ConsumerStatefulWidget {
 
 class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
   TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    searchController.removeListener(_onSearchChanged);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      searchQuery = searchController.text.toLowerCase();
+    });
+  }
 
   Future<void> getUsers() async {
     if (ref.read(messageRequestServiceProviderImpl).data == null) {
@@ -31,14 +51,6 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
 
       await messageRequestRef.mapApprovedUsers();
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getUsers();
-    });
   }
 
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
@@ -81,11 +93,30 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
     }
   }
 
+  List<String> _getFilteredUsers(Map<String, dynamic> usersData) {
+    if (searchQuery.isEmpty) {
+      return usersData.keys.toList();
+    }
+
+    return usersData.keys.where((username) {
+      final user = usersData[username];
+      final fullName = user['fullname']?.toString().toLowerCase() ?? '';
+      final nickname = user['nickname']?.toString().toLowerCase() ?? '';
+      
+      return fullName.contains(searchQuery) || 
+             nickname.contains(searchQuery) ||
+             username.toLowerCase().contains(searchQuery);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     double height = MediaQuery.sizeOf(context).height;
     final messageRequestRef = ref.watch(messageRequestServiceProviderImpl);
+    
+    final filteredUsers = _getFilteredUsers(messageRequestRef.data ?? {});
+
     return SizedBox(
       height: height * 0.9,
       child: SafeArea(
@@ -116,7 +147,7 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                       ),
                       child: TextField(
                         controller: searchController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Search for users...',
                           contentPadding:
                               EdgeInsets.symmetric(vertical: 1, horizontal: 15),
@@ -124,15 +155,38 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                               borderRadius:
                                   BorderRadius.all(Radius.circular(60)),
                               borderSide: BorderSide.none),
+                          suffixIcon: searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear,
+                                      color: isLightTheme 
+                                          ? Colors.grey[600] 
+                                          : Colors.grey[400]),
+                                  onPressed: () {
+                                    searchController.clear();
+                                  },
+                                )
+                              : null,
                         ),
                       ),
                     ),
                   ),
                   Expanded(
-                      child: ListView.builder(
-                    itemCount: messageRequestRef.data.keys.length,
+                      child: filteredUsers.isEmpty
+                          ? Center(
+                              child: Text(
+                                searchQuery.isEmpty
+                                    ? 'No users available'
+                                    : 'No users found for "$searchQuery"',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                    itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
-                      final usersList = messageRequestRef.data.keys.toList();
+                      final username = filteredUsers[index];
                       return InkWell(
                         onTap: () {
                           if (widget.profile == null) {
@@ -140,20 +194,20 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                             int check = 0;
                             for (var chat in chatRef.data) {
                               if (chat['username'] ==
-                                  messageRequestRef.data[usersList[index]]
+                                  messageRequestRef.data[username]
                                       ['username']) {
                                 final chatDetailRef = ref
                                     .read(getChatDetailsProviderImpl.notifier);
                                 chatDetailRef.updateChatDetails({
                                   'username': messageRequestRef
-                                      .data[usersList[index]]['username'],
+                                      .data[username]['username'],
                                   'profile_picture':
-                                      messageRequestRef.data[usersList[index]]
+                                      messageRequestRef.data[username]
                                           ['profile_picture_url'],
                                   'full_name': messageRequestRef
-                                      .data[usersList[index]]['fullname'],
+                                      .data[username]['fullname'],
                                   'nickname': messageRequestRef
-                                      .data[usersList[index]]['nickname'],
+                                      .data[username]['nickname'],
                                   'messages': chat['messages']
                                 });
                                 check = 1;
@@ -166,33 +220,33 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
 
                               chatDetailRef.updateChatDetails({
                                 'username': messageRequestRef
-                                    .data[usersList[index]]['username'],
+                                    .data[username]['username'],
                                 'profile_picture':
-                                    messageRequestRef.data[usersList[index]]
+                                    messageRequestRef.data[username]
                                         ['profile_picture_url'],
                                 'full_name': messageRequestRef
-                                    .data[usersList[index]]['fullname'],
+                                    .data[username]['fullname'],
                                 'nickname': messageRequestRef
-                                    .data[usersList[index]]['nickname'],
+                                    .data[username]['nickname'],
                                 'messages': []
                               });
                             }
                             Navigator.pop(context);
 
                             Routemaster.of(context)
-                                .push('/chat-detail/${usersList[index]}');
+                                .push('/chat-detail/$username');
                           } else {
-                            sendContact(usersList[index]);
+                            sendContact(username);
                             Navigator.pop(context);
                           }
                         },
                         child: ListTile(
                             leading: CircleAvatar(
                               backgroundImage: CachedNetworkImageProvider(
-                                  messageRequestRef.data[usersList[index]]
+                                  messageRequestRef.data[username]
                                       ['profile_picture_url']),
                             ),
-                            title: Text(messageRequestRef.data[usersList[index]]
+                            title: Text(messageRequestRef.data[username]
                                 ['fullname'])),
                       );
                     },

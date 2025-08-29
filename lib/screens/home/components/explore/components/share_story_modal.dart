@@ -12,15 +12,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ShareStoryModal extends ConsumerStatefulWidget {
-  ShortStoryModel story;
+  final ShortStoryModel story;
   ShareStoryModal({super.key, required this.story});
 
   @override
-  ConsumerState<ShareStoryModal> createState() => _MessageRequestModalState();
+  ConsumerState<ShareStoryModal> createState() => _ShareStoryModalState();
 }
 
-class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
+class _ShareStoryModalState extends ConsumerState<ShareStoryModal> {
   TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    searchController.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getUsers();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.removeListener(_onSearchChanged);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      searchQuery = searchController.text.toLowerCase();
+    });
+  }
 
   Future<void> getUsers() async {
     if (ref.read(messageRequestServiceProviderImpl).data == null) {
@@ -29,14 +52,6 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
 
       await messageRequestRef.mapApprovedUsers();
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getUsers();
-    });
   }
 
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
@@ -59,16 +74,6 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
     try {
       final username = await SharedPreferencesService.getPreference('username');
 
-      /**ChatMessageModel messageModel = ChatMessageModel(
-          messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-          parentId: stories[currentIndex]['id'].toString(),
-          parentContent: 'Story',
-          sender: username!,
-          receiver: toUsername,
-          action: 'created',
-          content: replyController.text,
-          isFileIncluded: false,
-          createdAt: DateTime.now().toUtc().toIso8601String()); */
       ChatMessageModel messageModel = ChatMessageModel(
           sender: username,
           receiver: receiver,
@@ -90,11 +95,30 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
     }
   }
 
+  List<String> _getFilteredUsers(Map<String, dynamic> usersData) {
+    if (searchQuery.isEmpty) {
+      return usersData.keys.toList();
+    }
+
+    return usersData.keys.where((username) {
+      final user = usersData[username];
+      final fullName = user['fullname']?.toString().toLowerCase() ?? '';
+      final nickname = user['nickname']?.toString().toLowerCase() ?? '';
+      
+      return fullName.contains(searchQuery) || 
+             nickname.contains(searchQuery) ||
+             username.toLowerCase().contains(searchQuery);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     double height = MediaQuery.sizeOf(context).height;
     final messageRequestRef = ref.watch(messageRequestServiceProviderImpl);
+    
+    final filteredUsers = _getFilteredUsers(messageRequestRef.data ?? {});
+
     return SizedBox(
       height: height * 0.9,
       child: SafeArea(
@@ -125,7 +149,7 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
                       ),
                       child: TextField(
                         controller: searchController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Search for users...',
                           contentPadding:
                               EdgeInsets.symmetric(vertical: 1, horizontal: 15),
@@ -133,30 +157,53 @@ class _MessageRequestModalState extends ConsumerState<ShareStoryModal> {
                               borderRadius:
                                   BorderRadius.all(Radius.circular(60)),
                               borderSide: BorderSide.none),
+                          suffixIcon: searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear,
+                                      color: isLightTheme 
+                                          ? Colors.grey[600] 
+                                          : Colors.grey[400]),
+                                  onPressed: () {
+                                    searchController.clear();
+                                  },
+                                )
+                              : null,
                         ),
                       ),
                     ),
                   ),
                   Expanded(
-                      child: ListView.builder(
-                    itemCount: messageRequestRef.data.keys.length,
+                      child: filteredUsers.isEmpty
+                          ? Center(
+                              child: Text(
+                                searchQuery.isEmpty
+                                    ? 'No users available'
+                                    : 'No users found for "$searchQuery"',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                    itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
-                      final usersList = messageRequestRef.data.keys.toList();
+                      final username = filteredUsers[index];
                       return InkWell(
                         onTap: () async{
                           final shareRef = ref.read(updateStoryShareCountProviderImpl.notifier);
 
                           await shareRef.updateStoryShareCount(int.parse(widget.story.id));
-                          shareVideo(messageRequestRef.data[usersList[index]]
+                          shareVideo(messageRequestRef.data[username]
                               ['username']);
                         },
                         child: ListTile(
                             leading: CircleAvatar(
                               backgroundImage: CachedNetworkImageProvider(
-                                  messageRequestRef.data[usersList[index]]
+                                  messageRequestRef.data[username]
                                       ['profile_picture_url']),
                             ),
-                            title: Text(messageRequestRef.data[usersList[index]]
+                            title: Text(messageRequestRef.data[username]
                                 ['fullname'])),
                       );
                     },

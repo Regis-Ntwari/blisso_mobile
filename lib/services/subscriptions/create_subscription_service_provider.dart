@@ -17,6 +17,8 @@ class CreateSubscriptionServiceProvider extends StateNotifier<ApiState> {
       final response =
           await subscriptionService.createSubscription(subscription);
 
+          print(response);
+
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {

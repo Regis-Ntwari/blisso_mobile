@@ -17,6 +17,7 @@ class SubscriptionDesign extends StatelessWidget {
   final bool viewVideoCaption;
   final bool shareProfile;
   final bool shareVideos;
+  final Function onTap;
   SubscriptionDesign(
       {super.key,
       required this.title,
@@ -33,7 +34,8 @@ class SubscriptionDesign extends StatelessWidget {
       required this.viewVideos,
       required this.viewVideoCaption,
       required this.shareProfile,
-      required this.shareVideos});
+      required this.shareVideos,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -120,14 +122,24 @@ class SubscriptionDesign extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 12),
-                  Text('${rwPrice} RWF', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: GlobalColors.primaryColor),),
-                  Text('${usdPrice} USD', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: GlobalColors.primaryColor)),
+                  Text(
+                    '${rwPrice} RWF',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: GlobalColors.primaryColor),
+                  ),
+                  Text('${usdPrice} USD',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: GlobalColors.primaryColor)),
                   const SizedBox(height: 24),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () => onTap(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: GlobalColors.primaryColor,
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -148,17 +160,18 @@ class SubscriptionDesign extends StatelessWidget {
             ),
           ),
         ),
-        Positioned(
-          top: 10,
-          right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-          color: GlobalColors.primaryColor,
-          child: const Text(
-            'Active',
-            style: TextStyle(fontSize: 10, color: Colors.white),
-          ),
-        ))
+        if (isActive)
+          Positioned(
+              top: 10,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                color: GlobalColors.primaryColor,
+                child: const Text(
+                  'Active',
+                  style: TextStyle(fontSize: 10, color: Colors.white),
+                ),
+              ))
       ],
     );
   }

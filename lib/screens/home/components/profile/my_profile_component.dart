@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
@@ -11,6 +12,7 @@ import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
+import 'package:blisso_mobile/services/subscriptions/create_subscription_service_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -99,6 +101,101 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     } else {
       showSnackBar(context, profileState.error!);
     }
+  }
+
+  void showPopupPayment(dynamic payment) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String? tempSelected = selectedOption;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Choose Currency'),
+                    const SizedBox(height: 10),
+                    RadioListTile<String>(
+                      title: const Text('RWF'),
+                      value: 'RWF',
+                      groupValue: tempSelected,
+                      onChanged: (value) {
+                        setState(() {
+                          tempSelected = value!;
+                        });
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('USD'),
+                      value: 'USD',
+                      groupValue: tempSelected,
+                      onChanged: (value) {
+                        setState(() {
+                          tempSelected = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    ButtonComponent(
+                      text: 'Continue',
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        // Update the actual selectedOption in parent
+                        setState(() {
+                          selectedOption = tempSelected!;
+                        });
+                        final chosenOptionRef =
+                            ref.read(chosenOptionsProviderImpl.notifier);
+                        chosenOptionRef.addOption('currency', selectedOption);
+                        chosenOptionRef.addOption(
+                            'amount',
+                            selectedOption == 'RWF'
+                                ? payment['rw_price']
+                                : payment['usd_price']);
+
+                        chosenOptionRef.addOption('code', payment['code']);
+                        if ((selectedOption == 'RWF' &&
+                                payment['rw_price'] == 0) ||
+                            (selectedOption == 'USD' &&
+                                payment['usd_price'] == 0.0)) {
+                          await ref
+                              .read(createSubscriptionProviderImpl.notifier)
+                              .createSubscription({
+                            "plan_code": payment['code'],
+                            "price": selectedOption == 'RWF'
+                                ? payment['rw_price']
+                                : payment['usd_price'],
+                            "currency": selectedOption,
+                          });
+
+                          await ref.read(myProfileServiceProviderImpl.notifier).getMyProfile();
+                        } else {
+                          Routemaster.of(context).push(
+                            '/homepage/subscription'
+                            '?code=${payment['code']}'
+                            '&name=${payment['name']}'
+                            '&rwPrice=${payment['rw_price']}'
+                            '&usdPrice=${payment['usd_price']}'
+                            '&months=${payment['months']}'
+                            '&currency=$selectedOption',
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -388,203 +485,90 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                         height: 10,
                       ),
                       const Divider(),
-                      const SizedBox(height: 10,),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       SizedBox(
                         height: 600,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
-                          child:
-                              subscriptionState.isLoading ||
-                                      subscriptionState.data == null
-                                  ? const Center(
-                                      child: CircularProgressIndicator(
-                                        color: GlobalColors.primaryColor,
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount:
-                                        subscriptionState.data.length,
-                                    itemBuilder: (context, index) {
-                                      return Padding(
-                                              padding: const EdgeInsets
-                                                  .symmetric(
-                                                  horizontal: 2.0),
-                                              child: InkWell(
-                                                  onTap: () {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        String?
-                                                            tempSelected =
-                                                            selectedOption; // local copy to update inside dialog
-                                                          
-                                                        return StatefulBuilder(
-                                                          builder: (context,
-                                                              setState) {
-                                                            return Dialog(
-                                                              child:
-                                                                  Padding(
-                                                                padding: const EdgeInsets
-                                                                    .all(
-                                                                    16),
-                                                                child:
-                                                                    Column(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize.min,
-                                                                  children: [
-                                                                    const Text(
-                                                                        'Choose Currency'),
-                                                                    const SizedBox(
-                                                                        height: 10),
-                                                                    RadioListTile<
-                                                                        String>(
-                                                                      title:
-                                                                          const Text('RWF'),
-                                                                      value:
-                                                                          'RWF',
-                                                                      groupValue:
-                                                                          tempSelected,
-                                                                      onChanged:
-                                                                          (value) {
-                                                                        setState(() {
-                                                                          tempSelected = value!;
-                                                                        });
-                                                                      },
-                                                                    ),
-                                                                    RadioListTile<
-                                                                        String>(
-                                                                      title:
-                                                                          const Text('USD'),
-                                                                      value:
-                                                                          'USD',
-                                                                      groupValue:
-                                                                          tempSelected,
-                                                                      onChanged:
-                                                                          (value) {
-                                                                        setState(() {
-                                                                          tempSelected = value!;
-                                                                        });
-                                                                      },
-                                                                    ),
-                                                                    const SizedBox(
-                                                                        height: 20),
-                                                                    ButtonComponent(
-                                                                      text:
-                                                                          'Continue',
-                                                                      backgroundColor:
-                                                                          Colors.white,
-                                                                      foregroundColor:
-                                                                          Colors.black,
-                                                                      onTap:
-                                                                          () {
-                                                                        Navigator.pop(context);
-                                                                        // Update the actual selectedOption in parent
-                                                                        setState(() {
-                                                                          selectedOption = tempSelected!;
-                                                                        });
-                                                                        final chosenOptionRef = ref.read(chosenOptionsProviderImpl.notifier);
-                                                                        chosenOptionRef.addOption('currency', selectedOption);
-                                                                        chosenOptionRef.addOption('amount', selectedOption == 'RWF' ? subscriptionState.data[index]['rw_price'] : subscriptionState.data[index]['usd_price']);
-                                                          
-                                                                        chosenOptionRef.addOption('code', subscriptionState.data[index]['code']);
-                                                                        Routemaster.of(context).push(
-                                                                          '/homepage/subscription'
-                                                                          '?code=${subscriptionState.data[index]['code']}'
-                                                                          '&name=${subscriptionState.data[index]['name']}'
-                                                                          '&rwPrice=${subscriptionState.data[index]['rw_price']}'
-                                                                          '&usdPrice=${subscriptionState.data[index]['usd_price']}'
-                                                                          '&months=${subscriptionState.data[index]['months']}'
-                                                                          '&currency=$selectedOption',
-                                                                        );
-                                                                      },
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  child: SubscriptionDesign(
-                                                    rwPrice: double.parse(subscriptionState.data[index]['rw_price'].toString()),
-                                                    usdPrice: double.parse(subscriptionState.data[index]['usd_price'].toString()),
-                                                    isActive: profileState.data['subscription']['plan_code'] == subscriptionState.data[index]['code'],
-                                                    title: subscriptionState.data[index]['name'],
-                                                      isChat: subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      postStory:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      viewStory:
-                                                          true,
-                                                      viewStoryCaption:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      postVideos:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      viewRecommendations:
-                                                          true,
-                                                      viewProfiles:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      viewVideos:
-                                                          true,
-                                                      viewVideoCaption:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      shareProfile:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true,
-                                                      shareVideos:
-                                                          subscriptionState
-                                                                      .data[index]
-                                                                  [
-                                                                  'rw_price'] ==
-                                                              0
-                                                          ? false
-                                                          : true)),
-                                            );
-                                    },
+                          child: subscriptionState.isLoading ||
+                                  subscriptionState.data == null
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: GlobalColors.primaryColor,
                                   ),
+                                )
+                              : ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: subscriptionState.data.length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 2.0),
+                                      child: InkWell(
+                                          onTap: () {
+                                            if (profileState
+                                                        .data['subscription']
+                                                    ['plan_code'] !=
+                                                null) {
+                                              showPopupComponent(
+                                                  context: context,
+                                                  icon: Icons.error,
+                                                  message:
+                                                      'You already have an active subscription');
+                                            } else {
+                                              showPopupPayment(subscriptionState
+                                                  .data[index]);
+                                            }
+                                          },
+                                          child: SubscriptionDesign(
+                                              onTap: () {
+                                                if (profileState.data[
+                                                            'subscription']
+                                                        ['plan_code'] !=
+                                                    null) {
+                                                  showPopupComponent(
+                                                      context: context,
+                                                      icon: Icons.error,
+                                                      message:
+                                                          'You already have an active subscription');
+                                                } else {
+                                                  showPopupPayment(
+                                                      subscriptionState
+                                                          .data[index]);
+                                                }
+                                              },
+                                              rwPrice: double.parse(
+                                                  subscriptionState.data[index]
+                                                          ['rw_price']
+                                                      .toString()),
+                                              usdPrice: double.parse(
+                                                  subscriptionState.data[index]
+                                                          ['usd_price']
+                                                      .toString()),
+                                              isActive: profileState.data['subscription']
+                                                      ['plan_code'] ==
+                                                  subscriptionState.data[index]
+                                                      ['code'],
+                                              title: subscriptionState.data[index]
+                                                  ['name'],
+                                              isChat: subscriptionState.data[index]['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                              postStory: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
+                                              viewStory: true,
+                                              viewStoryCaption: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
+                                              postVideos: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
+                                              viewRecommendations: true,
+                                              viewProfiles: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
+                                              viewVideos: true,
+                                              viewVideoCaption: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
+                                              shareProfile: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
+                                              shareVideos: subscriptionState.data[index]['rw_price'] == 0 ? false : true)),
+                                    );
+                                  },
+                                ),
                         ),
                       ),
                       SizedBox(

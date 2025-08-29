@@ -638,7 +638,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                     decoration: BoxDecoration(
                                       color: isLightTheme
                                           ? const Color(0xFFF5F5F5)
-                                          : Colors.black,
+                                          : const Color(0xFF111112),
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
                                         color: isLightTheme
@@ -659,16 +659,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                               minWidth: 60, maxWidth: 120),
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              right: BorderSide(
-                                                color: isLightTheme
-                                                    ? Colors.grey[300]!
-                                                    : Colors.grey[700]!,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                          
                                           child: DropdownButtonHideUnderline(
                                             child: DropdownButton<String>(
                                               value: searchAttribute,
@@ -783,16 +774,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                         Container(
                                           height: 35, // Match parent height
                                           width: 40,
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              left: BorderSide(
-                                                color: isLightTheme
-                                                    ? Colors.grey[300]!
-                                                    : Colors.grey[700]!,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                          
                                           child: IconButton(
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
