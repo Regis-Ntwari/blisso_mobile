@@ -285,7 +285,8 @@ class _TargetProfileComponentState
                                               color:
                                                   GlobalColors.secondaryColor),
                                         ),
-                                        Text(targetProfile.maritalStatus!.toUpperCase())
+                                        Text(targetProfile.maritalStatus!
+                                            .toUpperCase())
                                       ],
                                     ),
                                     Column(
@@ -348,12 +349,17 @@ class _TargetProfileComponentState
                   ),
                 ),
               ),
-              Padding(padding: const EdgeInsets.only( top: 10), child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
-                ],
-              ),),
+              if (targetProfile.distanceAnnot != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                          '${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
+                    ],
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: SizedBox(

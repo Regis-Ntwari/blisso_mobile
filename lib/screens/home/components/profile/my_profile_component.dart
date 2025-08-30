@@ -480,6 +480,43 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                     )
                                   ],
                                 ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Show Me',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(
+                                            '${profileState.data['show_me'].toString().toUpperCase()}')
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Distance Measure',
+                                          style: TextStyle(
+                                              color:
+                                                  GlobalColors.secondaryColor),
+                                        ),
+                                        Text(profileState
+                                            .data['distance_measure'])
+                                      ],
+                                    )
+                                  ],
+                                )
                               ],
                             ),
                           ),
@@ -507,69 +544,109 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                   scrollDirection: Axis.horizontal,
                                   itemCount: subscriptionState.data.length,
                                   itemBuilder: (context, index) {
+                                    // Sort the subscriptions to show active one first
+                                    List<dynamic> sortedSubscriptions =
+                                        List.from(subscriptionState.data);
+                                    sortedSubscriptions.sort((a, b) {
+                                      bool aIsActive =
+                                          profileState.data['subscription']
+                                                  ['plan_code'] ==
+                                              a['code'];
+                                      bool bIsActive =
+                                          profileState.data['subscription']
+                                                  ['plan_code'] ==
+                                              b['code'];
+
+                                      if (aIsActive && !bIsActive) return -1;
+                                      if (!aIsActive && bIsActive) return 1;
+                                      return 0;
+                                    });
+
+                                    final subscription =
+                                        sortedSubscriptions[index];
+                                    final isActive =
+                                        profileState.data['subscription']
+                                                ['plan_code'] ==
+                                            subscription['code'];
+
                                     return Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 2.0),
                                       child: InkWell(
+                                        onTap: () {
+                                          if (profileState.data['subscription']
+                                                      ['plan_code'] !=
+                                                  null &&
+                                              !isActive) {
+                                            showPopupComponent(
+                                                context: context,
+                                                icon: Icons.error,
+                                                message:
+                                                    'You already have an active subscription');
+                                          } else if (!isActive) {
+                                            showPopupPayment(subscription);
+                                          }
+                                        },
+                                        child: SubscriptionDesign(
                                           onTap: () {
-                                            if (profileState
-                                                        .data['subscription']
-                                                    ['plan_code'] !=
-                                                null) {
+                                            if (profileState.data[
+                                                            'subscription']
+                                                        ['plan_code'] !=
+                                                    null &&
+                                                !isActive) {
                                               showPopupComponent(
                                                   context: context,
                                                   icon: Icons.error,
                                                   message:
                                                       'You already have an active subscription');
-                                            } else {
-                                              showPopupPayment(subscriptionState
-                                                  .data[index]);
+                                            } else if (!isActive) {
+                                              showPopupPayment(subscription);
                                             }
                                           },
-                                          child: SubscriptionDesign(
-                                              onTap: () {
-                                                if (profileState.data[
-                                                            'subscription']
-                                                        ['plan_code'] !=
-                                                    null) {
-                                                  showPopupComponent(
-                                                      context: context,
-                                                      icon: Icons.error,
-                                                      message:
-                                                          'You already have an active subscription');
-                                                } else {
-                                                  showPopupPayment(
-                                                      subscriptionState
-                                                          .data[index]);
-                                                }
-                                              },
-                                              rwPrice: double.parse(
-                                                  subscriptionState.data[index]
-                                                          ['rw_price']
-                                                      .toString()),
-                                              usdPrice: double.parse(
-                                                  subscriptionState.data[index]
-                                                          ['usd_price']
-                                                      .toString()),
-                                              isActive: profileState.data['subscription']
-                                                      ['plan_code'] ==
-                                                  subscriptionState.data[index]
-                                                      ['code'],
-                                              title: subscriptionState.data[index]
-                                                  ['name'],
-                                              isChat: subscriptionState.data[index]['rw_price'] == 0
+                                          rwPrice: double.parse(
+                                              subscription['rw_price']
+                                                  .toString()),
+                                          usdPrice: double.parse(
+                                              subscription['usd_price']
+                                                  .toString()),
+                                          isActive: isActive,
+                                          title: subscription['name'],
+                                          isChat: subscription['rw_price'] == 0
+                                              ? false
+                                              : true,
+                                          postStory:
+                                              subscription['rw_price'] == 0
                                                   ? false
                                                   : true,
-                                              postStory: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
-                                              viewStory: true,
-                                              viewStoryCaption: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
-                                              postVideos: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
-                                              viewRecommendations: true,
-                                              viewProfiles: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
-                                              viewVideos: true,
-                                              viewVideoCaption: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
-                                              shareProfile: subscriptionState.data[index]['rw_price'] == 0 ? false : true,
-                                              shareVideos: subscriptionState.data[index]['rw_price'] == 0 ? false : true)),
+                                          viewStory: true,
+                                          viewStoryCaption:
+                                              subscription['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                          postVideos:
+                                              subscription['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                          viewRecommendations: true,
+                                          viewProfiles:
+                                              subscription['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                          viewVideos: true,
+                                          viewVideoCaption:
+                                              subscription['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                          shareProfile:
+                                              subscription['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                          shareVideos:
+                                              subscription['rw_price'] == 0
+                                                  ? false
+                                                  : true,
+                                        ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -578,8 +655,14 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       SizedBox(
                         child: Column(
                           children: [
-                            SizedBox(
+                            Container(
                               height: 300,
+                              decoration: BoxDecoration(
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: isLightTheme
+                                              ? Colors.black
+                                              : Colors.white))),
                               child: DefaultTabController(
                                 length: 2,
                                 child: Column(
@@ -888,7 +971,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       ),
                       SwitchListTile(
                         activeColor: GlobalColors.primaryColor,
-                        title: const Text('Hide Profile'),
+                        title: Text(
+                            'Profile is ${profileState.data['hide_profile'] ? 'hidden' : 'not hidden'}'),
                         value: profileState.data['hide_profile'],
                         onChanged: (value) async {
                           setState(() {
@@ -924,7 +1008,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       SwitchListTile(
                         activeColor: GlobalColors.primaryColor,
                         title: Text(
-                            'Login Code is ${profileState.data['login_code_enabled'] ? 'enabled' : 'disabled'}'),
+                            'Login code is ${profileState.data['login_code_enabled'] ? 'enabled' : 'disabled'}'),
                         value: profileState.data['login_code_enabled'],
                         onChanged: (value) async {
                           setState(() {

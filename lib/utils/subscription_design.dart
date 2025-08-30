@@ -43,7 +43,7 @@ class SubscriptionDesign extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          constraints: BoxConstraints(maxWidth: width * 0.9),
+          constraints: BoxConstraints(maxWidth: width * 0.8),
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: Card(
             elevation: 8,
