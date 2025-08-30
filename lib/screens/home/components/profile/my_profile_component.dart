@@ -657,6 +657,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                           children: [
                             Container(
                               height: 300,
+                              padding: const EdgeInsets.only(bottom: 2),
                               decoration: BoxDecoration(
                                   border: Border(
                                       bottom: BorderSide(
@@ -677,7 +678,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                           GlobalColors.secondaryColor,
                                     ),
                                     SizedBox(
-                                      height: 250,
+                                      height: 240,
                                       child: TabBarView(
                                         children: [
                                           // Pictures Tab

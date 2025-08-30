@@ -378,7 +378,8 @@ class _TargetProfileComponentState
                 child: Column(
                   children: [
                     Container(
-                        height: 250,
+                        height: 300,
+                        padding: const EdgeInsets.only(bottom: 2,),
                         decoration: BoxDecoration(
                             border: Border(
                                 bottom: BorderSide(
@@ -388,7 +389,7 @@ class _TargetProfileComponentState
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: SizedBox(
-                            height: 200,
+                            height: 250,
                             child: DefaultTabController(
                               length: 2,
                               child: Column(
@@ -403,7 +404,7 @@ class _TargetProfileComponentState
                                         GlobalColors.secondaryColor,
                                   ),
                                   SizedBox(
-                                    height: 200,
+                                    height: 240,
                                     child: Padding(
                                       padding:
                                           const EdgeInsets.only(left: 10.0),
