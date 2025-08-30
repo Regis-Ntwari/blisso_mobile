@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
+import 'package:blisso_mobile/screens/home/components/stories/share_short_story_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
@@ -11,6 +12,7 @@ import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/stories/delete_story_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -201,32 +203,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
         }
       }
     }
-
-    // try {
-    //   ChatMessageModel messageModel = ChatMessageModel(
-    //       messageId: generate12ByteHexFromTimestamp(DateTime.now()),
-    //       parentId: stories[currentIndex]['id'].toString(),
-    //       parentContent: 'Story',
-    //       contentFileType: stories[currentIndex]['id'],
-    //       sender: username!,
-    //       receiver: toUsername,
-    //       action: 'created',
-    //       content: replyController.text,
-    //       isFileIncluded: false,
-    //       createdAt: DateTime.now().toUtc().toIso8601String());
-
-    //   final messageRef = ref.read(webSocketNotifierProvider.notifier);
-    //   messageRef.sendMessage(messageModel);
-
-    //   setState(() {
-    //     replyController.clear();
-    //     isSendingReply = false;
-    //   });
-    // } catch (e) {
-    //   setState(() {
-    //     isSendingReply = false;
-    //   });
-    // }
   }
 
   TextEditingController replyController = TextEditingController();
@@ -248,87 +224,6 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     _videoController?.dispose();
     super.dispose();
   }
-
-  /*try {
-      final messageRequestRef =
-          ref.read(addMessageRequestServiceProviderImpl.notifier);
-      await messageRequestRef.sendMessageRequest(targetUsername);
-
-      final messageRequestResponse =
-          ref.read(addMessageRequestServiceProviderImpl);
-
-      if (messageRequestResponse.error == null) {
-        if (context.mounted) {
-          // Show success popup
-          if (messageRequestResponse.statusCode == 200) {
-            final chatRef = ref.read(chatServiceProviderImpl);
-            if (chatRef.data == null || chatRef.data.isEmpty) {
-              final chatRef = ref.read(chatServiceProviderImpl.notifier);
-              await chatRef.getMessages();
-            }
-            final chatsRef = ref.read(chatServiceProviderImpl);
-            for (var chat in chatsRef.data) {
-              if (chat['username'] == targetUsername) {
-                final chatDetailsRef =
-                    ref.read(getChatDetailsProviderImpl.notifier);
-                chatDetailsRef.updateChatDetails({
-                  'username': targetUsername,
-                  'profile_picture': widget.profile['profile_picture_url'],
-                  'full_name': '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
-                  'nickname': widget.profile['nickname'],
-                  'messages': chat['messages']
-                });
-              }
-            }
-            setState(() {
-              isLoading = false;
-            });
-            Routemaster.of(context).push('/chat-detail/$targetUsername');
-          } else if (messageRequestResponse.statusCode == 201) {
-            setState(() {
-              isLoading = false;
-            });
-            showPopupComponent(
-                context: context,
-                icon: Icons.verified,
-                iconColor: Colors.green[800],
-                message:
-                    'Message request sent to ${widget.profile['nickname']}!');
-          } else {
-            setState(() {
-              isLoading = false;
-            });
-            showPopupComponent(
-              context: context,
-              icon: Icons.error,
-              iconColor: Colors.red,
-              message: messageRequestResponse.error!,
-            );
-          }
-        }
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        showPopupComponent(
-            context: context,
-            icon: Icons.error,
-            message: messageRequestResponse.error!);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        // Show error popup
-        showPopupComponent(
-          context: context,
-          icon: Icons.error,
-          iconColor: Colors.red,
-          message: 'Failed to send message request: ${e.toString()}',
-        );
-      }
-    } */
 
   @override
   Widget build(BuildContext context) {
@@ -383,6 +278,51 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
+                  if (stories[currentIndex]['nickname'] == nickname)
+                    Positioned(
+                        top: 50,
+                        right: 10,
+                        child: PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
+                          ),
+                          onSelected: (value) async {
+                            setState(() {
+                              isProfileLoading = true;
+                            });
+                            if (value == 'share') {
+                              showShareShortStoryModal(
+                                  context, stories[currentIndex]['id']);
+                              setState(() {
+                                isProfileLoading = false;
+                              });
+                            } else {
+                              await ref
+                                  .read(deleteStoryProviderImpl.notifier)
+                                  .deleteStory(stories[currentIndex]['id']);
+                              await ref
+                                  .read(storiesServiceProviderImpl.notifier)
+                                  .getStories();
+                              setState(() {
+                                isProfileLoading = false;
+                              });
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          itemBuilder: (context) {
+                            return [
+                              const PopupMenuItem<String>(
+                                value: 'share',
+                                child: Text('Share Story'),
+                              ),
+                              const PopupMenuItem<String>(
+                                value: 'delete',
+                                child: Text('Delete Story'),
+                              ),
+                            ];
+                          },
+                        )),
                   Positioned(
                     bottom: 130,
                     left: 10,
@@ -490,31 +430,31 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                     right: 10,
                     child: stories[currentIndex]['caption'] != null
                         ? Container(
-                          color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withOpacity(0.6),
                             constraints: BoxConstraints(
                               maxWidth: MediaQuery.of(context).size.width - 20,
                             ),
-                            child: 
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                                  child: Center(
-                                    child: ExpandableTextComponent(
-                                      text: stories[currentIndex]['caption'],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                        shadows: [
-                                          Shadow(
-                                            offset: Offset(1, 1),
-                                            blurRadius: 3.0,
-                                            color: Colors.black54,
-                                          ),
-                                        ],
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 5.0),
+                              child: Center(
+                                child: ExpandableTextComponent(
+                                  text: stories[currentIndex]['caption'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    shadows: [
+                                      Shadow(
+                                        offset: Offset(1, 1),
+                                        blurRadius: 3.0,
+                                        color: Colors.black54,
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
+                              ),
+                            ),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -578,17 +518,13 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                             MediaQuery.of(context).size.width *
                                                 0.7,
                                         decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(60),
-                                          color: 
-                                              Colors.grey[900]
-                                        ),
+                                            borderRadius:
+                                                BorderRadius.circular(60),
+                                            color: Colors.grey[900]),
                                         child: TextField(
                                           controller: replyController,
                                           style: const TextStyle(
-                                              color: 
-                                                  Colors.white
-                                                  ),
+                                              color: Colors.white),
                                           decoration: const InputDecoration(
                                             hintText: 'Reply...',
                                             hintStyle:
@@ -610,8 +546,9 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                     IconButton(
                                       onPressed: () {
                                         if (replyController.text.isNotEmpty) {
-                                          sendReply(stories[currentIndex]
-                                              ['username'], stories[currentIndex]['name']);
+                                          sendReply(
+                                              stories[currentIndex]['username'],
+                                              stories[currentIndex]['name']);
                                         }
                                       },
                                       icon: const Icon(Icons.send,

@@ -7,11 +7,14 @@ import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_target_snapshot_dialog.dart';
+import 'package:blisso_mobile/screens/home/components/profile/video_post_options_component.dart';
 import 'package:blisso_mobile/screens/utils/subscription/chosen_options_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
+import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
+import 'package:blisso_mobile/services/stories/delete_video_post_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/create_subscription_service_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
@@ -174,7 +177,9 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             "currency": selectedOption,
                           });
 
-                          await ref.read(myProfileServiceProviderImpl.notifier).getMyProfile();
+                          await ref
+                              .read(myProfileServiceProviderImpl.notifier)
+                              .getMyProfile();
                         } else {
                           Routemaster.of(context).push(
                             '/homepage/subscription'
@@ -648,7 +653,19 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                           .data.length,
                                                       itemBuilder:
                                                           (context, index) {
-                                                        return InkWell(
+                                                        return GestureDetector(
+                                                          onLongPress:
+                                                              () async {
+                                                            showVideoPostOptions(
+                                                                context,
+                                                                videoPostState
+                                                                        .data[
+                                                                    index]['id']);
+                                                            await ref
+                                                                .read(profileServiceProviderImpl
+                                                                    .notifier)
+                                                                .getMyProfile();
+                                                          },
                                                           onTap: () {
                                                             Routemaster.of(
                                                                     context)

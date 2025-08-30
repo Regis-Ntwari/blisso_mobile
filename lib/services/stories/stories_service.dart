@@ -24,6 +24,30 @@ class StoriesService {
     return response;
   }
 
+  Future<ApiResponse> deleteStory(int id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    print(accessToken);
+
+    ApiResponse response = await ApiService().deleteData(
+        endpoint: 'posts/stories/$id/', token: accessToken, body: {});
+
+    return response;
+  }
+
+  Future<ApiResponse> deleteVideoPost(int id) async{
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    print(accessToken);
+
+    ApiResponse response = await ApiService().deleteData(
+        endpoint: 'posts/video-posts/$id/', token: accessToken, body: {});
+
+    return response;
+  }
+
   Future<ApiResponse> likeStory(int id) async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
@@ -65,9 +89,13 @@ class StoriesService {
   }
 
   Future<ApiResponse> updateShareCount(int storyId) async {
-    String accessToken = await SharedPreferencesService.getPreference('accessToken');
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().postData(endpoint: 'posts/video-posts/$storyId/share/', token: accessToken, body: {});
+    ApiResponse response = await ApiService().postData(
+        endpoint: 'posts/video-posts/$storyId/share/',
+        token: accessToken,
+        body: {});
 
     return response;
   }
