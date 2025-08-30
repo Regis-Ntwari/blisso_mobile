@@ -36,7 +36,7 @@ class _ExpandableTextState extends State<ExpandableTextComponent> {
             textDirection: TextDirection.ltr,
           )..layout(maxWidth: constraints.maxWidth);
 
-          final isOverflowing = tp.didExceedMaxLines;
+          //final isOverflowing = tp.didExceedMaxLines;
 
           return AnimatedSize(
             duration: const Duration(milliseconds: 200),

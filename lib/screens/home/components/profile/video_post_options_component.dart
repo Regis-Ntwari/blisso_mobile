@@ -1,11 +1,6 @@
-import 'dart:io';
-
-import 'package:blisso_mobile/screens/chat/attachments/short_story_image_modal.dart';
-import 'package:blisso_mobile/screens/chat/attachments/short_story_video_modal.dart';
 import 'package:blisso_mobile/services/stories/delete_video_post_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 class VideoPostOptionsComponent extends ConsumerStatefulWidget {
   final int id;

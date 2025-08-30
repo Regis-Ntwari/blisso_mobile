@@ -13,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
 class MessageRequestModal extends ConsumerStatefulWidget {
-  Map<String, dynamic>? profile;
+  final Map<String, dynamic>? profile;
   MessageRequestModal({super.key, this.profile});
 
   @override

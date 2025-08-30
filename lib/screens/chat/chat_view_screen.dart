@@ -479,8 +479,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
             
                             // Handle date headers
                             if (item['type'] == 'header') {
-                              final date =
-                                  DateTime.parse('${item['date']} 00:00:00');
+                              // final date =
+                              //     DateTime.parse('${item['date']} 00:00:00');
             
                               return Padding(
                                 padding:

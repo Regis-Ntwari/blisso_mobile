@@ -1,4 +1,3 @@
-import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/services/message_requests/accept_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/get_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/reject_message_request_service_provider.dart';

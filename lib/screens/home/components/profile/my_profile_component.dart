@@ -14,7 +14,6 @@ import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart'
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
-import 'package:blisso_mobile/services/stories/delete_video_post_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/create_subscription_service_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
