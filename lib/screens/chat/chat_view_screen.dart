@@ -9,6 +9,9 @@ import 'package:blisso_mobile/screens/chat/utils/message_view.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
+import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
+import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -374,6 +377,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   dynamic editMessage;
 
+  bool isProfileLoading = false;
+
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
@@ -409,448 +414,514 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
           ),
         ),
         elevation: 8,
-        title: Row(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(right: 5),
-              child: CircleAvatar(
-                backgroundColor: Colors.grey,
-                backgroundImage: CachedNetworkImageProvider(
-                    chatDetailsRef['profile_picture']),
+        title: InkWell(
+          onTap: () async {
+            setState(() {
+              isProfileLoading = true;
+            });
+            final profileRef = ref.read(anyProfileServiceProviderImpl.notifier);
+            await profileRef.getAnyProfile(widget.username);
+
+            final targetProfile = ref.read(targetProfileProvider.notifier);
+            final profileData = ref.read(anyProfileServiceProviderImpl);
+
+            targetProfile.updateTargetProfile(TargetProfileModel.fromMap(
+                profileData.data as Map<String, dynamic>));
+            setState(() {
+              isProfileLoading = false;
+            });
+
+            Routemaster.of(context)
+                .push('/chat-detail/${widget.username}/profile');
+          },
+          child: Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 5),
+                child: CircleAvatar(
+                  backgroundColor: Colors.grey,
+                  backgroundImage: CachedNetworkImageProvider(
+                      chatDetailsRef['profile_picture']),
+                ),
               ),
-            ),
-            Expanded(
-              child: ExpandableTextComponent(
-                text: chatDetailsRef['full_name'],
+              Expanded(
+                child: ExpandableTextComponent(
+                  text: chatDetailsRef['full_name'],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: chatDetailsRef['messages'].isEmpty
-                  ? Center(
-                      child: Text(
-                        'No messages yet. Start a conversation!',
-                        style: TextStyle(
-                          color: GlobalColors.secondaryColor,
-                        ),
-                      ),
-                    )
-                  : Builder(
-                      builder: (context) {
-                        // Group messages by date
-                        Map<String, List<dynamic>> messagesByDate = {};
-                        for (var message in chatDetailsRef['messages']) {
-                          final messageDate =
-                              DateTime.parse(message['created_at']);
-                          final dateKey =
-                              DateFormat('yyyy-MM-dd').format(messageDate);
-            
-                          if (!messagesByDate.containsKey(dateKey)) {
-                            messagesByDate[dateKey] = [];
-                          }
-                          messagesByDate[dateKey]!.add(message);
-                        }
-            
-                        // Create a list of all dates
-                        final dateKeys = messagesByDate.keys.toList()..sort();
-            
-                        // Create a list of all items (date headers + messages)
-                        List<dynamic> allItems = [];
-                        for (var dateKey in dateKeys) {
-                          // Add date header
-                          allItems.add({'type': 'header', 'date': dateKey});
-            
-                          // Add messages for this date
-                          for (var message in messagesByDate[dateKey]!) {
-                            allItems.add({'type': 'message', 'data': message});
-                          }
-                        }
-            
-                        return ListView.builder(
-                          controller: scrollController,
-                          itemCount: allItems.length,
-                          itemBuilder: (context, index) {
-                            final item = allItems[index];
-            
-                            // Handle date headers
-                            if (item['type'] == 'header') {
-                              // final date =
-                              //     DateTime.parse('${item['date']} 00:00:00');
-            
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      formatDateHeader(item['date']),
-                                      style: TextStyle(
-                                        color: Colors.grey[700],
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-            
-                            // Handle messages
-                            final message = item['data'];
-                            final isSender = message['sender'] == username;
-            
-                            return Column(
-                              crossAxisAlignment: isSender
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: isSender
-                                      ? const EdgeInsets.only(
-                                          top: 1.5,
-                                          bottom: 1.5,
-                                          left: 80.0,
-                                          right: 10)
-                                      : const EdgeInsets.only(
-                                          top: 1.5,
-                                          bottom: 1.5,
-                                          left: 10.0,
-                                          right: 80),
-                                  child: Align(
-                                    alignment: isSender
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: GestureDetector(
-                                      onLongPress: () {
-                                        dynamic selectedMessage = message;
-                                        isSender
-                                            ? showMessageOption(
-                                                context,
-                                                () => deleteTextMessage(
-                                                    selectedMessage), () {
-                                                messageController.text =
-                                                    selectedMessage['content'];
-                                                Navigator.of(context).pop();
-                                                setState(() {
-                                                  editMessage = selectedMessage;
-                                                });
-                                              })
-                                            : null;
-                                      },
-                                      onHorizontalDragUpdate: (details) {
-                                        setState(() {
-                                          dragDistances[index] =
-                                              (dragDistances[index] ?? 0) +
-                                                  details.primaryDelta!;
-                                        });
-                                      },
-                                      onHorizontalDragEnd: (details) {
-                                        if ((dragDistances[index] ?? 0) > 50) {
-                                          setState(() {
-                                            replyMessage = message;
-                                            dragDistances[index] = 0;
-                                          });
-                                        } else {
-                                          setState(() {
-                                            dragDistances[index] = 0;
-                                          });
-                                        }
-                                      },
-                                      child: Transform.translate(
-                                        offset: Offset(
-                                            dragDistances[index] ?? 0, 0),
+      body: isProfileLoading
+          ? Center(
+              child: CircularProgressIndicator(
+                color: GlobalColors.primaryColor,
+              ),
+            )
+          : SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: chatDetailsRef['messages'].isEmpty
+                        ? Center(
+                            child: Text(
+                              'No messages yet. Start a conversation!',
+                              style: TextStyle(
+                                color: GlobalColors.secondaryColor,
+                              ),
+                            ),
+                          )
+                        : Builder(
+                            builder: (context) {
+                              // Group messages by date
+                              Map<String, List<dynamic>> messagesByDate = {};
+                              for (var message in chatDetailsRef['messages']) {
+                                final messageDate =
+                                    DateTime.parse(message['created_at']);
+                                final dateKey = DateFormat('yyyy-MM-dd')
+                                    .format(messageDate);
+
+                                if (!messagesByDate.containsKey(dateKey)) {
+                                  messagesByDate[dateKey] = [];
+                                }
+                                messagesByDate[dateKey]!.add(message);
+                              }
+
+                              // Create a list of all dates
+                              final dateKeys = messagesByDate.keys.toList()
+                                ..sort();
+
+                              // Create a list of all items (date headers + messages)
+                              List<dynamic> allItems = [];
+                              for (var dateKey in dateKeys) {
+                                // Add date header
+                                allItems
+                                    .add({'type': 'header', 'date': dateKey});
+
+                                // Add messages for this date
+                                for (var message in messagesByDate[dateKey]!) {
+                                  allItems.add(
+                                      {'type': 'message', 'data': message});
+                                }
+                              }
+
+                              return ListView.builder(
+                                controller: scrollController,
+                                itemCount: allItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = allItems[index];
+
+                                  // Handle date headers
+                                  if (item['type'] == 'header') {
+                                    // final date =
+                                    //     DateTime.parse('${item['date']} 00:00:00');
+
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
+                                      child: Center(
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
-                                              vertical: 5.0, horizontal: 10.0),
+                                              horizontal: 12, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: isSender
-                                                ? isLightTheme
-                                                    ? GlobalColors
-                                                        .myMessageColor
-                                                    : GlobalColors.primaryColor
-                                                : isLightTheme
-                                                    ? Colors.grey[200]
-                                                    : GlobalColors
-                                                        .otherDarkMessageColor,
+                                            color: Colors.grey[300],
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                           ),
-                                          child: MessageView(
-                                            message: message,
-                                            scrollToParent: _scrollToParent,
-                                            username: widget.username,
+                                          child: Text(
+                                            formatDateHeader(item['date']),
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                // Time stamp positioned outside the message bubble
-                                Padding(
-                                  padding: isSender
-                                      ? const EdgeInsets.only(
-                                          right: 20.0, bottom: 8.0)
-                                      : const EdgeInsets.only(
-                                          left: 20.0, bottom: 8.0),
-                                  child: Text(
-                                    formatMessageTime(message['created_at']),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: isEmojiPickerVisible,
-              builder: (context, isVisible, child) {
-                return Column(
-                  children: [
-                    if (isVisible)
-                      SizedBox(
-                          height: 250,
-                          child: EmojiPicker(
-                            onBackspacePressed: () {},
-                            onEmojiSelected: (category, emoji) {
-                              setState(() {
-                                isVoice = false;
-                              });
-                            },
-                            textEditingController: messageController,
-                            config: Config(
-                              height: 256,
-                              checkPlatformCompatibility: true,
-                              emojiViewConfig: EmojiViewConfig(
-                                backgroundColor: isLightTheme
-                                    ? GlobalColors.lightBackgroundColor
-                                    : Colors.black,
-                                emojiSizeMax: 28 *
-                                    (foundation.defaultTargetPlatform ==
-                                            TargetPlatform.iOS
-                                        ? 1.20
-                                        : 1.0),
-                              ),
-                              viewOrderConfig: const ViewOrderConfig(
-                                top: EmojiPickerItem.searchBar,
-                                middle: EmojiPickerItem.categoryBar,
-                                bottom: EmojiPickerItem.emojiView,
-                              ),
-                              skinToneConfig: const SkinToneConfig(),
-                              categoryViewConfig: CategoryViewConfig(
-                                  indicatorColor: GlobalColors.primaryColor,
-                                  iconColorSelected: GlobalColors.primaryColor,
-                                  backgroundColor: isLightTheme
-                                      ? GlobalColors.lightBackgroundColor
-                                      : Colors.black),
-                              bottomActionBarConfig: BottomActionBarConfig(
-                                  enabled: false,
-                                  buttonColor: GlobalColors.primaryColor,
-                                  backgroundColor: isLightTheme
-                                      ? GlobalColors.lightBackgroundColor
-                                      : Colors.black),
-                              searchViewConfig: SearchViewConfig(
-                                  backgroundColor: isLightTheme
-                                      ? GlobalColors.lightBackgroundColor
-                                      : Colors.black),
-                            ),
-                          )),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 2, vertical: 5),
-                      child: Column(
-                        children: [
-                          replyMessage == null
-                              ? const SizedBox.shrink()
-                              : Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 10, horizontal: 10),
-                                  color: isLightTheme
-                                      ? Colors.grey[300]
-                                      : Colors.grey[800],
-                                  child: Stack(
-                                    alignment: Alignment.center,
+                                    );
+                                  }
+
+                                  // Handle messages
+                                  final message = item['data'];
+                                  final isSender =
+                                      message['sender'] == username;
+
+                                  return Column(
+                                    crossAxisAlignment: isSender
+                                        ? CrossAxisAlignment.end
+                                        : CrossAxisAlignment.start,
                                     children: [
-                                      Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              replyMessage['sender'] == username
-                                                  ? 'Me'
-                                                  : chatDetailsRef['full_name'],
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold),
+                                      Padding(
+                                        padding: isSender
+                                            ? const EdgeInsets.only(
+                                                top: 1.5,
+                                                bottom: 1.5,
+                                                left: 80.0,
+                                                right: 10)
+                                            : const EdgeInsets.only(
+                                                top: 1.5,
+                                                bottom: 1.5,
+                                                left: 10.0,
+                                                right: 80),
+                                        child: Align(
+                                          alignment: isSender
+                                              ? Alignment.centerRight
+                                              : Alignment.centerLeft,
+                                          child: GestureDetector(
+                                            onLongPress: () {
+                                              dynamic selectedMessage = message;
+                                              isSender
+                                                  ? showMessageOption(
+                                                      context,
+                                                      () => deleteTextMessage(
+                                                          selectedMessage), () {
+                                                      messageController.text =
+                                                          selectedMessage[
+                                                              'content'];
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      setState(() {
+                                                        editMessage =
+                                                            selectedMessage;
+                                                      });
+                                                    })
+                                                  : null;
+                                            },
+                                            onHorizontalDragUpdate: (details) {
+                                              setState(() {
+                                                dragDistances[index] =
+                                                    (dragDistances[index] ??
+                                                            0) +
+                                                        details.primaryDelta!;
+                                              });
+                                            },
+                                            onHorizontalDragEnd: (details) {
+                                              if ((dragDistances[index] ?? 0) >
+                                                  50) {
+                                                setState(() {
+                                                  replyMessage = message;
+                                                  dragDistances[index] = 0;
+                                                });
+                                              } else {
+                                                setState(() {
+                                                  dragDistances[index] = 0;
+                                                });
+                                              }
+                                            },
+                                            child: Transform.translate(
+                                              offset: Offset(
+                                                  dragDistances[index] ?? 0, 0),
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 5.0,
+                                                        horizontal: 10.0),
+                                                decoration: BoxDecoration(
+                                                  color: isSender
+                                                      ? isLightTheme
+                                                          ? GlobalColors
+                                                              .myMessageColor
+                                                          : GlobalColors
+                                                              .primaryColor
+                                                      : isLightTheme
+                                                          ? Colors.grey[200]
+                                                          : GlobalColors
+                                                              .otherDarkMessageColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: MessageView(
+                                                  message: message,
+                                                  scrollToParent:
+                                                      _scrollToParent,
+                                                  username: widget.username,
+                                                ),
+                                              ),
                                             ),
-                                            Text(replyMessage[
-                                                        'content_file_type']
-                                                    .toString()
-                                                    .startsWith('video')
-                                                ? 'Video'
-                                                : replyMessage[
-                                                            'content_file_type']
-                                                        .toString()
-                                                        .startsWith('audio')
-                                                    ? 'Audio'
-                                                    : replyMessage[
-                                                                'content_file_type']
-                                                            .toString()
-                                                            .startsWith('file')
-                                                        ? 'Document'
-                                                        : replyMessage[
-                                                            'content'])
-                                          ]),
-                                      Positioned(
-                                        top: -2,
-                                        right: 0,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            setState(() {
-                                              replyMessage = null;
-                                            });
-                                          },
+                                          ),
+                                        ),
+                                      ),
+                                      // Time stamp positioned outside the message bubble
+                                      Padding(
+                                        padding: isSender
+                                            ? const EdgeInsets.only(
+                                                right: 20.0, bottom: 8.0)
+                                            : const EdgeInsets.only(
+                                                left: 20.0, bottom: 8.0),
+                                        child: Text(
+                                          formatMessageTime(
+                                              message['created_at']),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
                                       ),
                                     ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: isEmojiPickerVisible,
+                    builder: (context, isVisible, child) {
+                      return Column(
+                        children: [
+                          if (isVisible)
+                            SizedBox(
+                                height: 250,
+                                child: EmojiPicker(
+                                  onBackspacePressed: () {},
+                                  onEmojiSelected: (category, emoji) {
+                                    setState(() {
+                                      isVoice = false;
+                                    });
+                                  },
+                                  textEditingController: messageController,
+                                  config: Config(
+                                    height: 256,
+                                    checkPlatformCompatibility: true,
+                                    emojiViewConfig: EmojiViewConfig(
+                                      backgroundColor: isLightTheme
+                                          ? GlobalColors.lightBackgroundColor
+                                          : Colors.black,
+                                      emojiSizeMax: 28 *
+                                          (foundation.defaultTargetPlatform ==
+                                                  TargetPlatform.iOS
+                                              ? 1.20
+                                              : 1.0),
+                                    ),
+                                    viewOrderConfig: const ViewOrderConfig(
+                                      top: EmojiPickerItem.searchBar,
+                                      middle: EmojiPickerItem.categoryBar,
+                                      bottom: EmojiPickerItem.emojiView,
+                                    ),
+                                    skinToneConfig: const SkinToneConfig(),
+                                    categoryViewConfig: CategoryViewConfig(
+                                        indicatorColor:
+                                            GlobalColors.primaryColor,
+                                        iconColorSelected:
+                                            GlobalColors.primaryColor,
+                                        backgroundColor: isLightTheme
+                                            ? GlobalColors.lightBackgroundColor
+                                            : Colors.black),
+                                    bottomActionBarConfig:
+                                        BottomActionBarConfig(
+                                            enabled: false,
+                                            buttonColor:
+                                                GlobalColors.primaryColor,
+                                            backgroundColor: isLightTheme
+                                                ? GlobalColors
+                                                    .lightBackgroundColor
+                                                : Colors.black),
+                                    searchViewConfig: SearchViewConfig(
+                                        backgroundColor: isLightTheme
+                                            ? GlobalColors.lightBackgroundColor
+                                            : Colors.black),
                                   ),
-                                ),
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: toggleEmojiPicker,
-                                icon: isVisible
-                                    ? const Icon(Icons.keyboard)
-                                    : const Icon(Icons.emoji_emotions_outlined),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.attachment),
-                                onPressed: () => showAttachmentOptions(
-                                    context, username!, widget.username),
-                              ),
-                              Expanded(
-                                child: _isRecording
-                                    ? const Text('Recording...')
+                                )),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 2, vertical: 5),
+                            child: Column(
+                              children: [
+                                replyMessage == null
+                                    ? const SizedBox.shrink()
                                     : Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(60),
-                                          color: isLightTheme
-                                              ? Colors.grey[100]
-                                              : Colors.grey[900],
-                                        ),
-                                        child: ValueListenableBuilder<
-                                            TextEditingController>(
-                                          valueListenable:
-                                              messageControllerNotifier,
-                                          builder:
-                                              (context, controller, child) {
-                                            return TextField(
-                                              maxLines: 3,
-                                              minLines: 1,
-                                              textInputAction:
-                                                  TextInputAction.newline,
-                                              controller: messageController,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  isVoice = value.isEmpty;
-                                                });
-                                              },
-                                              focusNode: textFocusNode,
-                                              decoration: InputDecoration(
-                                                hintText: 'Type a message...',
-                                                border: OutlineInputBorder(
-                                                    borderSide: BorderSide.none,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            60)),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 15),
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10, horizontal: 10),
+                                        color: isLightTheme
+                                            ? Colors.grey[300]
+                                            : Colors.grey[800],
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    replyMessage['sender'] ==
+                                                            username
+                                                        ? 'Me'
+                                                        : chatDetailsRef[
+                                                            'full_name'],
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  Text(replyMessage[
+                                                              'content_file_type']
+                                                          .toString()
+                                                          .startsWith('video')
+                                                      ? 'Video'
+                                                      : replyMessage[
+                                                                  'content_file_type']
+                                                              .toString()
+                                                              .startsWith(
+                                                                  'audio')
+                                                          ? 'Audio'
+                                                          : replyMessage[
+                                                                      'content_file_type']
+                                                                  .toString()
+                                                                  .startsWith(
+                                                                      'file')
+                                                              ? 'Document'
+                                                              : replyMessage[
+                                                                  'content'])
+                                                ]),
+                                            Positioned(
+                                              top: -2,
+                                              right: 0,
+                                              child: IconButton(
+                                                icon: const Icon(Icons.close),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    replyMessage = null;
+                                                  });
+                                                },
                                               ),
-                                              onTap: () {
-                                                isEmojiPickerVisible.value =
-                                                    false;
-                                              },
-                                            );
-                                          },
+                                            ),
+                                          ],
                                         ),
                                       ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 5.0),
-                                child: Container(
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(50),
-                                    color: GlobalColors.primaryColor,
-                                  ),
-                                  child: isVoice
-                                      ? GestureDetector(
-                                          onLongPress: _startRecording,
-                                          onLongPressUp: _stopRecording,
-                                          child: CircleAvatar(
-                                            backgroundColor: _isRecording
-                                                ? GlobalColors.primaryColor
-                                                : GlobalColors.whiteColor,
-                                            child: Icon(Icons.mic,
-                                                color: _isRecording
-                                                    ? Colors.white
-                                                    : GlobalColors
-                                                        .primaryColor),
-                                          ),
-                                        )
-                                      : IconButton(
-                                          onPressed: () {
-                                            final message =
-                                                messageController.text.trim();
-                                            sendTextMessage(message);
-            
-                                            if (message.isNotEmpty) {
-                                              messageController.clear();
-                                              WidgetsBinding.instance
-                                                  .addPostFrameCallback((_) {
-                                                scrollToBottom();
-                                              });
-                                            }
-                                          },
-                                          icon: Icon(
-                                            color: Colors.white,
-                                            isVoice ? Icons.mic : Icons.send,
-                                          ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: toggleEmojiPicker,
+                                      icon: isVisible
+                                          ? const Icon(Icons.keyboard)
+                                          : const Icon(
+                                              Icons.emoji_emotions_outlined),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.attachment),
+                                      onPressed: () => showAttachmentOptions(
+                                          context, username!, widget.username),
+                                    ),
+                                    Expanded(
+                                      child: _isRecording
+                                          ? const Text('Recording...')
+                                          : Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(60),
+                                                color: isLightTheme
+                                                    ? Colors.grey[100]
+                                                    : Colors.grey[900],
+                                              ),
+                                              child: ValueListenableBuilder<
+                                                  TextEditingController>(
+                                                valueListenable:
+                                                    messageControllerNotifier,
+                                                builder: (context, controller,
+                                                    child) {
+                                                  return TextField(
+                                                    maxLines: 3,
+                                                    minLines: 1,
+                                                    textInputAction:
+                                                        TextInputAction.newline,
+                                                    controller:
+                                                        messageController,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        isVoice = value.isEmpty;
+                                                      });
+                                                    },
+                                                    focusNode: textFocusNode,
+                                                    decoration: InputDecoration(
+                                                      hintText:
+                                                          'Type a message...',
+                                                      border:
+                                                          OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide
+                                                                      .none,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          60)),
+                                                      contentPadding:
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 15),
+                                                    ),
+                                                    onTap: () {
+                                                      isEmojiPickerVisible
+                                                          .value = false;
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 5.0),
+                                      child: Container(
+                                        height: 50,
+                                        width: 50,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: GlobalColors.primaryColor,
                                         ),
+                                        child: isVoice
+                                            ? GestureDetector(
+                                                onLongPress: _startRecording,
+                                                onLongPressUp: _stopRecording,
+                                                child: CircleAvatar(
+                                                  backgroundColor: _isRecording
+                                                      ? GlobalColors
+                                                          .primaryColor
+                                                      : GlobalColors.whiteColor,
+                                                  child: Icon(Icons.mic,
+                                                      color: _isRecording
+                                                          ? Colors.white
+                                                          : GlobalColors
+                                                              .primaryColor),
+                                                ),
+                                              )
+                                            : IconButton(
+                                                onPressed: () {
+                                                  final message =
+                                                      messageController.text
+                                                          .trim();
+                                                  sendTextMessage(message);
+
+                                                  if (message.isNotEmpty) {
+                                                    messageController.clear();
+                                                    WidgetsBinding.instance
+                                                        .addPostFrameCallback(
+                                                            (_) {
+                                                      scrollToBottom();
+                                                    });
+                                                  }
+                                                },
+                                                icon: Icon(
+                                                  color: Colors.white,
+                                                  isVoice
+                                                      ? Icons.mic
+                                                      : Icons.send,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

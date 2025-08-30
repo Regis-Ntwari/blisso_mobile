@@ -377,8 +377,14 @@ class _TargetProfileComponentState
               SizedBox(
                 child: Column(
                   children: [
-                    SizedBox(
+                    Container(
                         height: 250,
+                        decoration: BoxDecoration(
+                            border: Border(
+                                bottom: BorderSide(
+                                    color: isLightTheme
+                                        ? Colors.black
+                                        : Colors.white))),
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: SizedBox(
