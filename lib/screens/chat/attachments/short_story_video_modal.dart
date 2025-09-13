@@ -34,10 +34,6 @@ class _ShortStoryVideoModalState extends ConsumerState<ShortStoryVideoModal> {
       final shortStoryRef = ref.read(storiesServiceProviderImpl.notifier);
 
       await shortStoryRef.createStory(videoStory);
-
-      
-
-      print('Story posted successfully');
     } catch (e) {
       debugPrint(e.toString());
     }
