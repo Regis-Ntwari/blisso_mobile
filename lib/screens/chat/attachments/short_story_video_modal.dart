@@ -23,6 +23,7 @@ class _ShortStoryVideoModalState extends ConsumerState<ShortStoryVideoModal> {
   TextEditingController captionController = TextEditingController();
 
   void postShortVideoStory() async {
+    Navigator.of(context).pop();
     try {
       Map<String, dynamic> videoStory = {
         'post_type': 'VIDEO',
@@ -34,7 +35,7 @@ class _ShortStoryVideoModalState extends ConsumerState<ShortStoryVideoModal> {
 
       await shortStoryRef.createStory(videoStory);
 
-      Navigator.of(context).pop();
+      
 
       print('Story posted successfully');
     } catch (e) {

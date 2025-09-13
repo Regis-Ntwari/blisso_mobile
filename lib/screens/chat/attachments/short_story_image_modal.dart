@@ -17,6 +17,7 @@ class _ShortStoryImageModalState extends ConsumerState<ShortStoryImageModal> {
   TextEditingController captionController = TextEditingController();
 
   void sendImageMessage() async {
+    Navigator.of(context).pop();
     try {
       Map<String, dynamic> imageStory = {
         'post_type': 'IMAGE',
@@ -28,7 +29,7 @@ class _ShortStoryImageModalState extends ConsumerState<ShortStoryImageModal> {
 
       await shortStoryRef.createStory(imageStory);
 
-      Navigator.of(context).pop();
+      
     } catch (e) {
       debugPrint(e.toString());
     }
