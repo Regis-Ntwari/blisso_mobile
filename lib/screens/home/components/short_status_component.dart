@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/home/components/stories/choose_story_component.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -55,7 +57,14 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
       child: Row(
         children: [
           InkWell(
-            onTap: () => showChooseStoryOptions(context),
+            onTap: () {
+              if(ref.read(permissionProviderImpl)['can_create_short_story']) {
+                showChooseStoryOptions(context);
+              } else {
+                showPopupComponent(context: context, icon: Icons.error, message: 'Please upgrade your plan');
+              }
+              
+            },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5),
               child: Column(
@@ -112,9 +121,17 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
                       children: [
                         InkWell(
                           onTap: () {
-                            String encodedData = jsonEncode(userStatuses);
-                            Routemaster.of(context)
-                                .push('/homepage/view-story?data=$encodedData');
+                            if (ref.read(permissionProviderImpl)[
+                                'can_view_short_story']) {
+                              String encodedData = jsonEncode(userStatuses);
+                              Routemaster.of(context).push(
+                                  '/homepage/view-story?data=$encodedData');
+                            } else {
+                              showPopupComponent(
+                                  context: context,
+                                  icon: Icons.error,
+                                  message: 'Please upgrade your plan');
+                            }
                           },
                           child: Container(
                             width: 70,

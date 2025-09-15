@@ -1,7 +1,9 @@
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/short_story_player.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/video_controller_manager.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,7 +83,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
             ))
         .toList();
 
-    return PageView.builder(
+    return ref.read(permissionProviderImpl)['can_view_video_post'] ? PageView.builder(
       controller: _pageController,
       scrollDirection: Axis.vertical,
       itemCount: videos.length,
@@ -93,7 +95,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
           videoController: controller, // pass preloaded controller
         );
       },
-    );
+    ) : PopupComponent(icon: Icons.error, message: 'Please upgrade your package!');
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dar
 import 'package:blisso_mobile/screens/chat/chat_message_request.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/users/all_user_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -48,7 +49,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         Future(() => getAllChats()); // Fetch only if data is null
       }
     });
-    
+
     // Add listener to search controller
     searchController.addListener(() {
       filterChats();
@@ -64,7 +65,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void filterChats() {
     final chatRef = ref.read(chatServiceProviderImpl);
     final query = searchController.text.toLowerCase();
-    
+
     if (query.isEmpty) {
       setState(() {
         filteredChats = chatRef.data ?? [];
@@ -75,10 +76,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           final fullName = chat['full_name']?.toString().toLowerCase() ?? '';
           final username = chat['username']?.toString().toLowerCase() ?? '';
           final nickname = chat['nickname']?.toString().toLowerCase() ?? '';
-          
-          return fullName.contains(query) || 
-                 username.contains(query) || 
-                 nickname.contains(query);
+
+          return fullName.contains(query) ||
+              username.contains(query) ||
+              nickname.contains(query);
         }).toList();
       });
     }
@@ -143,7 +144,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final chatRef = ref.watch(chatServiceProviderImpl);
-    
+
     // Initialize filteredChats if empty and chat data is available
     if (filteredChats.isEmpty && chatRef.data != null) {
       filteredChats = chatRef.data!;
@@ -186,165 +187,199 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               // First tab - Chat List
               chatRef.isLoading
                   ? const LoadingScreen()
-                  : chatRef.data == null || chatRef.data.isEmpty
+                  : ref.read(permissionProviderImpl)['can_chat'] == false
                       ? Center(
                           child: Text(
-                            'No chats yet',
-                            style:
-                                TextStyle(color: GlobalColors.secondaryColor),
+                            'Please upgrade your plan to chat.',
+                            style: TextStyle(
+                                fontSize: 16, color: GlobalColors.primaryColor),
                           ),
                         )
-                      : Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 10.0, right: 10, top: 20),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(60),
-                                  color: isLightTheme
-                                      ? Colors.grey[100]
-                                      : Colors.grey[900],
-                                ),
-                                child: TextField(
-                                  controller: searchController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Search for chats...',
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 1, horizontal: 15),
-                                    border: const OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(60)),
-                                        borderSide: BorderSide.none),
-                                    suffixIcon: searchController.text.isNotEmpty
-                                        ? IconButton(
-                                            icon: const Icon(Icons.clear),
-                                            onPressed: () {
-                                              searchController.clear();
-                                            },
-                                          )
-                                        : null,
+                      : chatRef.data == null || chatRef.data.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No chats yet',
+                                style: TextStyle(
+                                    color: GlobalColors.secondaryColor),
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 10.0, right: 10, top: 20),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(60),
+                                      color: isLightTheme
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                    ),
+                                    child: TextField(
+                                      controller: searchController,
+                                      decoration: InputDecoration(
+                                        hintText: 'Search for chats...',
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                vertical: 1, horizontal: 15),
+                                        border: const OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(60)),
+                                            borderSide: BorderSide.none),
+                                        suffixIcon: searchController
+                                                .text.isNotEmpty
+                                            ? IconButton(
+                                                icon: const Icon(Icons.clear),
+                                                onPressed: () {
+                                                  searchController.clear();
+                                                },
+                                              )
+                                            : null,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            Expanded(
-                              child: filteredChats.isEmpty
-                                  ? Center(
-                                      child: Text(
-                                        'No matching chats found',
-                                        style: TextStyle(
-                                            color: GlobalColors.secondaryColor),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      itemBuilder: (context, index) {
-                                        String profilePicture = filteredChats[index]
-                                            ['profile_picture_url'];
-                                        String nickname =
-                                            filteredChats[index]['nickname'];
-                                        String fullname =
-                                            filteredChats[index]['full_name'];
-                                        String username =
-                                            filteredChats[index]['username'];
-                                        List<dynamic>? messages =
-                                            filteredChats[index]['messages'];
-                                        Map<String, dynamic> lastMessage = {};
-                    
-                                        if (messages != null && messages.isNotEmpty) {
-                                          lastMessage = messages[messages.length - 1];
-                                          print(lastMessage);
-                                        } else {
-                                          lastMessage = {
-                                            'content': 'No messages yet',
-                                            'created_at': DateTime.now()
-                                                .toUtc()
-                                                .toIso8601String()
-                                          };
-                                        }
-                    
-                                        return InkWell(
-                                          onTap: () => chooseChat(
-                                              username,
-                                              profilePicture,
-                                              nickname,
-                                              fullname,
-                                              messages),
-                                          child: ListTile(
-                                            leading: CircleAvatar(
-                                              backgroundImage:
-                                                  CachedNetworkImageProvider(
-                                                      profilePicture),
-                                            ),
-                                            title: Text(fullname),
-                                            subtitle: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(
-                                                  lastMessage['content']
-                                                              .toString()
-                                                              .length >
-                                                          30
-                                                      ? '${lastMessage['content'].toString().characters.take(30)}...'
-                                                      : lastMessage['content']
-                                                          .toString(),
-                                                          style: TextStyle(fontWeight: lastMessage[
-                                                                      'sender'] !=
-                                                                  username &&
-                                                              lastMessage[
-                                                                      'message_status'] ==
-                                                                  'unseen'
-                                                          ? FontWeight.bold
-                                                          : FontWeight.normal),
-                                                ),
-                                                Text(
-                                                  formatDate(lastMessage['created_at']
-                                                      .toString()),
-                                                  style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight: lastMessage[
-                                                                      'sender'] !=
-                                                                  username &&
-                                                              lastMessage[
-                                                                      'message_status'] ==
-                                                                  'unseen'
-                                                          ? FontWeight.bold
-                                                          : FontWeight.normal),
-                                                ),
-                                              ],
-                                            ),
+                                Expanded(
+                                  child: filteredChats.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            'No matching chats found',
+                                            style: TextStyle(
+                                                color: GlobalColors
+                                                    .secondaryColor),
                                           ),
-                                        );
-                                      },
-                                      itemCount: filteredChats.length,
-                                    ),
+                                        )
+                                      : ListView.builder(
+                                          itemBuilder: (context, index) {
+                                            String profilePicture =
+                                                filteredChats[index]
+                                                    ['profile_picture_url'];
+                                            String nickname =
+                                                filteredChats[index]
+                                                    ['nickname'];
+                                            String fullname =
+                                                filteredChats[index]
+                                                    ['full_name'];
+                                            String username =
+                                                filteredChats[index]
+                                                    ['username'];
+                                            List<dynamic>? messages =
+                                                filteredChats[index]
+                                                    ['messages'];
+                                            Map<String, dynamic> lastMessage =
+                                                {};
+
+                                            if (messages != null &&
+                                                messages.isNotEmpty) {
+                                              lastMessage =
+                                                  messages[messages.length - 1];
+                                              print(lastMessage);
+                                            } else {
+                                              lastMessage = {
+                                                'content': 'No messages yet',
+                                                'created_at': DateTime.now()
+                                                    .toUtc()
+                                                    .toIso8601String()
+                                              };
+                                            }
+
+                                            return InkWell(
+                                              onTap: () => chooseChat(
+                                                  username,
+                                                  profilePicture,
+                                                  nickname,
+                                                  fullname,
+                                                  messages),
+                                              child: ListTile(
+                                                leading: CircleAvatar(
+                                                  backgroundImage:
+                                                      CachedNetworkImageProvider(
+                                                          profilePicture),
+                                                ),
+                                                title: Text(fullname),
+                                                subtitle: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      lastMessage['content']
+                                                                  .toString()
+                                                                  .length >
+                                                              30
+                                                          ? '${lastMessage['content'].toString().characters.take(30)}...'
+                                                          : lastMessage[
+                                                                  'content']
+                                                              .toString(),
+                                                      style: TextStyle(
+                                                          fontWeight: lastMessage[
+                                                                          'sender'] !=
+                                                                      username &&
+                                                                  lastMessage[
+                                                                          'message_status'] ==
+                                                                      'unseen'
+                                                              ? FontWeight.bold
+                                                              : FontWeight
+                                                                  .normal),
+                                                    ),
+                                                    Text(
+                                                      formatDate(lastMessage[
+                                                              'created_at']
+                                                          .toString()),
+                                                      style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight: lastMessage[
+                                                                          'sender'] !=
+                                                                      username &&
+                                                                  lastMessage[
+                                                                          'message_status'] ==
+                                                                      'unseen'
+                                                              ? FontWeight.bold
+                                                              : FontWeight
+                                                                  .normal),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          itemCount: filteredChats.length,
+                                        ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-              const ChatMessageRequest()
+              ref.read(permissionProviderImpl)['can_view_message_requests']
+                  ? const ChatMessageRequest()
+                  : const Center(
+                      child: Text(
+                        'Please upgrade your plan to view message requests.',
+                        style: TextStyle(color: GlobalColors.primaryColor),
+                      ),
+                    )
             ],
           ),
         ),
-        floatingActionButton: InkWell(
-          onTap: () {
-            showMessageRequestModal(context, null);
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(35),
-              color: GlobalColors.primaryColor,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Icon(
-                Icons.add,
-                color: GlobalColors.whiteColor,
-                size: 40,
-              ),
-            ),
-          ),
-        ),
+        floatingActionButton: ref.read(permissionProviderImpl)['can_chat']
+            ? InkWell(
+                onTap: () {
+                  showMessageRequestModal(context, null);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(35),
+                    color: GlobalColors.primaryColor,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.add,
+                      color: GlobalColors.whiteColor,
+                      size: 40,
+                    ),
+                  ),
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }

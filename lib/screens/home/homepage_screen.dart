@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:blisso_mobile/components/loading_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/video_post_modal.dart';
 import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
@@ -8,6 +9,7 @@ import 'package:blisso_mobile/screens/home/components/home_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
 import 'package:blisso_mobile/screens/home/feeling_popup_component.dart';
 import 'package:blisso_mobile/services/feeling/feeling_provider.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/location_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/update_location_service_provider.dart';
@@ -381,14 +383,24 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                                 ],
                                               ),
                                               onPressed: () async {
-                                                final picker = ImagePicker();
-                                                final pickedFile =
-                                                    await picker.pickVideo(
-                                                        source: ImageSource
-                                                            .gallery);
-                                                if (pickedFile != null) {
-                                                  showVideoPostModal(context,
-                                                      File(pickedFile.path));
+                                                if (ref.read(
+                                                        permissionProviderImpl)[
+                                                    'can_create_video_post']) {
+                                                  final picker = ImagePicker();
+                                                  final pickedFile =
+                                                      await picker.pickVideo(
+                                                          source: ImageSource
+                                                              .gallery);
+                                                  if (pickedFile != null) {
+                                                    showVideoPostModal(context,
+                                                        File(pickedFile.path));
+                                                  }
+                                                } else {
+                                                  showPopupComponent(
+                                                      context: context,
+                                                      icon: Icons.error,
+                                                      message:
+                                                          'Please Upgrade your plan');
                                                 }
                                               },
                                             ),
@@ -659,7 +671,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                               minWidth: 60, maxWidth: 120),
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8),
-                                          
+
                                           child: DropdownButtonHideUnderline(
                                             child: DropdownButton<String>(
                                               value: searchAttribute,
@@ -729,7 +741,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                                       : Colors.white,
                                                   fontSize: 14,
                                                 ),
-                                                textAlignVertical: TextAlignVertical.center,
+                                                textAlignVertical:
+                                                    TextAlignVertical.center,
                                                 decoration: InputDecoration(
                                                   isDense: true,
                                                   contentPadding: const EdgeInsets
@@ -751,7 +764,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                                   border: InputBorder.none,
                                                   prefixIcon: Padding(
                                                     padding: const EdgeInsets
-                                                        .symmetric(horizontal: 8),
+                                                        .symmetric(
+                                                        horizontal: 8),
                                                     child: Icon(
                                                       Icons.search,
                                                       color: isLightTheme
@@ -774,7 +788,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                                         Container(
                                           height: 35, // Match parent height
                                           width: 40,
-                                          
+
                                           child: IconButton(
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),

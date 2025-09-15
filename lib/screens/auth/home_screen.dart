@@ -159,7 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SizedBox(
                         height: 100,
                         width: 300,
-                        child: Image.asset('assets/images/logo-new.png')),
+                        child: Image.asset('assets/images/blisso.png')),
                     Padding(
                       padding: const EdgeInsets.only(top: 30.0),
                       child: Row(

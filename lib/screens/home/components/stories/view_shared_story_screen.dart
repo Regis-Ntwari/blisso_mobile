@@ -2,6 +2,7 @@ import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -131,29 +132,39 @@ class _ViewSharedStoryScreenState extends ConsumerState<ViewSharedStoryScreen> {
             child: InkWell(
               onTap: () async {
                 if (_story!['nickname'] != nickname) {
-                  setState(() {
-                    _loading = true;
-                  });
-                  try {
-                    final profileRef =
-                        ref.read(anyProfileServiceProviderImpl.notifier);
-                    await profileRef.getAnyProfile(_story!['username']);
-
-                    final targetProfile =
-                        ref.read(targetProfileProvider.notifier);
-                    final profileData = ref.read(anyProfileServiceProviderImpl);
-
-                    targetProfile.updateTargetProfile(
-                        TargetProfileModel.fromMap(
-                            profileData.data as Map<String, dynamic>));
+                  if (ref.read(
+                      permissionProviderImpl)['can_view_profile_detail']) {
                     setState(() {
-                      _loading = false;
+                      _loading = true;
                     });
-                    if (mounted) {
-                      Routemaster.of(context).push('/homepage/target-profile');
+                    try {
+                      final profileRef =
+                          ref.read(anyProfileServiceProviderImpl.notifier);
+                      await profileRef.getAnyProfile(_story!['username']);
+
+                      final targetProfile =
+                          ref.read(targetProfileProvider.notifier);
+                      final profileData =
+                          ref.read(anyProfileServiceProviderImpl);
+
+                      targetProfile.updateTargetProfile(
+                          TargetProfileModel.fromMap(
+                              profileData.data as Map<String, dynamic>));
+                      setState(() {
+                        _loading = false;
+                      });
+                      if (mounted) {
+                        Routemaster.of(context)
+                            .push('/homepage/target-profile');
+                      }
+                    } catch (e) {
+                      showSnackBar(context, 'Failed to load profile');
                     }
-                  } catch (e) {
-                    showSnackBar(context, 'Failed to load profile');
+                  } else {
+                    showPopupComponent(
+                        context: context,
+                        icon: Icons.error,
+                        message: 'Please upgrade your plan');
                   }
                 }
               },

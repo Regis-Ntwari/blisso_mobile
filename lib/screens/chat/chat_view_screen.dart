@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:blisso_mobile/components/expandable_text_component.dart';
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/attachment_modal.dart';
 import 'package:blisso_mobile/screens/chat/message_options/message_option.dart';
 import 'package:blisso_mobile/screens/chat/utils/message_view.dart';
@@ -10,6 +11,7 @@ import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -416,23 +418,32 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
         elevation: 8,
         title: InkWell(
           onTap: () async {
-            setState(() {
-              isProfileLoading = true;
-            });
-            final profileRef = ref.read(anyProfileServiceProviderImpl.notifier);
-            await profileRef.getAnyProfile(widget.username);
+            if (ref.read(permissionProviderImpl)['can_view_profile_detail']) {
+              setState(() {
+                isProfileLoading = true;
+              });
 
-            final targetProfile = ref.read(targetProfileProvider.notifier);
-            final profileData = ref.read(anyProfileServiceProviderImpl);
+              final profileRef =
+                  ref.read(anyProfileServiceProviderImpl.notifier);
+              await profileRef.getAnyProfile(widget.username);
 
-            targetProfile.updateTargetProfile(TargetProfileModel.fromMap(
-                profileData.data as Map<String, dynamic>));
-            setState(() {
-              isProfileLoading = false;
-            });
+              final targetProfile = ref.read(targetProfileProvider.notifier);
+              final profileData = ref.read(anyProfileServiceProviderImpl);
 
-            Routemaster.of(context)
-                .push('/chat-detail/${widget.username}/profile');
+              targetProfile.updateTargetProfile(TargetProfileModel.fromMap(
+                  profileData.data as Map<String, dynamic>));
+              setState(() {
+                isProfileLoading = false;
+              });
+
+              Routemaster.of(context)
+                  .push('/chat-detail/${widget.username}/profile');
+            } else {
+              showPopupComponent(
+                  context: context,
+                  icon: Icons.error,
+                  message: 'Please upgrade your plan');
+            }
           },
           child: Row(
             children: [

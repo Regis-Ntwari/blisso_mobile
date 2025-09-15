@@ -1,7 +1,9 @@
+import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/share_story_modal.dart';
 import 'package:blisso_mobile/services/models/short_story_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
@@ -60,7 +62,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   }
 
   void _handleLike() {
-    widget.video.likes = widget.video.likedThisStory ? widget.video.likes - 1 : widget.video.likes + 1;
+    widget.video.likes = widget.video.likedThisStory
+        ? widget.video.likes - 1
+        : widget.video.likes + 1;
     ref
         .read(getVideoPostProviderImpl.notifier)
         .likeVideoPost(int.parse(widget.video.id));
@@ -130,25 +134,33 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                               isProfileLoading = true;
                             });
                             try {
-                              final profileRef = ref
-                                  .read(anyProfileServiceProviderImpl.notifier);
-                              await profileRef
-                                  .getAnyProfile(widget.video.username);
+                              if (ref.read(permissionProviderImpl)[
+                                  'can_view_profile_detail']) {
+                                final profileRef = ref.read(
+                                    anyProfileServiceProviderImpl.notifier);
+                                await profileRef
+                                    .getAnyProfile(widget.video.username);
 
-                              final targetProfile =
-                                  ref.read(targetProfileProvider.notifier);
-                              final profileData =
-                                  ref.read(anyProfileServiceProviderImpl);
+                                final targetProfile =
+                                    ref.read(targetProfileProvider.notifier);
+                                final profileData =
+                                    ref.read(anyProfileServiceProviderImpl);
 
-                              targetProfile.updateTargetProfile(
-                                  TargetProfileModel.fromMap(profileData.data
-                                      as Map<String, dynamic>));
-                              setState(() {
-                                isProfileLoading = false;
-                              });
-                              if (mounted) {
-                                Routemaster.of(context)
-                                    .push('/homepage/target-profile');
+                                targetProfile.updateTargetProfile(
+                                    TargetProfileModel.fromMap(profileData.data
+                                        as Map<String, dynamic>));
+                                setState(() {
+                                  isProfileLoading = false;
+                                });
+                                if (mounted) {
+                                  Routemaster.of(context)
+                                      .push('/homepage/target-profile');
+                                } else {
+                                  showPopupComponent(
+                                      context: context,
+                                      icon: Icons.error,
+                                      message: 'Please upgrade your package');
+                                }
                               }
                             } catch (e) {
                               showSnackBar(context, 'Failed to load profile');
@@ -231,7 +243,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     )
                   : IconButton(
                       onPressed: () {
-                        showShareVideoModal(context, widget.video);
+                        ref.read(permissionProviderImpl)['can_share_video_post']
+                            ? showShareVideoModal(context, widget.video)
+                            : showPopupComponent(
+                                context: context,
+                                icon: Icons.error,
+                                message: 'Please upgrade your plan');
                       },
                       icon: Transform.rotate(
                         angle: 325 *
@@ -284,35 +301,41 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     )
                   : InkWell(
                       onTap: () {
-                        showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.black.withOpacity(0.6),
-                            builder: (ctx) {
-                              return SingleChildScrollView(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Column(
-                                    children: [
-                                      Align(
-                                          alignment: Alignment.topRight,
-                                          child: IconButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              icon: const Icon(
-                                                Icons.close,
-                                                color: Colors.white,
-                                              ))),
-                                      Text(
-                                        widget.video.description,
-                                        style: const TextStyle(
-                                            color: Colors.white),
+                        ref.read(permissionProviderImpl)[
+                                'can_view_video_post_caption']
+                            ? showModalBottomSheet(
+                                context: context,
+                                backgroundColor: Colors.black.withOpacity(0.6),
+                                builder: (ctx) {
+                                  return SingleChildScrollView(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Column(
+                                        children: [
+                                          Align(
+                                              alignment: Alignment.topRight,
+                                              child: IconButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  icon: const Icon(
+                                                    Icons.close,
+                                                    color: Colors.white,
+                                                  ))),
+                                          Text(
+                                            widget.video.description,
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            });
+                                    ),
+                                  );
+                                })
+                            : showPopupComponent(
+                                context: context,
+                                icon: Icons.error,
+                                message: 'Please upgrade your plan');
                         // showDialog(
                         //   context: context,
                         //   barrierDismissible: true,

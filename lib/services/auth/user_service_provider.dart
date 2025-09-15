@@ -1,13 +1,15 @@
 import 'package:blisso_mobile/services/api_state.dart';
 import 'package:blisso_mobile/services/auth/user_service.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserServiceProvider extends StateNotifier<ApiState> {
+  final Ref ref;
   final UserService _userService;
 
-  UserServiceProvider(this._userService) : super(ApiState());
+  UserServiceProvider(this._userService, this.ref) : super(ApiState());
 
   Future<void> registerUser(
       String username, firstname, lastname, authType) async {
@@ -87,6 +89,10 @@ class UserServiceProvider extends StateNotifier<ApiState> {
             'is_profile_completed', response.result['has_pictures']);
 
         SharedPreferencesService.setPreference("isRegistered", true);
+
+        ref
+            .read(permissionProviderImpl.notifier)
+            .updatePermissions(response.result['permissions']);
       }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);
@@ -157,5 +163,5 @@ class UserServiceProvider extends StateNotifier<ApiState> {
 
 final userServiceProviderImpl =
     StateNotifierProvider<UserServiceProvider, ApiState>((ref) {
-  return UserServiceProvider(UserService());
+  return UserServiceProvider(UserService(), ref);
 });

@@ -3,6 +3,7 @@ import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -41,7 +42,8 @@ class _TargetProfileComponentState
   }
 
   Future<void> handleDMTap(BuildContext context) async {
-    final targetProfile = ref.watch(targetProfileProvider);
+    if(ref.read(permissionProviderImpl)['can_send_message_request']) {
+final targetProfile = ref.watch(targetProfileProvider);
     final targetUsername = targetProfile.user!['username'];
     setState(() {
       isLoading = true;
@@ -132,6 +134,10 @@ class _TargetProfileComponentState
         );
       }
     }
+    } else {
+      showPopupComponent(context: context, icon: Icons.error, message: 'Please upgrade your plan to send message requests');
+    }
+    
   }
 
   @override
@@ -373,7 +379,7 @@ class _TargetProfileComponentState
                         onTap: isLoading ? () {} : () => handleDMTap(context)),
                   ),
                 ),
-              ),
+              ) ,
               SizedBox(
                 child: Column(
                   children: [

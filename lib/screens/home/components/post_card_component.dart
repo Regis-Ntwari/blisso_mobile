@@ -7,6 +7,7 @@ import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dar
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -75,92 +76,99 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   }
 
   Future<void> handleDMTap(BuildContext context) async {
-    setState(() {
-      isLoading = true;
-    });
+    if (ref.read(permissionProviderImpl)['can_send_message_request']) {
+      setState(() {
+        isLoading = true;
+      });
 
-    final targetUsername = widget.profile['user']['username'];
+      final targetUsername = widget.profile['user']['username'];
 
-    try {
-      final messageRequestRef =
-          ref.read(addMessageRequestServiceProviderImpl.notifier);
-      await messageRequestRef.sendMessageRequest(targetUsername);
+      try {
+        final messageRequestRef =
+            ref.read(addMessageRequestServiceProviderImpl.notifier);
+        await messageRequestRef.sendMessageRequest(targetUsername);
 
-      final messageRequestResponse =
-          ref.read(addMessageRequestServiceProviderImpl);
+        final messageRequestResponse =
+            ref.read(addMessageRequestServiceProviderImpl);
 
-      if (messageRequestResponse.error == null) {
-        if (context.mounted) {
-          // Show success popup
-          if (messageRequestResponse.statusCode == 200) {
-            final chatRef = ref.read(chatServiceProviderImpl);
-            if (chatRef.data == null || chatRef.data.isEmpty) {
-              final chatRef = ref.read(chatServiceProviderImpl.notifier);
-              await chatRef.getMessages();
-            }
-            final chatsRef = ref.read(chatServiceProviderImpl);
-            for (var chat in chatsRef.data) {
-              if (chat['username'] == targetUsername) {
-                final chatDetailsRef =
-                    ref.read(getChatDetailsProviderImpl.notifier);
-                chatDetailsRef.updateChatDetails({
-                  'username': targetUsername,
-                  'profile_picture': widget.profile['profile_picture_url'],
-                  'full_name':
-                      '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
-                  'nickname': widget.profile['nickname'],
-                  'messages': chat['messages']
-                });
+        if (messageRequestResponse.error == null) {
+          if (context.mounted) {
+            // Show success popup
+            if (messageRequestResponse.statusCode == 200) {
+              final chatRef = ref.read(chatServiceProviderImpl);
+              if (chatRef.data == null || chatRef.data.isEmpty) {
+                final chatRef = ref.read(chatServiceProviderImpl.notifier);
+                await chatRef.getMessages();
               }
-            }
-            setState(() {
-              isLoading = false;
-            });
-            Routemaster.of(context).push('/chat-detail/$targetUsername');
-          } else if (messageRequestResponse.statusCode == 201) {
-            setState(() {
-              isLoading = false;
-            });
-            showPopupComponent(
+              final chatsRef = ref.read(chatServiceProviderImpl);
+              for (var chat in chatsRef.data) {
+                if (chat['username'] == targetUsername) {
+                  final chatDetailsRef =
+                      ref.read(getChatDetailsProviderImpl.notifier);
+                  chatDetailsRef.updateChatDetails({
+                    'username': targetUsername,
+                    'profile_picture': widget.profile['profile_picture_url'],
+                    'full_name':
+                        '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
+                    'nickname': widget.profile['nickname'],
+                    'messages': chat['messages']
+                  });
+                }
+              }
+              setState(() {
+                isLoading = false;
+              });
+              Routemaster.of(context).push('/chat-detail/$targetUsername');
+            } else if (messageRequestResponse.statusCode == 201) {
+              setState(() {
+                isLoading = false;
+              });
+              showPopupComponent(
+                  context: context,
+                  icon: Icons.verified,
+                  iconColor: Colors.green[800],
+                  message:
+                      'Message request sent to ${widget.profile['nickname']}!');
+            } else {
+              setState(() {
+                isLoading = false;
+              });
+              showPopupComponent(
                 context: context,
-                icon: Icons.verified,
-                iconColor: Colors.green[800],
-                message:
-                    'Message request sent to ${widget.profile['nickname']}!');
-          } else {
-            setState(() {
-              isLoading = false;
-            });
-            showPopupComponent(
+                icon: Icons.error,
+                iconColor: GlobalColors.primaryColor,
+                message: messageRequestResponse.error!,
+              );
+            }
+          }
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          showPopupComponent(
               context: context,
               icon: Icons.error,
-              iconColor: GlobalColors.primaryColor,
-              message: messageRequestResponse.error!,
-            );
-          }
+              message: messageRequestResponse.error!);
         }
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        showPopupComponent(
+      } catch (e) {
+        if (context.mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          // Show error popup
+          showPopupComponent(
             context: context,
             icon: Icons.error,
-            message: messageRequestResponse.error!);
+            iconColor: Colors.red,
+            message: 'Failed to send message request: ${e.toString()}',
+          );
+        }
       }
-    } catch (e) {
-      if (context.mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        // Show error popup
-        showPopupComponent(
+    } else {
+      showPopupComponent(
           context: context,
           icon: Icons.error,
-          iconColor: Colors.red,
-          message: 'Failed to send message request: ${e.toString()}',
-        );
-      }
+          message: 'Please upgrade your plan to send message requests');
     }
   }
 
@@ -176,9 +184,17 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             InkWell(
               onTap: () {
-                targetProfile.updateTargetProfile(
-                    TargetProfileModel.fromMap(widget.profile));
-                Routemaster.of(context).push('/homepage/target-profile');
+                if (ref
+                    .read(permissionProviderImpl)['can_view_profile_detail']) {
+                  targetProfile.updateTargetProfile(
+                      TargetProfileModel.fromMap(widget.profile));
+                  Routemaster.of(context).push('/homepage/target-profile');
+                } else {
+                  showPopupComponent(
+                      context: context,
+                      icon: Icons.error,
+                      message: 'Please upgrade your plan');
+                }
               },
               child: ListTile(
                   trailing: widget.profile['feeling_caption'] != null
@@ -319,7 +335,15 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                         IconButton(
                           icon: const Icon(Icons.share),
                           onPressed: () {
-                            showMessageRequestModal(context, widget.profile);
+                            if (ref.read(
+                                permissionProviderImpl)['can_share_profile']) {
+                              showMessageRequestModal(context, widget.profile);
+                            } else {
+                              showPopupComponent(
+                                  context: context,
+                                  icon: Icons.error,
+                                  message: 'Please upgrade your plan');
+                            }
                           },
                         ),
                       ],

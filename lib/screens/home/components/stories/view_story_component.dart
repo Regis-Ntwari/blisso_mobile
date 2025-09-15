@@ -9,6 +9,7 @@ import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
+import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
@@ -292,11 +293,19 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                               isProfileLoading = true;
                             });
                             if (value == 'share') {
-                              showShareShortStoryModal(
-                                  context, stories[currentIndex]['id']);
-                              setState(() {
-                                isProfileLoading = false;
-                              });
+                              if (ref.read(permissionProviderImpl)[
+                                  'can_share_short_story']) {
+                                showShareShortStoryModal(
+                                    context, stories[currentIndex]['id']);
+                                setState(() {
+                                  isProfileLoading = false;
+                                });
+                              } else {
+                                showPopupComponent(
+                                    context: context,
+                                    icon: Icons.error,
+                                    message: 'Please upgrade your plan');
+                              }
                             } else {
                               await ref
                                   .read(deleteStoryProviderImpl.notifier)
@@ -311,16 +320,20 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             }
                           },
                           itemBuilder: (context) {
-                            return [
-                              const PopupMenuItem<String>(
-                                value: 'share',
-                                child: Text('Share Story'),
-                              ),
-                              const PopupMenuItem<String>(
+                            final items = <PopupMenuEntry<String>>[];
+
+                            items.add(const PopupMenuItem<String>(
+                              value: 'share',
+                              child: Text('Share Story'),
+                            ));
+
+                            if (stories[currentIndex]['nickname'] == nickname) {
+                              items.add(const PopupMenuItem<String>(
                                 value: 'delete',
                                 child: Text('Delete Story'),
-                              ),
-                            ];
+                              ));
+                            }
+                            return items;
                           },
                         )),
                   Positioned(
@@ -332,25 +345,33 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                           isProfileLoading = true;
                         });
                         try {
-                          final profileRef =
-                              ref.read(anyProfileServiceProviderImpl.notifier);
-                          await profileRef
-                              .getAnyProfile(stories[currentIndex]['username']);
+                          if (ref.read(permissionProviderImpl)[
+                              'can_view_profile_detail']) {
+                            final profileRef = ref
+                                .read(anyProfileServiceProviderImpl.notifier);
+                            await profileRef.getAnyProfile(
+                                stories[currentIndex]['username']);
 
-                          final targetProfile =
-                              ref.read(targetProfileProvider.notifier);
-                          final profileData =
-                              ref.read(anyProfileServiceProviderImpl);
+                            final targetProfile =
+                                ref.read(targetProfileProvider.notifier);
+                            final profileData =
+                                ref.read(anyProfileServiceProviderImpl);
 
-                          targetProfile.updateTargetProfile(
-                              TargetProfileModel.fromMap(
-                                  profileData.data as Map<String, dynamic>));
-                          setState(() {
-                            isProfileLoading = false;
-                          });
-                          if (mounted) {
-                            Routemaster.of(context)
-                                .push('/homepage/target-profile');
+                            targetProfile.updateTargetProfile(
+                                TargetProfileModel.fromMap(
+                                    profileData.data as Map<String, dynamic>));
+                            setState(() {
+                              isProfileLoading = false;
+                            });
+                            if (mounted) {
+                              Routemaster.of(context)
+                                  .push('/homepage/target-profile');
+                            }
+                          } else {
+                            showPopupComponent(
+                                context: context,
+                                icon: Icons.error,
+                                message: 'Please upgrade your plan');
                           }
                         } catch (e) {
                           showSnackBar(context, 'Failed to load profile');
@@ -439,7 +460,10 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                   const EdgeInsets.symmetric(horizontal: 5.0),
                               child: Center(
                                 child: ExpandableTextComponent(
-                                  text: stories[currentIndex]['caption'],
+                                  text: ref.read(permissionProviderImpl)[
+                                          'can_view_short_story_caption']
+                                      ? stories[currentIndex]['caption']
+                                      : 'Please upgrade to view the caption',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -510,50 +534,65 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                       ),
                                     ),
                                     // Reply Text Field in the middle
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10),
-                                      child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.7,
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(60),
-                                            color: Colors.grey[900]),
-                                        child: TextField(
-                                          controller: replyController,
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                          decoration: const InputDecoration(
-                                            hintText: 'Reply...',
-                                            hintStyle:
-                                                TextStyle(color: Colors.white),
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    vertical: 1,
-                                                    horizontal: 15),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(60)),
-                                              borderSide: BorderSide.none,
+                                    ref.read(permissionProviderImpl)[
+                                            'can_reply_short_story']
+                                        ? Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10),
+                                            child: Container(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.7,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(60),
+                                                  color: Colors.grey[900]),
+                                              child: TextField(
+                                                controller: replyController,
+                                                style: const TextStyle(
+                                                    color: Colors.white),
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: 'Reply...',
+                                                  hintStyle: TextStyle(
+                                                      color: Colors.white),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          vertical: 1,
+                                                          horizontal: 15),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                60)),
+                                                    borderSide: BorderSide.none,
+                                                  ),
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                          )
+                                        : const ExpandableTextComponent(
+                                            text:
+                                                'You cannot reply to this story. upgrade your plan', style: TextStyle(color: Colors.white),),
                                     // Share button
-                                    IconButton(
-                                      onPressed: () {
-                                        if (replyController.text.isNotEmpty) {
-                                          sendReply(
-                                              stories[currentIndex]['username'],
-                                              stories[currentIndex]['name']);
-                                        }
-                                      },
-                                      icon: const Icon(Icons.send,
-                                          color: Colors.white),
-                                    ),
+                                    ref.read(permissionProviderImpl)[
+                                            'can_reply_short_story']
+                                        ? IconButton(
+                                            onPressed: () {
+                                              if (replyController
+                                                  .text.isNotEmpty) {
+                                                sendReply(
+                                                    stories[currentIndex]
+                                                        ['username'],
+                                                    stories[currentIndex]
+                                                        ['name']);
+                                              }
+                                            },
+                                            icon: const Icon(Icons.send,
+                                                color: Colors.white),
+                                          )
+                                        : const SizedBox.shrink(),
                                   ],
                                 ),
                               ],
