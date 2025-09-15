@@ -44,21 +44,6 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
     _pageController.dispose();
   }
 
-  // Future<bool> checkIfChatExists(String username) async {
-  //   final chatRef = ref.watch(chatServiceProviderImpl);
-  //   if (chatRef.data == null || chatRef.data.isEmpty) {
-  //     final chatRef = ref.read(chatServiceProviderImpl.notifier);
-  //     await chatRef.getMessages();
-  //   }
-
-  //   for (var chat in chatRef.data) {
-  //     if (chat.containsKey(username)) {
-  //       return true;
-  //     }
-  //   }
-  //   return false;
-  // }
-
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
     // Convert DateTime to Unix timestamp in milliseconds
     int timestamp = dateTime.millisecondsSinceEpoch;
