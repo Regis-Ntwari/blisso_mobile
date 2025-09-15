@@ -21,7 +21,7 @@ class _FeelingPopupComponentState extends ConsumerState<FeelingPopupComponent> {
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      backgroundColor: Colors.transparent,
       body: Center(
         child: Container(
           padding: const EdgeInsets.all(20),
