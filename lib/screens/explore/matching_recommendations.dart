@@ -1,14 +1,11 @@
-import 'dart:ui';
-
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
+import 'package:blisso_mobile/screens/explore/user_card.dart';
 import 'package:blisso_mobile/services/matching/matching_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
-import 'package:blisso_mobile/utils/global_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
@@ -23,7 +20,8 @@ class MatchingRecommendations extends ConsumerStatefulWidget {
 
 class _MatchingRecommendationsState
     extends ConsumerState<MatchingRecommendations> {
-  String? _loadingUsername;
+  final Map<String, bool> _loadingStates = {};
+  final int _previewItemLimit = 3;
 
   @override
   void initState() {
@@ -36,13 +34,15 @@ class _MatchingRecommendationsState
   }
 
   void _loadProfile(Map<String, dynamic> user) async {
+    final username = user['username'];
+    
     setState(() {
-      _loadingUsername = user['username'];
+      _loadingStates[username] = true;
     });
 
     try {
       final profileRef = ref.read(anyProfileServiceProviderImpl.notifier);
-      await profileRef.getAnyProfile(user['username']);
+      await profileRef.getAnyProfile(username);
 
       final targetProfile = ref.read(targetProfileProvider.notifier);
       final profileData = ref.read(anyProfileServiceProviderImpl);
@@ -60,15 +60,26 @@ class _MatchingRecommendationsState
     } finally {
       if (mounted) {
         setState(() {
-          _loadingUsername = null;
+          _loadingStates.remove(username);
         });
       }
+    }
+  }
+
+  int _getItemCount(List<dynamic> data, bool canViewRecommendations) {
+    if (canViewRecommendations) {
+      return data.length;
+    } else {
+      return data.length > _previewItemLimit ? _previewItemLimit : data.length;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final matchingState = ref.watch(matchingServiceProviderImpl);
+    final canViewRecommendations = ref.watch(permissionProviderImpl.select(
+      (value) => value['can_view_matching_recommendations'] == true,
+    ));
 
     if (matchingState.error != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,16 +91,13 @@ class _MatchingRecommendationsState
       return const LoadingScreen();
     }
 
-    final canViewRecommendations = ref.read(permissionProviderImpl)[
-            'can_view_matching_recommendations'] ==
-        true;
+    final data = matchingState.data!;
+    final itemCount = _getItemCount(data, canViewRecommendations);
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: GridView.builder(
-        itemCount: canViewRecommendations
-            ? matchingState.data.length
-            : matchingState.data.length > 3 ? 3 : matchingState.data.length,
+        itemCount: itemCount,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 0.1,
@@ -97,132 +105,15 @@ class _MatchingRecommendationsState
           childAspectRatio: 3 / 4,
         ),
         itemBuilder: (context, index) {
-          final user = matchingState.data[index];
-          final isLoadingCard = _loadingUsername == user['username'];
+          final user = data[index];
+          final username = user['username'];
+          final isLoading = _loadingStates[username] == true;
           
-          // For non-premium users, apply blur effect to preview items
-          final isPreview = !canViewRecommendations;
-
-          return InkWell(
-            onTap: canViewRecommendations
-                ? () => _loadProfile(user) // Use the extracted method
-                : null, // Disable tap for non-premium users
-            child: Stack(
-              children: [
-                Card(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    children: [
-                      // Background image
-                      Positioned.fill(
-                        child: CachedNetworkImage(
-                          imageUrl: user['profile_picture_url']!,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(
-                              color: GlobalColors.primaryColor,
-                            ),
-                          ),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-
-                      // Overlay
-                      Positioned.fill(
-                        child: Container(
-                            color: Colors.black.withOpacity(0.3)),
-                      ),
-
-                      // Score at top right
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0x99000000),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            "Matched at ${user['score']!}",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Nickname at bottom
-                      Positioned(
-                        bottom: 10,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Text(
-                            user['nickanme'] ?? '',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(0, 1),
-                                  blurRadius: 2,
-                                  color: Colors.black,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Loading overlay for this card
-                      if (isLoadingCard)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black.withOpacity(0.5),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                
-                // Blur overlay for preview items
-                if (isPreview)
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-                        child: Container(
-                          color: Colors.black.withOpacity(0.6),
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.lock_outline,
-                                  size: 40,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                                Text('Upgrade your plan to view recommendations', style: TextStyle(color: Colors.white, fontSize: 14), textAlign: TextAlign.center,),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          return UserCard(
+            user: user,
+            isLoading: isLoading,
+            isPreview: !canViewRecommendations,
+            onTap: canViewRecommendations ? () => _loadProfile(user) : null,
           );
         },
       ),

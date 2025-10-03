@@ -154,6 +154,10 @@ class UserServiceProvider extends StateNotifier<ApiState> {
             'is_profile_completed', response.result['has_pictures']);
 
         SharedPreferencesService.setPreference("isRegistered", true);
+
+         ref
+            .read(permissionProviderImpl.notifier)
+            .updatePermissions(response.result['permissions']);
       }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);

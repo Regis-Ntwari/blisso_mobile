@@ -24,124 +24,141 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen>
     with AutomaticKeepAliveClientMixin {
-  dynamic getUserFromUsername(String username) async {
-    final profileRef = ref.read(profileServiceProviderImpl.notifier);
-
-    await profileRef.getAnyProfile(username);
-
-    final profileData = ref.read(profileServiceProviderImpl);
-
-    return profileData.data;
-  }
-
-  void getAllChats() async {
-    final chatRef = ref.watch(chatServiceProviderImpl.notifier);
-
-    await chatRef.getMessages();
-  }
-
-  final TextEditingController searchController = TextEditingController();
-  List<dynamic> filteredChats = [];
+  final TextEditingController _searchController = TextEditingController();
+  final List<dynamic> _filteredChats = [];
 
   @override
   void initState() {
     super.initState();
+    
+    _searchController.addListener(_filterChats);
+    
+    // Initialize chat data after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (ref.read(chatServiceProviderImpl).data == null) {
-        Future(() => getAllChats()); // Fetch only if data is null
-      }
-    });
-
-    // Add listener to search controller
-    searchController.addListener(() {
-      filterChats();
+      _initializeChatData();
     });
   }
 
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
+  bool get _canChat {
+    final permissions = ref.read(permissionProviderImpl);
+    return permissions['can_chat'] == true;
   }
 
-  void filterChats() {
-    final chatRef = ref.read(chatServiceProviderImpl);
-    final query = searchController.text.toLowerCase();
+  bool get _canViewRequests {
+    final permissions = ref.read(permissionProviderImpl);
+    return permissions['can_view_message_requests'] == true;
+  }
 
-    if (query.isEmpty) {
-      setState(() {
-        filteredChats = chatRef.data ?? [];
-      });
-    } else {
-      setState(() {
-        filteredChats = (chatRef.data ?? []).where((chat) {
-          final fullName = chat['full_name']?.toString().toLowerCase() ?? '';
-          final username = chat['username']?.toString().toLowerCase() ?? '';
-          final nickname = chat['nickname']?.toString().toLowerCase() ?? '';
+  void _initializeChatData() {
+    final chatState = ref.read(chatServiceProviderImpl);
+    if (chatState.data == null && _canChat) {
+      Future(() => _getAllChats());
+    } else if (chatState.data != null) {
+      _updateFilteredChats(chatState.data!);
+    }
+  }
 
-          return fullName.contains(query) ||
-              username.contains(query) ||
-              nickname.contains(query);
-        }).toList();
+  Future<void> _getAllChats() async {
+    if (!_canChat) return;
+    
+    final chatNotifier = ref.read(chatServiceProviderImpl.notifier);
+    await chatNotifier.getMessages();
+    
+    // Update filtered chats after fetch
+    final chatData = ref.read(chatServiceProviderImpl).data;
+    if (chatData != null) {
+      _updateFilteredChats(chatData);
+    }
+  }
+
+  void _updateFilteredChats(List<dynamic> chats) {
+    if (mounted) {
+      setState(() {
+        _filteredChats
+          ..clear()
+          ..addAll(chats);
       });
     }
   }
 
-  bool isSameDay(DateTime date1, DateTime date2) {
+  void _filterChats() {
+    final chatData = ref.read(chatServiceProviderImpl).data;
+    if (chatData == null) return;
+
+    final query = _searchController.text.toLowerCase();
+
+    if (query.isEmpty) {
+      _updateFilteredChats(chatData);
+    } else {
+      final filtered = chatData.where((chat) {
+        final fullName = chat['full_name']?.toString().toLowerCase() ?? '';
+        final username = chat['username']?.toString().toLowerCase() ?? '';
+        final nickname = chat['nickname']?.toString().toLowerCase() ?? '';
+
+        return fullName.contains(query) ||
+            username.contains(query) ||
+            nickname.contains(query);
+      }).toList();
+      
+      _updateFilteredChats(filtered);
+    }
+  }
+
+  bool _isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year &&
         date1.month == date2.month &&
         date1.day == date2.day;
   }
 
-  String formatDate(String dateTimeString) {
-    final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-    final DateTime now = DateTime.now();
-    final DateFormat timeFormat = DateFormat("hh:mm");
-
-    if (isSameDay(dateTime, now)) {
-      return 'Today, ${timeFormat.format(dateTime)}';
+  String _formatDate(String dateTimeString) {
+    final dateTime = DateTime.parse(dateTimeString).toLocal();
+    final now = DateTime.now();
+    
+    if (_isSameDay(dateTime, now)) {
+      return 'Today, ${DateFormat("hh:mm").format(dateTime)}';
     }
 
-    final DateTime yesterday = now.subtract(const Duration(days: 1));
-    if (isSameDay(dateTime, yesterday)) {
-      return 'Yesterday, ${timeFormat.format(dateTime)}';
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (_isSameDay(dateTime, yesterday)) {
+      return 'Yesterday, ${DateFormat("hh:mm").format(dateTime)}';
     }
 
-    final DateFormat dateFormat = DateFormat("dd/MM/yyyy, hh:mm");
-    return dateFormat.format(dateTime);
+    return DateFormat("dd/MM/yyyy, hh:mm").format(dateTime);
   }
 
-  void chooseChat(String username, String profilePicture, String nickname,
-      String fullname, List<dynamic>? messages) {
-    final chatDetailsRef = ref.read(getChatDetailsProviderImpl.notifier);
-    chatDetailsRef.updateChatDetails({
+  void _chooseChat(
+    String username,
+    String profilePicture,
+    String nickname,
+    String fullname,
+    List<dynamic>? messages,
+  ) {
+    if (!_canChat) return;
+    
+    final chatDetailsNotifier = ref.read(getChatDetailsProviderImpl.notifier);
+    chatDetailsNotifier.updateChatDetails({
       'username': username,
       'profile_picture': profilePicture,
       'full_name': fullname,
       'nickname': nickname,
-      'messages': messages
+      'messages': messages,
     });
     Routemaster.of(context).push('/chat-detail/$username');
   }
 
-  // Future<String> getChatFullName(String username) async {
-  //   final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
-  //   String fullname = await allUserRef.getFullName(username);
-
-  //   return fullname;
-  // }
-
-  Future<String> getChatProfilePicture(String username) async {
-    final allUserRef = ref.read(allUserServiceProviderImpl.notifier);
-
-    String fullname = await allUserRef.getProfilePicture(username);
-
-    return fullname;
+  Future<String> _getChatProfilePicture(String username) async {
+    final allUserNotifier = ref.read(allUserServiceProviderImpl.notifier);
+    return await allUserNotifier.getProfilePicture(username);
   }
 
-  // Widget to show premium feature overlay
-  Widget _buildPremiumOverlay({required Widget child, required String message, bool showUpgradeButton = true}) {
+  // Premium overlay widget
+  Widget _buildPremiumOverlay({
+    required Widget child,
+    required String message,
+    bool showUpgradeButton = true,
+  }) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    
     return Stack(
       children: [
         // Blurred content
@@ -158,13 +175,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           ),
         ),
         
-        // Overlay message with upgrade option
+        // Overlay message
         Center(
           child: Container(
             padding: const EdgeInsets.all(20),
             margin: const EdgeInsets.symmetric(horizontal: 30),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark 
+              color: isDarkTheme 
                   ? Colors.grey[900]!.withOpacity(0.9) 
                   : Colors.white.withOpacity(0.9),
               borderRadius: BorderRadius.circular(16),
@@ -190,25 +207,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.white 
-                        : Colors.grey[800],
+                    color: isDarkTheme ? Colors.white : Colors.grey[800],
                   ),
                 ),
                 if (showUpgradeButton) ...[
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () {
-                      // Navigate to subscription page
-                      Routemaster.of(context).replace('/homepage');
-                    },
+                    onPressed: () => Routemaster.of(context).replace('/homepage'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: GlobalColors.primaryColor,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30, 
+                        vertical: 12,
+                      ),
                     ),
                     child: const Text('Go to profile to upgrade Plan'),
                   ),
@@ -221,248 +236,199 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    TextScaler scaler = MediaQuery.textScalerOf(context);
-    final chatRef = ref.watch(chatServiceProviderImpl);
+  Widget _buildSearchField() {
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+    
+    return Padding(
+      padding: const EdgeInsets.only(left: 10.0, right: 10, top: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(60),
+          color: isLightTheme ? Colors.grey[100] : Colors.grey[900],
+        ),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Search for chats...',
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 1, 
+              horizontal: 15,
+            ),
+            border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(60)),
+              borderSide: BorderSide.none,
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () => _searchController.clear(),
+                  )
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
 
-    // Initialize filteredChats if empty and chat data is available
-    if (filteredChats.isEmpty && chatRef.data != null) {
-      filteredChats = chatRef.data!;
+  Widget _buildChatListItem(Map<String, dynamic> chat) {
+    final profilePicture = chat['profile_picture_url'] ?? '';
+    final nickname = chat['nickname'] ?? '';
+    final fullname = chat['full_name'] ?? '';
+    final username = chat['username'] ?? '';
+    final messages = chat['messages'];
+    
+    final lastMessage = _getLastMessage(messages, username);
+    final hasUnread = _hasUnreadMessage(lastMessage, username);
+
+    return InkWell(
+      onTap: () => _chooseChat(username, profilePicture, nickname, fullname, messages),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: CachedNetworkImageProvider(profilePicture),
+        ),
+        title: Text(fullname),
+        subtitle: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                _truncateMessage(lastMessage['content']),
+                style: TextStyle(
+                  fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _formatDate(lastMessage['created_at']),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _getLastMessage(List<dynamic>? messages, String username) {
+    if (messages == null || messages.isEmpty) {
+      return {
+        'content': 'No messages yet',
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'sender': username,
+        'message_status': 'seen',
+      };
     }
+    
+    return messages.last;
+  }
 
-    final canChat = ref.read(permissionProviderImpl)['can_chat'] == true;
-    final canViewRequests = ref.read(permissionProviderImpl)['can_view_message_requests'] == true;
+  bool _hasUnreadMessage(Map<String, dynamic> lastMessage, String username) {
+    return lastMessage['sender'] != username &&
+        lastMessage['message_status'] == 'unseen';
+  }
 
-    // Build chat list content
-    Widget buildChatListContent() {
-      if (chatRef.isLoading) {
-        return const LoadingScreen();
-      }
-      
-      if (!canChat) {
-        return _buildPremiumOverlay(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 10.0, right: 10, top: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(60),
-                    color: isLightTheme ? Colors.grey[100] : Colors.grey[900],
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search for chats...',
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 1, horizontal: 15),
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(60)),
-                          borderSide: BorderSide.none),
-                      suffixIcon: searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                searchController.clear();
-                              },
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
+  String _truncateMessage(String message) {
+    const maxLength = 30;
+    return message.length > maxLength 
+        ? '${message.substring(0, maxLength)}...' 
+        : message;
+  }
+
+  Widget _buildChatListContent() {
+    final chatState = ref.watch(chatServiceProviderImpl);
+
+    if (chatState.isLoading) {
+      return const LoadingScreen();
+    }
+    
+    if (!_canChat) {
+      return _buildPremiumOverlay(
+        child: Column(
+          children: [
+            _buildSearchField(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: 5,
+                itemBuilder: (context, index) => const _ChatListItemSkeleton(),
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemBuilder: (context, index) {
-                    // Build sample chat items for the blurred view
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Colors.grey,
-                      ),
-                      title: Container(
-                        height: 16,
-                        width: 120,
-                        color: Colors.grey,
-                      ),
-                      subtitle: Container(
-                        height: 12,
-                        width: 180,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                  itemCount: 5,
-                ),
-              ),
-            ],
-          ),
-          message: 'Upgrade your plan to unlock chat features',
-        );
-      }
-      
-      if (chatRef.data == null || chatRef.data.isEmpty) {
-        return _buildPremiumOverlay(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 10.0, right: 10, top: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(60),
-                    color: isLightTheme ? Colors.grey[100] : Colors.grey[900],
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search for chats...',
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 1, horizontal: 15),
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(60)),
-                          borderSide: BorderSide.none),
-                      suffixIcon: searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                searchController.clear();
-                              },
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'No chats yet',
-                    style: TextStyle(color: GlobalColors.secondaryColor),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          message: 'Start conversations with other users.',
-          showUpgradeButton: false,
-        );
-      }
-      
-      return Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0, right: 10, top: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(60),
-                color: isLightTheme ? Colors.grey[100] : Colors.grey[900],
-              ),
-              child: TextField(
-                controller: searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search for chats...',
-                  contentPadding: const EdgeInsets.symmetric(
-                      vertical: 1, horizontal: 15),
-                  border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(60)),
-                      borderSide: BorderSide.none),
-                  suffixIcon: searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            searchController.clear();
-                          },
-                        )
-                      : null,
+            ),
+          ],
+        ),
+        message: 'Upgrade your plan to unlock chat features',
+      );
+    }
+    
+    final chatData = chatState.data;
+    if (chatData == null || chatData.isEmpty) {
+      return _buildPremiumOverlay(
+        child: Column(
+          children: [
+            _buildSearchField(),
+            Expanded(
+              child: Center(
+                child: Text(
+                  'No chats yet',
+                  style: TextStyle(color: GlobalColors.secondaryColor),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: filteredChats.isEmpty
-                ? Center(
-                    child: Text(
-                      'No matching chats found',
-                      style: TextStyle(color: GlobalColors.secondaryColor),
-                    ),
-                  )
-                : ListView.builder(
-                    itemBuilder: (context, index) {
-                      String profilePicture =
-                          filteredChats[index]['profile_picture_url'];
-                      String nickname = filteredChats[index]['nickname'];
-                      String fullname = filteredChats[index]['full_name'];
-                      String username = filteredChats[index]['username'];
-                      List<dynamic>? messages = filteredChats[index]['messages'];
-                      Map<String, dynamic> lastMessage = {};
-
-                      if (messages != null && messages.isNotEmpty) {
-                        lastMessage = messages[messages.length - 1];
-                        print(lastMessage);
-                      } else {
-                        lastMessage = {
-                          'content': 'No messages yet',
-                          'created_at': DateTime.now().toUtc().toIso8601String()
-                        };
-                      }
-
-                      return InkWell(
-                        onTap: () => chooseChat(
-                            username, profilePicture, nickname, fullname, messages),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage:
-                                CachedNetworkImageProvider(profilePicture),
-                          ),
-                          title: Text(fullname),
-                          subtitle: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                lastMessage['content'].toString().length > 30
-                                    ? '${lastMessage['content'].toString().characters.take(30)}...'
-                                    : lastMessage['content'].toString(),
-                                style: TextStyle(
-                                    fontWeight: lastMessage['sender'] != username &&
-                                            lastMessage['message_status'] == 'unseen'
-                                        ? FontWeight.bold
-                                        : FontWeight.normal),
-                              ),
-                              Text(
-                                formatDate(lastMessage['created_at'].toString()),
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: lastMessage['sender'] != username &&
-                                            lastMessage['message_status'] == 'unseen'
-                                        ? FontWeight.bold
-                                        : FontWeight.normal),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    itemCount: filteredChats.length,
-                  ),
-          ),
-        ],
+          ],
+        ),
+        message: 'Start conversations with other users.',
+        showUpgradeButton: false,
       );
     }
+    
+    // Initialize filtered chats if empty
+    if (_filteredChats.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updateFilteredChats(chatData);
+      });
+    }
+    
+    return Column(
+      children: [
+        _buildSearchField(),
+        Expanded(
+          child: _filteredChats.isEmpty
+              ? Center(
+                  child: Text(
+                    'No matching chats found',
+                    style: TextStyle(color: GlobalColors.secondaryColor),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _filteredChats.length,
+                  itemBuilder: (context, index) => 
+                      _buildChatListItem(_filteredChats[index]),
+                ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final scaler = MediaQuery.textScalerOf(context);
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+        backgroundColor: Theme.of(context).brightness == Brightness.light
+            ? GlobalColors.lightBackgroundColor 
+            : Colors.black,
         appBar: AppBar(
-          backgroundColor: isLightTheme ? Colors.white : Colors.black,
+          backgroundColor: Theme.of(context).brightness == Brightness.light
+              ? Colors.white 
+              : Colors.black,
           centerTitle: true,
           leading: IconButton(
-            onPressed: () {
-              Routemaster.of(context).replace('/homepage');
-            },
+            onPressed: () => Routemaster.of(context).replace('/homepage'),
             icon: const Icon(Icons.keyboard_arrow_left),
           ),
           title: Text(
@@ -486,10 +452,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           child: TabBarView(
             children: [
               // First tab - Chat List
-              buildChatListContent(),
+              _buildChatListContent(),
               
               // Second tab - Message Requests
-              !canViewRequests
+              !_canViewRequests
                   ? _buildPremiumOverlay(
                       child: const ChatMessageRequest(),
                       message: 'Upgrade your plan to view message requests',
@@ -498,18 +464,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             ],
           ),
         ),
-        floatingActionButton: canChat
+        floatingActionButton: _canChat
             ? InkWell(
-                onTap: () {
-                  showMessageRequestModal(context, null);
-                },
+                onTap: () => showMessageRequestModal(context, null),
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(35),
                     color: GlobalColors.primaryColor,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(10),
                     child: Icon(
                       Icons.add,
                       color: GlobalColors.whiteColor,
@@ -524,5 +488,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   bool get wantKeepAlive => true;
+}
+
+// Skeleton loading widget for chat list items
+class _ChatListItemSkeleton extends StatelessWidget {
+  const _ChatListItemSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ListTile(
+      leading: CircleAvatar(backgroundColor: Colors.grey),
+      title: SizedBox(
+        height: 16,
+        width: 120,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: Colors.grey),
+        ),
+      ),
+      subtitle: SizedBox(
+        height: 12,
+        width: 180,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: Colors.grey),
+        ),
+      ),
+    );
+  }
 }

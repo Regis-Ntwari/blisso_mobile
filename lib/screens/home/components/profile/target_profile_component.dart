@@ -42,102 +42,105 @@ class _TargetProfileComponentState
   }
 
   Future<void> handleDMTap(BuildContext context) async {
-    if(ref.read(permissionProviderImpl)['can_send_message_request']) {
-final targetProfile = ref.watch(targetProfileProvider);
-    final targetUsername = targetProfile.user!['username'];
-    setState(() {
-      isLoading = true;
-    });
+    if (ref.read(permissionProviderImpl)['can_send_message_request']) {
+      final targetProfile = ref.watch(targetProfileProvider);
+      final targetUsername = targetProfile.user!['username'];
+      setState(() {
+        isLoading = true;
+      });
 
-    // if (await checkIfChatExists(targetUsername)) {
-    //   if (context.mounted) {
-    //     Routemaster.of(context).push('/chat-detail/$targetUsername');
-    //   }
-    // }
-    try {
-      final messageRequestRef =
-          ref.read(addMessageRequestServiceProviderImpl.notifier);
-      await messageRequestRef.sendMessageRequest(targetUsername);
+      // if (await checkIfChatExists(targetUsername)) {
+      //   if (context.mounted) {
+      //     Routemaster.of(context).push('/chat-detail/$targetUsername');
+      //   }
+      // }
+      try {
+        final messageRequestRef =
+            ref.read(addMessageRequestServiceProviderImpl.notifier);
+        await messageRequestRef.sendMessageRequest(targetUsername);
 
-      final messageRequestResponse =
-          ref.read(addMessageRequestServiceProviderImpl);
+        final messageRequestResponse =
+            ref.read(addMessageRequestServiceProviderImpl);
 
-      if (messageRequestResponse.error == null) {
-        if (context.mounted) {
-          // Show success popup
-          if (messageRequestResponse.statusCode == 200) {
-            final chatRef = ref.read(chatServiceProviderImpl);
-            if (chatRef.data == null || chatRef.data.isEmpty) {
-              final chatRef = ref.read(chatServiceProviderImpl.notifier);
-              await chatRef.getMessages();
-            }
-            final chatsRef = ref.read(chatServiceProviderImpl);
-            for (var chat in chatsRef.data) {
-              if (chat['username'] == targetUsername) {
-                final chatDetailsRef =
-                    ref.read(getChatDetailsProviderImpl.notifier);
-                chatDetailsRef.updateChatDetails({
-                  'username': targetUsername,
-                  'profile_picture': targetProfile.profilePictureUri,
-                  'full_name':
-                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
-                  'nickname': targetProfile.nickname,
-                  'messages': chat['messages']
-                });
+        if (messageRequestResponse.error == null) {
+          if (context.mounted) {
+            // Show success popup
+            if (messageRequestResponse.statusCode == 200) {
+              final chatRef = ref.read(chatServiceProviderImpl);
+              if (chatRef.data == null || chatRef.data.isEmpty) {
+                final chatRef = ref.read(chatServiceProviderImpl.notifier);
+                await chatRef.getMessages();
               }
-            }
-            setState(() {
-              isLoading = false;
-            });
-            Routemaster.of(context).push('/chat-detail/$targetUsername');
-          } else if (messageRequestResponse.statusCode == 201) {
-            setState(() {
-              isLoading = false;
-            });
-            showPopupComponent(
+              final chatsRef = ref.read(chatServiceProviderImpl);
+              for (var chat in chatsRef.data) {
+                if (chat['username'] == targetUsername) {
+                  final chatDetailsRef =
+                      ref.read(getChatDetailsProviderImpl.notifier);
+                  chatDetailsRef.updateChatDetails({
+                    'username': targetUsername,
+                    'profile_picture': targetProfile.profilePictureUri,
+                    'full_name':
+                        '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                    'nickname': targetProfile.nickname,
+                    'messages': chat['messages']
+                  });
+                }
+              }
+              setState(() {
+                isLoading = false;
+              });
+              Routemaster.of(context).push('/chat-detail/$targetUsername');
+            } else if (messageRequestResponse.statusCode == 201) {
+              setState(() {
+                isLoading = false;
+              });
+              showPopupComponent(
+                  context: context,
+                  icon: Icons.verified,
+                  iconColor: Colors.green[800],
+                  message:
+                      'Message request sent to ${targetProfile.nickname}!');
+            } else {
+              setState(() {
+                isLoading = false;
+              });
+              showPopupComponent(
                 context: context,
-                icon: Icons.verified,
-                iconColor: Colors.green[800],
-                message: 'Message request sent to ${targetProfile.nickname}!');
-          } else {
-            setState(() {
-              isLoading = false;
-            });
-            showPopupComponent(
+                icon: Icons.error,
+                iconColor: Colors.red,
+                message: messageRequestResponse.error!,
+              );
+            }
+          }
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          showPopupComponent(
               context: context,
               icon: Icons.error,
-              iconColor: Colors.red,
-              message: messageRequestResponse.error!,
-            );
-          }
+              message: messageRequestResponse.error!);
         }
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        showPopupComponent(
+      } catch (e) {
+        if (context.mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          // Show error popup
+          showPopupComponent(
             context: context,
             icon: Icons.error,
-            message: messageRequestResponse.error!);
+            iconColor: GlobalColors.primaryColor,
+            message: 'Failed to send message request: ${e.toString()}',
+          );
+        }
       }
-    } catch (e) {
-      if (context.mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        // Show error popup
-        showPopupComponent(
+    } else {
+      showPopupComponent(
           context: context,
           icon: Icons.error,
-          iconColor: Colors.red,
-          message: 'Failed to send message request: ${e.toString()}',
-        );
-      }
+          message: 'Please upgrade your plan to send message requests');
     }
-    } else {
-      showPopupComponent(context: context, icon: Icons.error, message: 'Please upgrade your plan to send message requests');
-    }
-    
   }
 
   @override
@@ -355,6 +358,112 @@ final targetProfile = ref.watch(targetProfileProvider);
                   ),
                 ),
               ),
+              InkWell(
+                onTap: () {
+                  if (expandedField == 'interest') {
+                    setState(() {
+                      expandedField = '';
+                    });
+                  } else {
+                    setState(() {
+                      expandedField = 'interest';
+                    });
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: ListTile(
+                    title: Text(
+                      "${targetProfile.nickname}'s interests",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(targetProfile.lifesnapshots!
+                        .map((snapshot) => snapshot['name'])
+                        .join(", ")),
+                    trailing: expandedField == 'interest'
+                        ? const Icon(Icons.keyboard_arrow_down)
+                        : const Icon(Icons.keyboard_arrow_right),
+                  ),
+                ),
+              ),
+              if (expandedField == 'interest')
+                Padding(
+                  padding: const EdgeInsets.only(left: 20.0),
+                  child: Wrap(
+                    children:
+                        targetProfile.lifesnapshots!.map<Widget>((snapshot) {
+                      return IntrinsicWidth(
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 2),
+                          decoration: BoxDecoration(
+                              color: GlobalColors.primaryColor,
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 3, horizontal: 5),
+                          child: Text(
+                            snapshot['name'],
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12),
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(left: 10.0),
+                child: InkWell(
+                  onTap: () {
+                    if (expandedField == 'target') {
+                      setState(() {
+                        expandedField = '';
+                      });
+                    } else {
+                      setState(() {
+                        expandedField = 'target';
+                      });
+                    }
+                  },
+                  child: ListTile(
+                    title: Text(
+                        "${targetProfile.nickname}'s interests in a person",
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(targetProfile.targetLifesnapshots!
+                        .map((snapshot) => snapshot['name'])
+                        .join(", ")),
+                    trailing: expandedField == 'target'
+                        ? const Icon(Icons.keyboard_arrow_down)
+                        : const Icon(Icons.keyboard_arrow_right),
+                  ),
+                ),
+              ),
+              if (expandedField == 'target')
+                Padding(
+                  padding: const EdgeInsets.only(left: 20.0),
+                  child: Wrap(
+                    alignment: WrapAlignment.start,
+                    children: targetProfile.targetLifesnapshots!
+                        .map<Widget>((snapshot) {
+                      return IntrinsicWidth(
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 2),
+                          decoration: BoxDecoration(
+                              color: GlobalColors.primaryColor,
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 3, horizontal: 5),
+                          child: Text(
+                            snapshot['name'],
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12),
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
               if (targetProfile.distanceAnnot != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
@@ -379,19 +488,15 @@ final targetProfile = ref.watch(targetProfileProvider);
                         onTap: isLoading ? () {} : () => handleDMTap(context)),
                   ),
                 ),
-              ) ,
+              ),
               SizedBox(
                 child: Column(
                   children: [
                     Container(
                         height: 300,
-                        padding: const EdgeInsets.only(bottom: 2,),
-                        decoration: BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(
-                                    color: isLightTheme
-                                        ? Colors.black
-                                        : Colors.white))),
+                        padding: const EdgeInsets.only(
+                          bottom: 2,
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: SizedBox(
@@ -506,101 +611,6 @@ final targetProfile = ref.watch(targetProfileProvider);
                             ),
                           ),
                         )),
-                    InkWell(
-                      onTap: () {
-                        if (expandedField == 'interest') {
-                          setState(() {
-                            expandedField = '';
-                          });
-                        } else {
-                          setState(() {
-                            expandedField = 'interest';
-                          });
-                        }
-                      },
-                      child: ListTile(
-                        title: Text(
-                          "${targetProfile.nickname}'s interests",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(targetProfile.lifesnapshots!
-                            .map((snapshot) => snapshot['name'])
-                            .join(", ")),
-                        trailing: expandedField == 'interest'
-                            ? const Icon(Icons.keyboard_arrow_down)
-                            : const Icon(Icons.keyboard_arrow_right),
-                      ),
-                    ),
-                    if (expandedField == 'interest')
-                      Wrap(
-                        children: targetProfile.lifesnapshots!
-                            .map<Widget>((snapshot) {
-                          return IntrinsicWidth(
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 2),
-                              decoration: BoxDecoration(
-                                  color: GlobalColors.primaryColor,
-                                  borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 3, horizontal: 5),
-                              child: Text(
-                                snapshot['name'],
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                                textAlign: TextAlign.start,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    InkWell(
-                      onTap: () {
-                        if (expandedField == 'target') {
-                          setState(() {
-                            expandedField = '';
-                          });
-                        } else {
-                          setState(() {
-                            expandedField = 'target';
-                          });
-                        }
-                      },
-                      child: ListTile(
-                        title: Text(
-                            "${targetProfile.nickname}'s interests in a person",
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(targetProfile.targetLifesnapshots!
-                            .map((snapshot) => snapshot['name'])
-                            .join(", ")),
-                        trailing: expandedField == 'target'
-                            ? const Icon(Icons.keyboard_arrow_down)
-                            : const Icon(Icons.keyboard_arrow_right),
-                      ),
-                    ),
-                    if (expandedField == 'target')
-                      Wrap(
-                        alignment: WrapAlignment.start,
-                        children: targetProfile.targetLifesnapshots!
-                            .map<Widget>((snapshot) {
-                          return IntrinsicWidth(
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 2),
-                              decoration: BoxDecoration(
-                                  color: GlobalColors.primaryColor,
-                                  borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 3, horizontal: 5),
-                              child: Text(
-                                snapshot['name'],
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                                textAlign: TextAlign.start,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
                   ],
                 ),
               ),
