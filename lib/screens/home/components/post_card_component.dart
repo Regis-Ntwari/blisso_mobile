@@ -44,6 +44,20 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
     _pageController.dispose();
   }
 
+  Map<String, List<dynamic>> _groupBySubCategory(List<dynamic> snapshots) {
+  final Map<String, List<dynamic>> grouped = {};
+  
+  for (final snap in snapshots) {
+    final subCategory = snap['sub_category']?.toString() ?? 'Other';
+    if (!grouped.containsKey(subCategory)) {
+      grouped[subCategory] = [];
+    }
+    grouped[subCategory]!.add(snap);
+  }
+  
+  return grouped;
+}
+
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
     // Convert DateTime to Unix timestamp in milliseconds
     int timestamp = dateTime.millisecondsSinceEpoch;
@@ -365,32 +379,95 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                                 'Liked by ${widget.profile['people_liked'][0]} and others'),
                   ),
             Padding(
-                padding: const EdgeInsets.all(10),
-                child: widget.profile['target_lifesnapshots'].length > 0
-                    ? SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            ...widget.profile['target_lifesnapshots']
-                                .map((snap) => Container(
-                                      margin: const EdgeInsets.only(right: 2),
-                                      decoration: BoxDecoration(
-                                          color: GlobalColors.primaryColor,
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 3, horizontal: 5),
-                                      child: Text(
-                                        snap['name'],
-                                        style: const TextStyle(
-                                            color: Colors.white, fontSize: 12),
-                                        textAlign: TextAlign.start,
-                                      ),
-                                    ))
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink()),
+  padding: const EdgeInsets.all(10),
+  child: widget.profile['target_lifesnapshots'].length > 0
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Group snapshots by sub_category
+            ..._groupBySubCategory(widget.profile['target_lifesnapshots'])
+                .entries
+                .map((entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Sub-category title
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.label),
+                                SizedBox(width: 5,),
+                                Text(
+                                  entry.key,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Horizontal scrollable badges
+                          SizedBox(
+                            height: 40,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  ...entry.value.map((snap) => Container(
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              GlobalColors.primaryColor,
+                                              GlobalColors.primaryColor.withOpacity(0.8),
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.1),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              snap['name'],
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )),
+                                  const SizedBox(width: 4), // Add some end padding
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+          ],
+        )
+      : const SizedBox.shrink(),
+)
           ])),
     );
   }
