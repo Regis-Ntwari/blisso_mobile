@@ -18,12 +18,13 @@ class ExploreComponent extends ConsumerStatefulWidget {
 class _ExploreComponentState extends ConsumerState<ExploreComponent> {
   final PageController _pageController = PageController();
   final VideoControllerManager _videoManager = VideoControllerManager();
-
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+
+    // Fetch videos after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (ref.read(getVideoPostProviderImpl).data == null) {
         await ref.read(getVideoPostProviderImpl.notifier).getVideoPosts();
@@ -38,7 +39,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
     super.dispose();
   }
 
-  void _handlePageChanged(int index, List<ShortStoryModel> videos) async {
+  Future<void> _handlePageChanged(int index, List<ShortStoryModel> videos) async {
     setState(() => _currentIndex = index);
 
     // Preload current, previous, next
@@ -52,8 +53,8 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
       await _videoManager.preloadController(i, videos[i].videoUrl);
     }
 
-    // Dispose others not in preload list
-    for (final key in _videoManager.activeIndexes) {
+    // Dispose any other controllers
+    for (final key in List.of(_videoManager.activeIndexes)) {
       if (!toPreload.contains(key)) {
         _videoManager.disposeController(key);
       }
@@ -69,21 +70,32 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
     }
 
     final List<ShortStoryModel> videos = (videoState.data as List)
-        .map((video) => ShortStoryModel(
-              id: video['id'].toString(),
-              username: video['username'],
-              nickname: video['nickname'],
-              profilePicture: video['profile_picture_uri'],
-              videoUrl: video['post_file_url'],
-              description: video['caption'] ?? '',
-              likes: video['likes'] ?? 0,
-              shares: video['shares'] ?? 0,
-              peopleLiked: video['people_liked'] ?? [],
-              likedThisStory: video['liked_this_story'],
-            ))
+        .map(
+          (video) => ShortStoryModel(
+            id: video['id'].toString(),
+            username: video['username'],
+            nickname: video['nickname'],
+            profilePicture: video['profile_picture_uri'],
+            videoUrl: video['post_file_url'],
+            description: video['caption'] ?? '',
+            likes: video['likes'] ?? 0,
+            shares: video['shares'] ?? 0,
+            peopleLiked: video['people_liked'] ?? [],
+            likedThisStory: video['liked_this_story'],
+          ),
+        )
         .toList();
 
-    return ref.read(permissionProviderImpl)['can_view_video_post'] ? PageView.builder(
+    final hasPermission = ref.read(permissionProviderImpl)['can_view_video_post'];
+
+    if (!hasPermission) {
+      return const PopupComponent(
+        icon: Icons.error,
+        message: 'Please upgrade your package to view video posts!',
+      );
+    }
+
+    return PageView.builder(
       controller: _pageController,
       scrollDirection: Axis.vertical,
       itemCount: videos.length,
@@ -92,10 +104,10 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
         final controller = _videoManager.getController(index);
         return ShortStoryPlayer(
           video: videos[index],
-          videoController: controller, // pass preloaded controller
+          videoController: controller,
+          isActive: index == _currentIndex,
         );
       },
-    ) : PopupComponent(icon: Icons.error, message: 'Please upgrade your package!');
+    );
   }
 }
-

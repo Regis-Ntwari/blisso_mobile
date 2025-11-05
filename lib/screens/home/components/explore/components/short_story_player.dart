@@ -9,23 +9,24 @@ import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:routemaster/routemaster.dart';
-import 'package:video_player/video_player.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:video_player/video_player.dart';
 
 class ShortStoryPlayer extends ConsumerStatefulWidget {
   final ShortStoryModel video;
   final VideoPlayerController? videoController;
+  final bool isActive;
   final bool showStory;
 
   const ShortStoryPlayer({
     super.key,
     required this.video,
     this.videoController,
-    this.showStory = true,
+    required this.isActive,
+    this.showStory = true
   });
 
   @override
@@ -34,8 +35,8 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
 
 class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   late VideoPlayerController _controller;
-  late ChewieController _chewieController;
-  bool _isLoading = true;
+  bool _isBuffering = true;
+  bool _isInitialized = true;
   bool isProfileLoading = false;
   bool showCaption = false;
 
@@ -46,19 +47,22 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     _controller = widget.videoController ??
         VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
 
-    _controller.initialize().then((_) {
-      setState(() => _isLoading = false);
-    });
+    if (_controller.value.isInitialized) {
+      _isInitialized = true;
+      _isBuffering = false;
+    } else {
+      _controller.initialize().then((_) {
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+            _isBuffering = false;
+          });
+        }
+      });
+    }
 
-    _controller.setLooping(true);
-    _controller.play();
-
-    _chewieController = ChewieController(
-      videoPlayerController: _controller,
-      autoPlay: true,
-      looping: true,
-      showControls: false,
-    );
+    _controller.addListener(_handleBuffering);
+    if (widget.isActive) _controller.play();
   }
 
   void _handleLike() {
@@ -71,20 +75,53 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     setState(() {});
   }
 
+  void _handleBuffering() {
+    final isBuffering = _controller.value.isBuffering;
+    if (isBuffering != _isBuffering) {
+      setState(() => _isBuffering = isBuffering);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ShortStoryPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      widget.isActive ? _controller.play() : _controller.pause();
+    }
+  }
+
   @override
   void dispose() {
+    _controller.removeListener(_handleBuffering);
     if (widget.videoController == null) {
-      _controller.dispose(); // Only dispose if we created it
+      _controller.dispose();
     }
-    _chewieController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // return Stack(
+    //   fit: StackFit.expand,
+    //   children: [
+    //     if (_isInitialized)
+    //       FittedBox(
+    //         fit: BoxFit.cover,
+    //         child: SizedBox(
+    //           width: _controller.value.size.width,
+    //           height: _controller.value.size.height,
+    //           child: VideoPlayer(_controller),
+    //         ),
+    //       ),
+    //     if (_isBuffering)
+    //       const Center(
+    //         child: CircularProgressIndicator(color: Colors.white),
+    //       ),
+    //   ],
+    // );
     return Stack(
       children: [
-        _isLoading
+        !_isInitialized
             ? Shimmer.fromColors(
                 baseColor: Colors.grey[800]!,
                 highlightColor: Colors.grey[700]!,
@@ -114,7 +151,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
           child: Column(
             children: [
               // Profile picture
-              _isLoading && widget.showStory
+              !_isInitialized && widget.showStory
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,
@@ -176,7 +213,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                         )
                       : const SizedBox.shrink(),
               // Like button
-              _isLoading
+              !_isInitialized
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,
@@ -202,7 +239,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                       ),
                     ),
               // Add likes count below like button
-              _isLoading
+              !_isInitialized
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,
@@ -228,7 +265,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                     ),
               const SizedBox(height: 5),
               // Share button
-              _isLoading
+              !_isInitialized
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,
@@ -259,7 +296,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                           size: 32,
                         ),
                       )),
-              _isLoading
+              !_isInitialized
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,
@@ -286,7 +323,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               const SizedBox(
                 height: 5,
               ),
-              _isLoading
+              !_isInitialized
                   ? Shimmer.fromColors(
                       baseColor: Colors.grey[800]!,
                       highlightColor: Colors.grey[700]!,

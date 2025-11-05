@@ -73,7 +73,7 @@ class _ChatViewVideoState extends ConsumerState<ViewProfileVideoComponent> {
               context: context,
               removeLeft: true,
               removeRight: true,
-              child: ShortStoryPlayer(video: story, showStory: false,))),
+              child: ShortStoryPlayer(video: story, isActive: true,))),
     );
   }
 }
