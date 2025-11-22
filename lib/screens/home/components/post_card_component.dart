@@ -4,6 +4,7 @@ import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dart';
+import 'package:blisso_mobile/screens/home/components/expandable_pills_component.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
@@ -45,18 +46,18 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   }
 
   Map<String, List<dynamic>> _groupBySubCategory(List<dynamic> snapshots) {
-  final Map<String, List<dynamic>> grouped = {};
-  
-  for (final snap in snapshots) {
-    final subCategory = snap['sub_category']?.toString() ?? 'Other';
-    if (!grouped.containsKey(subCategory)) {
-      grouped[subCategory] = [];
+    final Map<String, List<dynamic>> grouped = {};
+
+    for (final snap in snapshots) {
+      final subCategory = snap['sub_category']?.toString() ?? 'Other';
+      if (!grouped.containsKey(subCategory)) {
+        grouped[subCategory] = [];
+      }
+      grouped[subCategory]!.add(snap);
     }
-    grouped[subCategory]!.add(snap);
+
+    return grouped;
   }
-  
-  return grouped;
-}
 
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
     // Convert DateTime to Unix timestamp in milliseconds
@@ -379,95 +380,125 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                                 'Liked by ${widget.profile['people_liked'][0]} and others'),
                   ),
             Padding(
-  padding: const EdgeInsets.all(10),
-  child: widget.profile['target_lifesnapshots'].length > 0
-      ? Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Group snapshots by sub_category
-            ..._groupBySubCategory(widget.profile['target_lifesnapshots'])
-                .entries
-                .map((entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Sub-category title
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.label),
-                                SizedBox(width: 5,),
-                                Text(
-                                  entry.key,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Horizontal scrollable badges
-                          SizedBox(
-                            height: 40,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  ...entry.value.map((snap) => Container(
-                                        margin: const EdgeInsets.only(right: 8),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              GlobalColors.primaryColor,
-                                              GlobalColors.primaryColor.withOpacity(0.8),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(20),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.1),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 8,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              snap['name'],
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )),
-                                  const SizedBox(width: 4), // Add some end padding
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-          ],
-        )
-      : const SizedBox.shrink(),
-)
+              padding: const EdgeInsets.all(10),
+              child: widget.profile['target_lifesnapshots'].length > 0
+                  // ? Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       // Group snapshots by sub_category
+                  //       ..._groupBySubCategory(
+                  //               widget.profile['target_lifesnapshots'])
+                  //           .entries
+                  //           .map((entry) => Padding(
+                  //                 padding: const EdgeInsets.only(bottom: 16),
+                  //                 child: Column(
+                  //                   crossAxisAlignment:
+                  //                       CrossAxisAlignment.start,
+                  //                   children: [
+                  //                     // Sub-category title
+                  //                     Padding(
+                  //                       padding:
+                  //                           const EdgeInsets.only(bottom: 8),
+                  //                       child: Row(
+                  //                         mainAxisSize: MainAxisSize.min,
+                  //                         children: [
+                  //                           Icon(Icons.label),
+                  //                           SizedBox(
+                  //                             width: 5,
+                  //                           ),
+                  //                           Text(
+                  //                             entry.key,
+                  //                             style: const TextStyle(
+                  //                               fontSize: 16,
+                  //                               fontWeight: FontWeight.w600,
+                  //                               color: Colors.black87,
+                  //                             ),
+                  //                           ),
+                  //                         ],
+                  //                       ),
+                  //                     ),
+                  //                     // Horizontal scrollable badges
+                  //                     SizedBox(
+                  //                       height: 40,
+                  //                       child: SingleChildScrollView(
+                  //                         scrollDirection: Axis.horizontal,
+                  //                         child: Row(
+                  //                           children: [
+                  //                             ...entry.value.map((snap) =>
+                  //                                 Container(
+                  //                                   margin:
+                  //                                       const EdgeInsets.only(
+                  //                                           right: 8),
+                  //                                   decoration: BoxDecoration(
+                  //                                     gradient: LinearGradient(
+                  //                                       colors: [
+                  //                                         GlobalColors
+                  //                                             .primaryColor,
+                  //                                         GlobalColors
+                  //                                             .primaryColor
+                  //                                             .withOpacity(0.8),
+                  //                                       ],
+                  //                                       begin:
+                  //                                           Alignment.topLeft,
+                  //                                       end: Alignment
+                  //                                           .bottomRight,
+                  //                                     ),
+                  //                                     borderRadius:
+                  //                                         BorderRadius.circular(
+                  //                                             20),
+                  //                                     boxShadow: [
+                  //                                       BoxShadow(
+                  //                                         color: Colors.black
+                  //                                             .withOpacity(0.1),
+                  //                                         blurRadius: 4,
+                  //                                         offset: const Offset(
+                  //                                             0, 2),
+                  //                                       ),
+                  //                                     ],
+                  //                                   ),
+                  //                                   padding: const EdgeInsets
+                  //                                       .symmetric(
+                  //                                     horizontal: 16,
+                  //                                     vertical: 8,
+                  //                                   ),
+                  //                                   child: Row(
+                  //                                     mainAxisSize:
+                  //                                         MainAxisSize.min,
+                  //                                     children: [
+                  //                                       Text(
+                  //                                         snap['name'],
+                  //                                         style:
+                  //                                             const TextStyle(
+                  //                                           color: Colors.white,
+                  //                                           fontSize: 14,
+                  //                                           fontWeight:
+                  //                                               FontWeight.w500,
+                  //                                         ),
+                  //                                       ),
+                  //                                     ],
+                  //                                   ),
+                  //                                 )),
+                  //                             const SizedBox(
+                  //                                 width:
+                  //                                     4), // Add some end padding
+                  //                           ],
+                  //                         ),
+                  //                       ),
+                  //                     ),
+                  //                   ],
+                  //                 ),
+                  //               )),
+                  //     ],
+                  //   )
+
+                  ? ExpandablePillsComponent(
+                      items: widget.profile['target_lifesnapshots']
+                          .map<dynamic>((snap) => snap['name'].toString())
+                          .toList(),
+                      color: GlobalColors.primaryColor,
+                    )
+                  : const SizedBox.shrink(),
+            )
           ])),
     );
   }

@@ -41,6 +41,20 @@ class _TargetProfileComponentState
     return false;
   }
 
+  Map<String, List<dynamic>> _groupBySubCategory(List<dynamic> snapshots) {
+    final Map<String, List<dynamic>> grouped = {};
+
+    for (final snap in snapshots) {
+      final subCategory = snap['sub_category']?.toString() ?? 'Other';
+      if (!grouped.containsKey(subCategory)) {
+        grouped[subCategory] = [];
+      }
+      grouped[subCategory]!.add(snap);
+    }
+
+    return grouped;
+  }
+
   Future<void> handleDMTap(BuildContext context) async {
     if (ref.read(permissionProviderImpl)['can_send_message_request']) {
       final targetProfile = ref.watch(targetProfileProvider);
@@ -387,29 +401,140 @@ class _TargetProfileComponentState
                 ),
               ),
               if (expandedField == 'interest')
+                // Padding(
+                //   padding: const EdgeInsets.only(left: 20.0),
+                //   child: Wrap(
+                //     children:
+                //         targetProfile.lifesnapshots!.map<Widget>((snapshot) {
+                //       return IntrinsicWidth(
+                //         child: Container(
+                //           margin: const EdgeInsets.only(right: 2),
+                //           decoration: BoxDecoration(
+                //               color: GlobalColors.primaryColor,
+                //               borderRadius: BorderRadius.circular(10)),
+                //           padding: const EdgeInsets.symmetric(
+                //               vertical: 3, horizontal: 5),
+                //           child: Text(
+                //             snapshot['name'],
+                //             style: const TextStyle(
+                //                 color: Colors.white, fontSize: 12),
+                //             textAlign: TextAlign.start,
+                //           ),
+                //         ),
+                //       );
+                //     }).toList(),
+                //   ),
+                // ),
                 Padding(
                   padding: const EdgeInsets.only(left: 20.0),
-                  child: Wrap(
-                    children:
-                        targetProfile.lifesnapshots!.map<Widget>((snapshot) {
-                      return IntrinsicWidth(
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 2),
-                          decoration: BoxDecoration(
-                              color: GlobalColors.primaryColor,
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 3, horizontal: 5),
-                          child: Text(
-                            snapshot['name'],
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 12),
-                            textAlign: TextAlign.start,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Group snapshots by sub_category
+                          ..._groupBySubCategory(
+                                  targetProfile.lifesnapshots!)
+                              .entries
+                              .map((entry) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Sub-category title
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 8),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.label),
+                                              SizedBox(
+                                                width: 5,
+                                              ),
+                                              Text(
+                                                entry.key,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isLightTheme ? Colors.black87 : Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Horizontal scrollable badges
+                                        SizedBox(
+                                          height: 40,
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                              children: [
+                                                ...entry.value.map((snap) =>
+                                                    Container(
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              right: 8),
+                                                      decoration: BoxDecoration(
+                                                        gradient: LinearGradient(
+                                                          colors: [
+                                                            GlobalColors
+                                                                .primaryColor,
+                                                            GlobalColors
+                                                                .primaryColor
+                                                                .withOpacity(0.8),
+                                                          ],
+                                                          begin:
+                                                              Alignment.topLeft,
+                                                          end: Alignment
+                                                              .bottomRight,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                20),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(0.1),
+                                                            blurRadius: 4,
+                                                            offset: const Offset(
+                                                                0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 8,
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            snap['name'],
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight.w500,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    )),
+                                                const SizedBox(
+                                                    width:
+                                                        4), // Add some end padding
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                        ],
+                      ),
                 ),
               Padding(
                 padding: const EdgeInsets.only(left: 10.0),
@@ -439,41 +564,152 @@ class _TargetProfileComponentState
                 ),
               ),
               if (expandedField == 'target')
-                Padding(
+              //   Padding(
+              //     padding: const EdgeInsets.only(left: 20.0),
+              //     child: Wrap(
+              //       alignment: WrapAlignment.start,
+              //       children: targetProfile.targetLifesnapshots!
+              //           .map<Widget>((snapshot) {
+              //         return IntrinsicWidth(
+              //           child: Container(
+              //             margin: const EdgeInsets.only(right: 2),
+              //             decoration: BoxDecoration(
+              //                 color: GlobalColors.primaryColor,
+              //                 borderRadius: BorderRadius.circular(10)),
+              //             padding: const EdgeInsets.symmetric(
+              //                 vertical: 3, horizontal: 5),
+              //             child: Text(
+              //               snapshot['name'],
+              //               style: const TextStyle(
+              //                   color: Colors.white, fontSize: 12),
+              //               textAlign: TextAlign.start,
+              //             ),
+              //           ),
+              //         );
+              //       }).toList(),
+              //     ),
+              //   ),
+              // if (targetProfile.distanceAnnot != null)
+              //   Padding(
+              //     padding: const EdgeInsets.only(top: 10),
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: [
+              //         Text(
+              //             '${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
+              //       ],
+              //     ),
+              //   ),
+              Padding(
                   padding: const EdgeInsets.only(left: 20.0),
-                  child: Wrap(
-                    alignment: WrapAlignment.start,
-                    children: targetProfile.targetLifesnapshots!
-                        .map<Widget>((snapshot) {
-                      return IntrinsicWidth(
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 2),
-                          decoration: BoxDecoration(
-                              color: GlobalColors.primaryColor,
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 3, horizontal: 5),
-                          child: Text(
-                            snapshot['name'],
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 12),
-                            textAlign: TextAlign.start,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              if (targetProfile.distanceAnnot != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                          '${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
-                    ],
-                  ),
+                  child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Group snapshots by sub_category
+                          ..._groupBySubCategory(
+                                  targetProfile.targetLifesnapshots!)
+                              .entries
+                              .map((entry) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Sub-category title
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 8),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.label),
+                                              SizedBox(
+                                                width: 5,
+                                              ),
+                                              Text(
+                                                entry.key,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isLightTheme ? Colors.black87 : Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Horizontal scrollable badges
+                                        SizedBox(
+                                          height: 40,
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                              children: [
+                                                ...entry.value.map((snap) =>
+                                                    Container(
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                              right: 8),
+                                                      decoration: BoxDecoration(
+                                                        gradient: LinearGradient(
+                                                          colors: [
+                                                            GlobalColors
+                                                                .primaryColor,
+                                                            GlobalColors
+                                                                .primaryColor
+                                                                .withOpacity(0.8),
+                                                          ],
+                                                          begin:
+                                                              Alignment.topLeft,
+                                                          end: Alignment
+                                                              .bottomRight,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                20),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(0.1),
+                                                            blurRadius: 4,
+                                                            offset: const Offset(
+                                                                0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 8,
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            snap['name'],
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Colors.white,
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight.w500,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    )),
+                                                const SizedBox(
+                                                    width:
+                                                        4), // Add some end padding
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                        ],
+                      ),
                 ),
               Padding(
                 padding: const EdgeInsets.only(top: 10),
