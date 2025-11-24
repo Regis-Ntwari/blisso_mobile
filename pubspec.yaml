@@ -60,6 +60,10 @@ dependencies:
   chewie: ^1.10.0
   shimmer: ^3.0.0
   flutter_svg: ^2.2.1
+  firebase_core: ^4.2.1
+  firebase_messaging: ^16.0.4
+  flutter_local_notifications: ^19.5.0
+  overlay_support: ^2.1.0
   
 
 dev_dependencies:
