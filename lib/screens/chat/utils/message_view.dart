@@ -347,7 +347,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               ),
                               Text(
                                 widget.message['content']!,
-                                textAlign: TextAlign.justify,
+                                textAlign: TextAlign.left,
                                 style: const TextStyle(
                                   fontSize: 14,
                                 ),
@@ -400,7 +400,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               ),
                               Text(
                                 widget.message['content']!,
-                                textAlign: TextAlign.justify,
+                                textAlign: TextAlign.left,
                                 style: const TextStyle(
                                   fontSize: 14,
                                 ),
@@ -481,7 +481,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   ),
                                   Text(
                                     '${widget.message['content']!}',
-                                    textAlign: TextAlign.justify,
+                                    textAlign: TextAlign.left,
                                     style: const TextStyle(
                                       fontSize: 14,
                                     ),
@@ -583,7 +583,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                                       widget
                                                           .message['content']!,
                                                       textAlign:
-                                                          TextAlign.justify,
+                                                          TextAlign.left,
                                                       style: const TextStyle(
                                                         fontSize: 14,
                                                       ),
@@ -592,7 +592,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                                 )
                                               : Text(
                                                   widget.message['content']!,
-                                                  textAlign: TextAlign.justify,
+                                                  textAlign: TextAlign.left,
                                                   style: const TextStyle(
                                                     fontSize: 14,
                                                   ),

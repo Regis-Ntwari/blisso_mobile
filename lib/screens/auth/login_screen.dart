@@ -49,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
-                  "Provide email or phone number you used to generate a one time password to your account",
+                  "Provide the email you used to generate a one time password to your account",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: scaler.scale(12),

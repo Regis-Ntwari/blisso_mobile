@@ -353,8 +353,7 @@ class _TargetProfileSnapshotsComponentState
                             if (snapshot.error != null) {
                               showSnackBar(context, snapshot.error!);
                             } else {
-                              Routemaster.of(context).push(
-                                  "/auto-write/Now, let's add gorgeous pictures/profile-pictures");
+                              Routemaster.of(context).replace('/homepage');
                             }
                           }
                         }),

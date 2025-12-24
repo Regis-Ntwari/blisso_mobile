@@ -9,6 +9,7 @@ import 'package:blisso_mobile/screens/chat/message_options/message_option.dart';
 import 'package:blisso_mobile/screens/chat/utils/message_view.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
+import 'package:blisso_mobile/services/chat/number_messages_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
@@ -21,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:routemaster/routemaster.dart';
@@ -283,14 +285,27 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   final ScrollController scrollController = ScrollController();
 
-  void scrollToBottom() {
-    if (scrollController.hasClients) {
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 50),
-        curve: Curves.easeOut,
-      );
-    }
+  void scrollToBottom({bool animated = true}) {
+    if (!scrollController.hasClients) return;
+
+    final position = scrollController.position;
+    final target = position.maxScrollExtent;
+
+    if (position.pixels >= target) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!scrollController.hasClients) return;
+
+      if (animated) {
+        scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+        );
+      } else {
+        scrollController.jumpTo(target);
+      }
+    });
   }
 
   final Map<String, GlobalKey> _messageKeys = {};
@@ -330,7 +345,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       await getMyUsername();
       initializeEmptyChat();
       ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
-      scrollToBottom();
+      ref.read(getNumberOfMessagesProvider.notifier).getNumberOfMessages();
     });
     messageControllerNotifier.value = messageController;
   }
@@ -384,11 +399,6 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      //ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
-      scrollToBottom();
-    });
 
     final chatDetailsRef = ref.watch(getChatDetailsProviderImpl);
 
@@ -474,208 +484,264 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
               child: Column(
                 children: [
                   Expanded(
-                    child: chatDetailsRef['messages'].isEmpty
-                        ? Center(
-                            child: Text(
-                              'No messages yet. Start a conversation!',
-                              style: TextStyle(
-                                color: GlobalColors.secondaryColor,
+                      child: Stack(
+                    children: [
+                      // svg background based on theme
+                      isLightTheme
+                          ? Positioned.fill(
+                              child: SvgPicture.asset(
+                                'assets/images/chat-light-bg.svg',
+                                fit: BoxFit.cover,
                               ),
-                            ),
-                          )
-                        : Builder(
-                            builder: (context) {
-                              // Group messages by date
-                              Map<String, List<dynamic>> messagesByDate = {};
-                              for (var message in chatDetailsRef['messages']) {
-                                final messageDate =
-                                    DateTime.parse(message['created_at']);
-                                final dateKey = DateFormat('yyyy-MM-dd')
-                                    .format(messageDate);
+                            )
+                          : Positioned.fill(
+                              child: SvgPicture.asset(
+                              'assets/images/chat-dark-bg.svg',
+                              fit: BoxFit.cover,
+                            )),
+                      chatDetailsRef['messages'].isEmpty
+                          ? Center(
+                              child: Text(
+                                'No messages yet. Start a conversation!',
+                                style: TextStyle(
+                                  color: GlobalColors.secondaryColor,
+                                ),
+                              ),
+                            )
+                          : Builder(
+                              builder: (context) {
+                                // Group messages by date
+                                Map<String, List<dynamic>> messagesByDate = {};
+                                for (var message
+                                    in chatDetailsRef['messages']) {
+                                  final messageDate =
+                                      DateTime.parse(message['created_at']);
+                                  final dateKey = DateFormat('yyyy-MM-dd')
+                                      .format(messageDate);
 
-                                if (!messagesByDate.containsKey(dateKey)) {
-                                  messagesByDate[dateKey] = [];
+                                  if (!messagesByDate.containsKey(dateKey)) {
+                                    messagesByDate[dateKey] = [];
+                                  }
+                                  messagesByDate[dateKey]!.add(message);
                                 }
-                                messagesByDate[dateKey]!.add(message);
-                              }
 
-                              // Create a list of all dates
-                              final dateKeys = messagesByDate.keys.toList()
-                                ..sort();
+                                // Create a list of all dates
+                                final dateKeys = messagesByDate.keys.toList()
+                                  ..sort();
 
-                              // Create a list of all items (date headers + messages)
-                              List<dynamic> allItems = [];
-                              for (var dateKey in dateKeys) {
-                                // Add date header
-                                allItems
-                                    .add({'type': 'header', 'date': dateKey});
+                                // Create a list of all items (date headers + messages)
+                                List<dynamic> allItems = [];
+                                for (var dateKey in dateKeys) {
+                                  // Add date header
+                                  allItems
+                                      .add({'type': 'header', 'date': dateKey});
 
-                                // Add messages for this date
-                                for (var message in messagesByDate[dateKey]!) {
-                                  allItems.add(
-                                      {'type': 'message', 'data': message});
+                                  // Add messages for this date
+                                  for (var message
+                                      in messagesByDate[dateKey]!) {
+                                    allItems.add(
+                                        {'type': 'message', 'data': message});
+                                  }
                                 }
-                              }
 
-                              return ListView.builder(
-                                controller: scrollController,
-                                itemCount: allItems.length,
-                                itemBuilder: (context, index) {
-                                  final item = allItems[index];
+                                return ListView.builder(
+                                  reverse: true,
+                                  controller: scrollController,
+                                  itemCount: allItems.length,
+                                  itemBuilder: (context, index) {
+                                    final item =
+                                        allItems[allItems.length - 1 - index];
 
-                                  // Handle date headers
-                                  if (item['type'] == 'header') {
-                                    // final date =
-                                    //     DateTime.parse('${item['date']} 00:00:00');
+                                    // Handle date headers
+                                    if (item['type'] == 'header') {
+                                      // final date =
+                                      //     DateTime.parse('${item['date']} 00:00:00');
 
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0),
-                                      child: Center(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[300],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            formatDateHeader(item['date']),
-                                            style: TextStyle(
-                                              color: Colors.grey[700],
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0),
+                                        child: Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: isLightTheme
+                                                  ? Colors.grey[300]
+                                                  : Colors.grey[900],
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              formatDateHeader(item['date']),
+                                              style: TextStyle(
+                                                color: isLightTheme
+                                                    ? Colors.grey[700]
+                                                    : Colors.grey[200],
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }
+                                      );
+                                    }
 
-                                  // Handle messages
-                                  final message = item['data'];
-                                  final isSender =
-                                      message['sender'] == username;
+                                    // Handle messages
+                                    final message = item['data'];
+                                    final isSender =
+                                        message['sender'] == username;
 
-                                  return Column(
-                                    crossAxisAlignment: isSender
-                                        ? CrossAxisAlignment.end
-                                        : CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: isSender
-                                            ? const EdgeInsets.only(
-                                                top: 1.5,
-                                                bottom: 1.5,
-                                                left: 80.0,
-                                                right: 10)
-                                            : const EdgeInsets.only(
-                                                top: 1.5,
-                                                bottom: 1.5,
-                                                left: 10.0,
-                                                right: 80),
-                                        child: Align(
-                                          alignment: isSender
-                                              ? Alignment.centerRight
-                                              : Alignment.centerLeft,
-                                          child: GestureDetector(
-                                            onLongPress: () {
-                                              dynamic selectedMessage = message;
-                                              isSender
-                                                  ? showMessageOption(
-                                                      context,
-                                                      () => deleteTextMessage(
-                                                          selectedMessage), () {
-                                                      messageController.text =
-                                                          selectedMessage[
-                                                              'content'];
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                      setState(() {
-                                                        editMessage =
-                                                            selectedMessage;
-                                                      });
-                                                    })
-                                                  : null;
-                                            },
-                                            onHorizontalDragUpdate: (details) {
-                                              setState(() {
-                                                dragDistances[index] =
-                                                    (dragDistances[index] ??
-                                                            0) +
-                                                        details.primaryDelta!;
-                                              });
-                                            },
-                                            onHorizontalDragEnd: (details) {
-                                              if ((dragDistances[index] ?? 0) >
-                                                  50) {
+                                    return Column(
+                                      crossAxisAlignment: isSender
+                                          ? CrossAxisAlignment.end
+                                          : CrossAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                          padding: isSender
+                                              ? const EdgeInsets.only(
+                                                  top: 1.5,
+                                                  bottom: 1.5,
+                                                  left: 80.0,
+                                                  right: 10)
+                                              : const EdgeInsets.only(
+                                                  top: 1.5,
+                                                  bottom: 1.5,
+                                                  left: 10.0,
+                                                  right: 80),
+                                          child: Align(
+                                            alignment: isSender
+                                                ? Alignment.centerRight
+                                                : Alignment.centerLeft,
+                                            child: GestureDetector(
+                                              onLongPress: () {
+                                                dynamic selectedMessage =
+                                                    message;
+                                                isSender
+                                                    ? showMessageOption(
+                                                        context,
+                                                        () => deleteTextMessage(
+                                                            selectedMessage),
+                                                        () {
+                                                        messageController.text =
+                                                            selectedMessage[
+                                                                'content'];
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        setState(() {
+                                                          editMessage =
+                                                              selectedMessage;
+                                                        });
+                                                      })
+                                                    : null;
+                                              },
+                                              onHorizontalDragUpdate:
+                                                  (details) {
                                                 setState(() {
-                                                  replyMessage = message;
-                                                  dragDistances[index] = 0;
+                                                  dragDistances[index] =
+                                                      (dragDistances[index] ??
+                                                              0) +
+                                                          details.primaryDelta!;
                                                 });
-                                              } else {
-                                                setState(() {
-                                                  dragDistances[index] = 0;
-                                                });
-                                              }
-                                            },
-                                            child: Transform.translate(
-                                              offset: Offset(
-                                                  dragDistances[index] ?? 0, 0),
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 5.0,
-                                                        horizontal: 10.0),
-                                                decoration: BoxDecoration(
-                                                  color: isSender
-                                                      ? isLightTheme
-                                                          ? GlobalColors
-                                                              .myMessageColor
-                                                          : GlobalColors
-                                                              .primaryColor
-                                                      : isLightTheme
-                                                          ? Colors.grey[200]
-                                                          : GlobalColors
-                                                              .otherDarkMessageColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: MessageView(
-                                                  message: message,
-                                                  scrollToParent:
-                                                      _scrollToParent,
-                                                  username: widget.username,
+                                              },
+                                              onHorizontalDragEnd: (details) {
+                                                if ((dragDistances[index] ??
+                                                        0) >
+                                                    50) {
+                                                  setState(() {
+                                                    replyMessage = message;
+                                                    dragDistances[index] = 0;
+                                                  });
+                                                } else {
+                                                  setState(() {
+                                                    dragDistances[index] = 0;
+                                                  });
+                                                }
+                                              },
+                                              child: Transform.translate(
+                                                offset: Offset(
+                                                    dragDistances[index] ?? 0,
+                                                    0),
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      vertical: 5.0,
+                                                      horizontal: 10.0),
+                                                  decoration: BoxDecoration(
+                                                    color: isSender
+                                                        ? isLightTheme
+                                                            ? GlobalColors
+                                                                .myMessageColor
+                                                            : GlobalColors
+                                                                .primaryColor
+                                                        : isLightTheme
+                                                            ? Colors.grey[200]
+                                                            : GlobalColors
+                                                                .otherDarkMessageColor,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                  child: MessageView(
+                                                    message: message,
+                                                    scrollToParent:
+                                                        _scrollToParent,
+                                                    username: widget.username,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      // Time stamp positioned outside the message bubble
-                                      Padding(
-                                        padding: isSender
-                                            ? const EdgeInsets.only(
-                                                right: 20.0, bottom: 8.0)
-                                            : const EdgeInsets.only(
-                                                left: 20.0, bottom: 8.0),
-                                        child: Text(
-                                          formatMessageTime(
-                                              message['created_at']),
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.grey[600],
+                                        // Time stamp positioned outside the message bubble
+                                        Padding(
+                                          padding: isSender
+                                              ? const EdgeInsets.only(
+                                                  right: 20.0, bottom: 8.0)
+                                              : const EdgeInsets.only(
+                                                  left: 20.0, bottom: 8.0),
+                                          child: Row(
+                                            mainAxisAlignment: isSender
+                                                ? MainAxisAlignment.end
+                                                : MainAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                formatMessageTime(
+                                                    message['created_at']),
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                              if (isSender &&
+                                                  index ==
+                                                      allItems.length - 1 &&
+                                                  message['message_status'] ==
+                                                      'seen')
+                                                const SizedBox(
+                                                  width: 5,
+                                                ),
+                                              if (isSender &&
+                                                  index ==
+                                                      allItems.length - 1 &&
+                                                  message['message_status'] ==
+                                                      'seen')
+                                                Text(
+                                                  'seen',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Colors.grey[600]),
+                                                ),
+                                            ],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                  ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                    ],
+                  )),
                   ValueListenableBuilder<bool>(
                     valueListenable: isEmojiPickerVisible,
                     builder: (context, isVisible, child) {
@@ -905,11 +971,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
                                                   if (message.isNotEmpty) {
                                                     messageController.clear();
-                                                    WidgetsBinding.instance
-                                                        .addPostFrameCallback(
-                                                            (_) {
-                                                      scrollToBottom();
-                                                    });
+                                                    // WidgetsBinding.instance
+                                                    //     .addPostFrameCallback(
+                                                    //         (_) {
+                                                    //   scrollToBottom();
+                                                    // });
                                                   }
                                                 },
                                                 icon: Icon(

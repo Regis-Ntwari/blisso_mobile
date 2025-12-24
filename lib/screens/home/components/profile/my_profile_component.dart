@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
-import 'package:blisso_mobile/components/popup_component.dart';
+//import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
@@ -18,7 +18,7 @@ import 'package:blisso_mobile/services/subscriptions/create_subscription_service
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
-import 'package:blisso_mobile/utils/subscription_design.dart';
+//import 'package:blisso_mobile/utils/subscription_design.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -229,7 +229,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     super.build(context);
     TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
-    final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
+    //final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
     final videoPostState = ref.watch(videoPostServiceProviderImpl);
     final snapshotState = ref.watch(snapshotServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
@@ -529,129 +529,129 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                       const SizedBox(
                         height: 10,
                       ),
-                      SizedBox(
-                        height: 600,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 2.0),
-                          child: subscriptionState.isLoading ||
-                                  subscriptionState.data == null
-                              ? const Center(
-                                  child: CircularProgressIndicator(
-                                    color: GlobalColors.primaryColor,
-                                  ),
-                                )
-                              : ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: subscriptionState.data.length,
-                                  itemBuilder: (context, index) {
-                                    // Sort the subscriptions to show active one first
-                                    List<dynamic> sortedSubscriptions =
-                                        List.from(subscriptionState.data);
-                                    sortedSubscriptions.sort((a, b) {
-                                      bool aIsActive =
-                                          profileState.data['subscription']
-                                                  ['plan_code'] ==
-                                              a['code'];
-                                      bool bIsActive =
-                                          profileState.data['subscription']
-                                                  ['plan_code'] ==
-                                              b['code'];
+                      // SizedBox(
+                      //   height: 600,
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.only(left: 2.0),
+                      //     child: subscriptionState.isLoading ||
+                      //             subscriptionState.data == null
+                      //         ? const Center(
+                      //             child: CircularProgressIndicator(
+                      //               color: GlobalColors.primaryColor,
+                      //             ),
+                      //           )
+                      //         : ListView.builder(
+                      //             scrollDirection: Axis.horizontal,
+                      //             itemCount: subscriptionState.data.length,
+                      //             itemBuilder: (context, index) {
+                      //               // Sort the subscriptions to show active one first
+                      //               List<dynamic> sortedSubscriptions =
+                      //                   List.from(subscriptionState.data);
+                      //               sortedSubscriptions.sort((a, b) {
+                      //                 bool aIsActive =
+                      //                     profileState.data['subscription']
+                      //                             ['plan_code'] ==
+                      //                         a['code'];
+                      //                 bool bIsActive =
+                      //                     profileState.data['subscription']
+                      //                             ['plan_code'] ==
+                      //                         b['code'];
 
-                                      if (aIsActive && !bIsActive) return -1;
-                                      if (!aIsActive && bIsActive) return 1;
-                                      return 0;
-                                    });
+                      //                 if (aIsActive && !bIsActive) return -1;
+                      //                 if (!aIsActive && bIsActive) return 1;
+                      //                 return 0;
+                      //               });
 
-                                    final subscription =
-                                        sortedSubscriptions[index];
-                                    final isActive =
-                                        profileState.data['subscription']
-                                                ['plan_code'] ==
-                                            subscription['code'];
+                      //               final subscription =
+                      //                   sortedSubscriptions[index];
+                      //               final isActive =
+                      //                   profileState.data['subscription']
+                      //                           ['plan_code'] ==
+                      //                       subscription['code'];
 
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 2.0),
-                                      child: InkWell(
-                                        onTap: () {
-                                          if (profileState.data['subscription']
-                                                      ['plan_code'] !=
-                                                  null &&
-                                              !isActive) {
-                                            showPopupComponent(
-                                                context: context,
-                                                icon: Icons.error,
-                                                message:
-                                                    'You already have an active subscription');
-                                          } else if (!isActive) {
-                                            showPopupPayment(subscription);
-                                          }
-                                        },
-                                        child: SubscriptionDesign(
-                                          onTap: () {
-                                            if (profileState.data[
-                                                            'subscription']
-                                                        ['plan_code'] !=
-                                                    null &&
-                                                !isActive) {
-                                              showPopupComponent(
-                                                  context: context,
-                                                  icon: Icons.error,
-                                                  message:
-                                                      'You already have an active subscription');
-                                            } else if (!isActive) {
-                                              showPopupPayment(subscription);
-                                            }
-                                          },
-                                          rwPrice: double.parse(
-                                              subscription['rw_price']
-                                                  .toString()),
-                                          usdPrice: double.parse(
-                                              subscription['usd_price']
-                                                  .toString()),
-                                          isActive: isActive,
-                                          title: subscription['name'],
-                                          isChat: subscription['rw_price'] == 0
-                                              ? false
-                                              : true,
-                                          postStory:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                          viewStory: true,
-                                          viewStoryCaption:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                          postVideos:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                          viewRecommendations: true,
-                                          viewProfiles:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                          viewVideos: true,
-                                          viewVideoCaption:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                          shareProfile:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                          shareVideos:
-                                              subscription['rw_price'] == 0
-                                                  ? false
-                                                  : true,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ),
+                      //               return Padding(
+                      //                 padding: const EdgeInsets.symmetric(
+                      //                     horizontal: 2.0),
+                      //                 child: InkWell(
+                      //                   onTap: () {
+                      //                     if (profileState.data['subscription']
+                      //                                 ['plan_code'] !=
+                      //                             null &&
+                      //                         !isActive) {
+                      //                       showPopupComponent(
+                      //                           context: context,
+                      //                           icon: Icons.error,
+                      //                           message:
+                      //                               'You already have an active subscription');
+                      //                     } else if (!isActive) {
+                      //                       showPopupPayment(subscription);
+                      //                     }
+                      //                   },
+                      //                   child: SubscriptionDesign(
+                      //                     onTap: () {
+                      //                       if (profileState.data[
+                      //                                       'subscription']
+                      //                                   ['plan_code'] !=
+                      //                               null &&
+                      //                           !isActive) {
+                      //                         showPopupComponent(
+                      //                             context: context,
+                      //                             icon: Icons.error,
+                      //                             message:
+                      //                                 'You already have an active subscription');
+                      //                       } else if (!isActive) {
+                      //                         showPopupPayment(subscription);
+                      //                       }
+                      //                     },
+                      //                     rwPrice: double.parse(
+                      //                         subscription['rw_price']
+                      //                             .toString()),
+                      //                     usdPrice: double.parse(
+                      //                         subscription['usd_price']
+                      //                             .toString()),
+                      //                     isActive: isActive,
+                      //                     title: subscription['name'],
+                      //                     isChat: subscription['rw_price'] == 0
+                      //                         ? false
+                      //                         : true,
+                      //                     postStory:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                     viewStory: true,
+                      //                     viewStoryCaption:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                     postVideos:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                     viewRecommendations: true,
+                      //                     viewProfiles:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                     viewVideos: true,
+                      //                     viewVideoCaption:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                     shareProfile:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                     shareVideos:
+                      //                         subscription['rw_price'] == 0
+                      //                             ? false
+                      //                             : true,
+                      //                   ),
+                      //                 ),
+                      //               );
+                      //             },
+                      //           ),
+                      //   ),
+                      // ),
                       SizedBox(
                         child: Column(
                           children: [

@@ -27,7 +27,7 @@ class UpdateLocationServiceProvider extends StateNotifier<ApiState> {
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(error: response.errorMessage, isLoading: false);
       } else {
-        
+        print(response);
       }
       
     } catch (e) {

@@ -234,8 +234,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ref.read(userServiceProviderImpl);
                                     if (userState.error != null) {
                                       showSnackBar(context, userState.error!);
+                                    } else {
+                                      setState(() {
+                                        if (!isCodeClicked) {
+                                          isCodeClicked = !isCodeClicked;
+                                        }
+                                      });
                                     }
                                   } else {
+                                    setState(() {
+                                      if (!isCodeClicked) {
+                                        isCodeClicked = !isCodeClicked;
+                                      }
+                                    });
                                     await ref
                                         .read(userServiceProviderImpl.notifier)
                                         .loginUser(
@@ -283,11 +294,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       }
                                     }
                                   }
-                                  setState(() {
-                                    if (!isCodeClicked) {
-                                      isCodeClicked = !isCodeClicked;
-                                    }
-                                  });
                                 }),
                           ),
                     Padding(
