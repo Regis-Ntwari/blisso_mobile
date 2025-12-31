@@ -5,6 +5,7 @@ import 'package:blisso_mobile/screens/chat/attachments/message_request_modal.dar
 import 'package:blisso_mobile/screens/chat/chat_message_request.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
+import 'package:blisso_mobile/services/chat/typing_message_provider.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -141,6 +142,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     if (!_canChat) return;
 
     final chatDetailsNotifier = ref.read(getChatDetailsProviderImpl.notifier);
+    print(messages?.last);
     chatDetailsNotifier.updateChatDetails({
       'username': username,
       'profile_picture': profilePicture,
@@ -299,6 +301,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final hasUnread = _hasUnreadMessage(lastMessage, myUsername!);
 
     final unreadMessagesCount = unreadMessages(messages);
+    final typingRef = ref.watch(typingStatusProvider);
 
     return InkWell(
       onTap: () =>
@@ -329,8 +332,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _truncateMessage(lastMessage['content']),
+                    ref.watch(typingStatusProvider.select((statuses) =>
+                            statuses[username]?.isTyping ?? false))
+                        ? 'typing...'
+                        : lastMessage['content_file_type']
+                                .toString()
+                                .contains('image')
+                            ? 'Image'
+                            : lastMessage['content_file_type']
+                                    .toString()
+                                    .contains('video')
+                                ? 'Video'
+                                : lastMessage['content_file_type']
+                                        .toString()
+                                        .contains('file')
+                                    ? 'Document'
+                                    : lastMessage['parent_content']
+                                            .toString()
+                                            .contains('story')
+                                        ? 'Story'
+                                        : lastMessage['action']
+                                                .toString()
+                                                .contains('profile_sharing')
+                                            ? 'Profile Shared'
+                                            : _truncateMessage(
+                                                lastMessage['content']),
                     style: TextStyle(
+                      fontStyle: typingRef == 'Typing'
+                          ? FontStyle.italic
+                          : FontStyle.normal,
                       fontWeight:
                           hasUnread ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -342,7 +372,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       radius: 10,
                       child: Text(
                         unreadMessagesCount.toString(),
-                        style: TextStyle(fontSize: 11),
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: GlobalColors.lightBackgroundColor),
                       ),
                     )
                 ],

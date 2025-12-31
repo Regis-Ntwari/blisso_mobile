@@ -9,16 +9,19 @@ class GetVideoPostProvider extends StateNotifier<ApiState> {
 
   GetVideoPostProvider({required this.storiesService}) : super(ApiState());
 
-  Future<void> getVideoPosts() async {
+  Future<void> getVideoPosts({int page = 1}) async {
     state = ApiState(isLoading: true);
 
     try {
-      final response = await storiesService.getVideoPosts();
+      final response = await storiesService.getVideoPosts(page: page);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {
-        state = ApiState(isLoading: false, data: response.result);
+        state = ApiState(
+            isLoading: false,
+            data: response.result,
+            pagination: response.pagination);
       }
     } catch (e) {
       state = ApiState(isLoading: false, error: e.toString());
@@ -26,10 +29,7 @@ class GetVideoPostProvider extends StateNotifier<ApiState> {
   }
 
   Future<void> likeVideoPost(int id) async {
-
     try {
-      
-
       final currentData = state.data;
       if (currentData == null || currentData is! List) return;
 
@@ -42,9 +42,11 @@ class GetVideoPostProvider extends StateNotifier<ApiState> {
 
       bool liked = video['liked_this_story'] ?? false;
 
-      String nickname = await SharedPreferencesService.getPreference('nickname');
+      String nickname =
+          await SharedPreferencesService.getPreference('nickname');
 
-      String profilePicture = await SharedPreferencesService.getPreference('profile_picture');
+      String profilePicture =
+          await SharedPreferencesService.getPreference('profile_picture');
 
       if (liked) {
         // Dislike: remove user and decrement count

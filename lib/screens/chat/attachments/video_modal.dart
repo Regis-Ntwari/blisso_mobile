@@ -49,6 +49,7 @@ class _VideoModalState extends ConsumerState<VideoModal> {
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'video/$extension',
           parentId: '000000000000000000000000',
+          messageStatus: 'unseen',
           contentFile: base64Bytes,
           sender: widget.sender,
           receiver: widget.receiver,

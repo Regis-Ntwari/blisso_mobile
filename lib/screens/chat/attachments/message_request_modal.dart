@@ -28,6 +28,11 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
+      if (ref.read(messageRequestServiceProviderImpl).data == null) {
+        await ref.read(messageRequestServiceProviderImpl.notifier).mapApprovedUsers();
+      }
+    });
     searchController.addListener(_onSearchChanged);
   }
 
@@ -102,10 +107,10 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
       final user = usersData[username];
       final fullName = user['fullname']?.toString().toLowerCase() ?? '';
       final nickname = user['nickname']?.toString().toLowerCase() ?? '';
-      
-      return fullName.contains(searchQuery) || 
-             nickname.contains(searchQuery) ||
-             username.toLowerCase().contains(searchQuery);
+
+      return fullName.contains(searchQuery) ||
+          nickname.contains(searchQuery) ||
+          username.toLowerCase().contains(searchQuery);
     }).toList();
   }
 
@@ -114,7 +119,7 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     double height = MediaQuery.sizeOf(context).height;
     final messageRequestRef = ref.watch(messageRequestServiceProviderImpl);
-    
+
     final filteredUsers = _getFilteredUsers(messageRequestRef.data ?? {});
 
     return SizedBox(
@@ -158,8 +163,8 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                           suffixIcon: searchQuery.isNotEmpty
                               ? IconButton(
                                   icon: Icon(Icons.clear,
-                                      color: isLightTheme 
-                                          ? Colors.grey[600] 
+                                      color: isLightTheme
+                                          ? Colors.grey[600]
                                           : Colors.grey[400]),
                                   onPressed: () {
                                     searchController.clear();
@@ -184,73 +189,77 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                               ),
                             )
                           : ListView.builder(
-                    itemCount: filteredUsers.length,
-                    itemBuilder: (context, index) {
-                      final username = filteredUsers[index];
-                      return InkWell(
-                        onTap: () {
-                          if (widget.profile == null) {
-                            final chatRef = ref.read(chatServiceProviderImpl);
-                            int check = 0;
-                            for (var chat in chatRef.data) {
-                              if (chat['username'] ==
-                                  messageRequestRef.data[username]
-                                      ['username']) {
-                                final chatDetailRef = ref
-                                    .read(getChatDetailsProviderImpl.notifier);
-                                chatDetailRef.updateChatDetails({
-                                  'username': messageRequestRef
-                                      .data[username]['username'],
-                                  'profile_picture':
-                                      messageRequestRef.data[username]
-                                          ['profile_picture_url'],
-                                  'full_name': messageRequestRef
-                                      .data[username]['fullname'],
-                                  'nickname': messageRequestRef
-                                      .data[username]['nickname'],
-                                  'messages': chat['messages']
-                                });
-                                check = 1;
-                              }
-                            }
+                              itemCount: filteredUsers.length,
+                              itemBuilder: (context, index) {
+                                final username = filteredUsers[index];
+                                return InkWell(
+                                  onTap: () {
+                                    if (widget.profile == null) {
+                                      final chatRef =
+                                          ref.read(chatServiceProviderImpl);
+                                      int check = 0;
+                                      for (var chat in chatRef.data) {
+                                        if (chat['username'] ==
+                                            messageRequestRef.data[username]
+                                                ['username']) {
+                                          final chatDetailRef = ref.read(
+                                              getChatDetailsProviderImpl
+                                                  .notifier);
+                                          chatDetailRef.updateChatDetails({
+                                            'username': messageRequestRef
+                                                .data[username]['username'],
+                                            'profile_picture':
+                                                messageRequestRef.data[username]
+                                                    ['profile_picture_url'],
+                                            'full_name': messageRequestRef
+                                                .data[username]['fullname'],
+                                            'nickname': messageRequestRef
+                                                .data[username]['nickname'],
+                                            'messages': chat['messages']
+                                          });
+                                          check = 1;
+                                        }
+                                      }
 
-                            if (check == 0) {
-                              final chatDetailRef =
-                                  ref.read(getChatDetailsProviderImpl.notifier);
+                                      if (check == 0) {
+                                        final chatDetailRef = ref.read(
+                                            getChatDetailsProviderImpl
+                                                .notifier);
 
-                              chatDetailRef.updateChatDetails({
-                                'username': messageRequestRef
-                                    .data[username]['username'],
-                                'profile_picture':
-                                    messageRequestRef.data[username]
-                                        ['profile_picture_url'],
-                                'full_name': messageRequestRef
-                                    .data[username]['fullname'],
-                                'nickname': messageRequestRef
-                                    .data[username]['nickname'],
-                                'messages': []
-                              });
-                            }
-                            Navigator.pop(context);
+                                        chatDetailRef.updateChatDetails({
+                                          'username': messageRequestRef
+                                              .data[username]['username'],
+                                          'profile_picture':
+                                              messageRequestRef.data[username]
+                                                  ['profile_picture_url'],
+                                          'full_name': messageRequestRef
+                                              .data[username]['fullname'],
+                                          'nickname': messageRequestRef
+                                              .data[username]['nickname'],
+                                          'messages': []
+                                        });
+                                      }
+                                      Navigator.pop(context);
 
-                            Routemaster.of(context)
-                                .push('/chat-detail/$username');
-                          } else {
-                            sendContact(username);
-                            Navigator.pop(context);
-                          }
-                        },
-                        child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: CachedNetworkImageProvider(
-                                  messageRequestRef.data[username]
-                                      ['profile_picture_url']),
-                            ),
-                            title: Text(messageRequestRef.data[username]
-                                ['fullname'])),
-                      );
-                    },
-                  ))
+                                      Routemaster.of(context)
+                                          .push('/chat-detail/$username');
+                                    } else {
+                                      sendContact(username);
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  child: ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                                messageRequestRef.data[username]
+                                                    ['profile_picture_url']),
+                                      ),
+                                      title: Text(messageRequestRef
+                                          .data[username]['fullname'])),
+                                );
+                              },
+                            ))
                 ],
               ),
       )),

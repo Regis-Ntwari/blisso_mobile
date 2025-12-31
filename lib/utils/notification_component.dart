@@ -57,7 +57,7 @@ class _InAppNotification extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: isLightTheme ?Colors.grey.shade200 : Colors.black),
               ),
               child: Row(
                 children: [

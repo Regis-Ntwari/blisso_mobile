@@ -45,20 +45,6 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
     _pageController.dispose();
   }
 
-  Map<String, List<dynamic>> _groupBySubCategory(List<dynamic> snapshots) {
-    final Map<String, List<dynamic>> grouped = {};
-
-    for (final snap in snapshots) {
-      final subCategory = snap['sub_category']?.toString() ?? 'Other';
-      if (!grouped.containsKey(subCategory)) {
-        grouped[subCategory] = [];
-      }
-      grouped[subCategory]!.add(snap);
-    }
-
-    return grouped;
-  }
-
   String generate12ByteHexFromTimestamp(DateTime dateTime) {
     // Convert DateTime to Unix timestamp in milliseconds
     int timestamp = dateTime.millisecondsSinceEpoch;
@@ -217,8 +203,11 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                         )
                       : const SizedBox.shrink(),
                   leading: CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(
-                        widget.profile['profile_picture_url']),
+                    backgroundImage: CachedNetworkImageProvider(widget
+                                .profile['profile_picture_url'] ==
+                            null
+                        ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d?q=80&w=580&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+                        : widget.profile['profile_picture_url']),
                   ),
                   contentPadding: const EdgeInsets.only(left: 5),
                   horizontalTitleGap: 10,

@@ -8,16 +8,18 @@ class NumberMessagesProvider extends StateNotifier<bool> {
   NumberMessagesProvider({required this.ref}) : super(false);
 
   Future<void> getNumberOfMessages() async {
-    final messages = ref.watch(chatServiceProviderImpl);
+    final messages = ref.read(chatServiceProviderImpl);
 
     if (messages.data == null) {
       await ref.read(chatServiceProviderImpl.notifier).getMessages();
     }
 
+    final messages2 = ref.read(chatServiceProviderImpl);
+
     String? username = await SharedPreferencesService.getPreference('username');
 
-    if (messages.data.isNotEmpty) {
-      for (var message in messages.data) {
+    if (messages2.data.isNotEmpty) {
+      for (var message in messages2.data) {
         List<dynamic> userMessages = message['messages'];
         if (userMessages[userMessages.length - 1]['message_status'] != 'seen' && userMessages[userMessages.length - 1]['sender'] != username!) {
           state = true;

@@ -49,14 +49,11 @@ class ProfileService {
     return response;
   }
 
-  Future<ApiResponse> getAllProfiles() async {
-    String accessToken =
+  Future<ApiResponse> getAllProfiles({int page = 1, double? latitude, double? longitude}) async {
+    final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response =
-        await ApiService().getData('/profiles/', accessToken);
-
-    return response;
+    return ApiService().getData('/profiles/?latitude=$latitude&longitude=$longitude&page=$page', accessToken);
   }
 
   Future<ApiResponse> updateProfileFeeling(String emoji, String caption) async {

@@ -12,6 +12,8 @@ class MessageRequestService {
     ApiResponse response = await ApiService()
         .getData('users/$username', accessToken, isChat: true);
 
+    print(response);
+
     return response;
   }
 

@@ -34,6 +34,41 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
+  void replaceMessageInChat(String chatKey, Map<String, dynamic> message) {
+  final List<Map<String, dynamic>> updatedChats =
+      List.from(state.data ?? []);
+
+  for (int chatIndex = 0; chatIndex < updatedChats.length; chatIndex++) {
+    final chat = Map<String, dynamic>.from(updatedChats[chatIndex]);
+
+    print("--- Replacing seen message ----");
+
+    if (chat['username'] == chatKey) {
+      print("--- found discussion ---");
+      final List messages = List.from(chat['messages']);
+
+      for (int i = 0; i < messages.length; i++) {
+        if (messages[i]['message_id'] == message['message_id']) {
+          print("--- found message ---");
+          messages[i] = message;
+          break;
+        }
+      }
+
+      chat['messages'] = messages;
+      updatedChats[chatIndex] = chat;
+      break;
+    }
+  }
+
+  state = ApiState(
+    isLoading: false,
+    data: updatedChats,
+    statusCode: state.statusCode,
+  );
+}
+
+
   void _applyMessageToChat(String chatKey, dynamic message) async {
     List<Map<String, dynamic>> updatedChats = List.from(state.data ?? []);
     bool isUpdated = false;

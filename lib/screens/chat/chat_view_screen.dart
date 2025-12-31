@@ -157,6 +157,24 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
     return hexTimestamp + randomHex;
   }
 
+  sendTypingMessage() {
+    final messageModel = ChatMessageModel(
+        messageId: generate12ByteHexFromTimestamp(DateTime.now()),
+        messageStatus: 'unseen',
+        parentId: '000000000000000000000000',
+        parentContent: '',
+        sender: username!,
+        receiver: widget.username,
+        action: 'typing',
+        content: '',
+        isFileIncluded: false,
+        createdAt: DateTime.now().toUtc().toIso8601String());
+
+    final messageRef = ref.read(webSocketNotifierProvider.notifier);
+
+    messageRef.sendMessage(messageModel);
+  }
+
   Future<void> sendTextMessage(String message) async {
     ChatMessageModel messageModel;
     if (editMessage == null) {
@@ -337,6 +355,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   bool isNameLoading = false;
 
+  ProviderSubscription? _chatDetailsSub;
+
   @override
   void initState() {
     super.initState();
@@ -347,7 +367,36 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
       ref.read(getNumberOfMessagesProvider.notifier).getNumberOfMessages();
     });
+    _chatDetailsSub = ref.listenManual(
+      getChatDetailsProviderImpl,
+      (previous, next) {
+        if (previous == null || next == null) return;
+
+        final prevMessages = previous['messages'] as List<dynamic>;
+        final nextMessages = next['messages'] as List<dynamic>;
+
+        if (nextMessages.length > prevMessages.length) {
+          final lastMessage = nextMessages.last;
+
+          final isFromOtherUser = lastMessage['sender'] != username;
+          final isUnseen = lastMessage['message_status'] == 'unseen';
+
+          if (isFromOtherUser && isUnseen) {
+            ref.read(getChatDetailsProviderImpl.notifier).markMessagesAsSeen();
+          }
+        }
+      },
+    );
+
     messageControllerNotifier.value = messageController;
+  }
+
+  @override
+  void dispose() {
+    _chatDetailsSub?.close();
+    _recorder.closeRecorder();
+    messageController.dispose();
+    super.dispose();
   }
 
   dynamic replyMessage;
@@ -713,16 +762,26 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                                 ),
                                               ),
                                               if (isSender &&
-                                                  index ==
-                                                      allItems.length - 1 &&
+                                                  message['message_id'] ==
+                                                      chatDetailsRef['messages']
+                                                              [chatDetailsRef[
+                                                                          'messages']
+                                                                      .length -
+                                                                  1]
+                                                          ['message_id'] &&
                                                   message['message_status'] ==
                                                       'seen')
                                                 const SizedBox(
                                                   width: 5,
                                                 ),
                                               if (isSender &&
-                                                  index ==
-                                                      allItems.length - 1 &&
+                                                  message['message_id'] ==
+                                                      chatDetailsRef['messages']
+                                                              [chatDetailsRef[
+                                                                          'messages']
+                                                                      .length -
+                                                                  1]
+                                                          ['message_id'] &&
                                                   message['message_status'] ==
                                                       'seen')
                                                 Text(
@@ -905,6 +964,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                                     controller:
                                                         messageController,
                                                     onChanged: (value) {
+                                                      sendTypingMessage();
                                                       setState(() {
                                                         isVoice = value.isEmpty;
                                                       });

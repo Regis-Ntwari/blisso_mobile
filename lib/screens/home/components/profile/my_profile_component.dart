@@ -656,7 +656,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                         child: Column(
                           children: [
                             Container(
-                              height: 300,
+                              height: 460,
                               padding: const EdgeInsets.only(bottom: 2),
                               decoration: BoxDecoration(
                                   border: Border(
@@ -678,14 +678,14 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                           GlobalColors.secondaryColor,
                                     ),
                                     SizedBox(
-                                      height: 240,
+                                      height: 400,
                                       child: TabBarView(
                                         children: [
                                           // Pictures Tab
                                           GridView.builder(
                                             gridDelegate:
                                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 3,
+                                              crossAxisCount: 2,
                                               crossAxisSpacing: 4,
                                               mainAxisSpacing: 4,
                                             ),

@@ -82,16 +82,16 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  Future<void> getAllProfiles() async {
+  Future<void> getAllProfiles({int page = 1, double? latitude, double? longitude}) async {
     state = ApiState(isLoading: true);
 
     try {
-      final response = await profileService.getAllProfiles();
+      final response = await profileService.getAllProfiles(page: page, latitude: latitude, longitude: longitude);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        state = ApiState(error: response.errorMessage, isLoading: false);
+        state = ApiState(error: response.errorMessage, isLoading: false, pagination: response.pagination);
       } else {
-        state = ApiState(data: response.result, isLoading: false);
+        state = ApiState(data: response.result, isLoading: false, pagination: response.pagination);
       }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);

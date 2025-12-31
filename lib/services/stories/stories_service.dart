@@ -78,12 +78,12 @@ class StoriesService {
     return response;
   }
 
-  Future<ApiResponse> getVideoPosts() async {
+  Future<ApiResponse> getVideoPosts({int page = 1}) async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response =
-        await ApiService().getData('posts/video-posts/', accessToken);
+        await ApiService().getData('posts/video-posts/?page=$page', accessToken);
 
     return response;
   }

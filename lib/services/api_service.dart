@@ -32,6 +32,7 @@ class ApiService {
       if (StatusCodes.codes.contains(decodedData['status_code'])) {
         return ApiResponse.success(
           result: decodedData['data'],
+          pagination: decodedData['pagination'],
           statusCode: decodedData['status_code'],
         );
       } else {

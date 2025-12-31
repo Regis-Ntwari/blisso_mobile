@@ -143,177 +143,178 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
-    return SafeArea(
-        child: Scaffold(
-      backgroundColor:
-          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-      body: userState.isLoading
-          ? const LoadingScreen()
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                        height: 100,
-                        width: 300,
-                        child: Image.asset('assets/images/blisso.png')),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 30.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '${AppLocalizations.of(context)!.welcomeBack}, ',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: scaler.scale(28),
-                                color: GlobalColors.primaryColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            firstname,
-                            style: TextStyle(
-                                fontSize: scaler.scale(28),
-                                color: Colors.grey[700]),
-                          )
-                        ],
-                      ),
+    return Scaffold(
+          backgroundColor:
+      isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+          body: userState.isLoading
+      ? const LoadingScreen()
+      : SafeArea(
+        child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                      height: 100,
+                      width: 300,
+                      child: Image.asset('assets/images/blisso.png')),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 30.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${AppLocalizations.of(context)!.welcomeBack}, ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: scaler.scale(28),
+                              color: GlobalColors.primaryColor,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          firstname,
+                          style: TextStyle(
+                              fontSize: scaler.scale(28),
+                              color: Colors.grey[700]),
+                        )
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(30),
-                      child: CircleAvatar(
-                        radius: 100,
-                        backgroundImage: profilePicture == null
-                            ? const AssetImage('assets/images/avatar1.jpg')
-                            : CachedNetworkImageProvider(
-                                profilePicture!,
-                              ),
-                      ),
-                    ),
-                    isCodeClicked
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: SizedBox(
-                              width: width * 0.90,
-                              child: TextInputComponent(
-                                  controller: _codeController,
-                                  labelText:
-                                      AppLocalizations.of(context)!.password,
-                                  hintText: AppLocalizations.of(context)!
-                                      .hintPassword,
-                                  validatorFunction: (value) {
-                                    return (value!.isEmpty
-                                        ? AppLocalizations.of(context)!
-                                            .validatorPassword
-                                        : null);
-                                  }),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(30),
+                    child: CircleAvatar(
+                      radius: 100,
+                      backgroundImage: profilePicture == null
+                          ? const AssetImage('assets/images/avatar1.jpg')
+                          : CachedNetworkImageProvider(
+                              profilePicture!,
                             ),
-                          )
-                        : Container(),
-                    isLoginCodeEnabled == null || !isLoginCodeEnabled!
-                        ? const SizedBox.shrink()
-                        : Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: ButtonComponent(
-                                text: !isCodeClicked
-                                    ? AppLocalizations.of(context)!.generateCode
-                                    : AppLocalizations.of(context)!.login,
-                                backgroundColor: GlobalColors.primaryColor,
-                                foregroundColor:
-                                    const Color.fromRGBO(255, 255, 255, 1),
-                                onTap: () async {
-                                  if (!isCodeClicked) {
-                                    await ref
-                                        .read(userServiceProviderImpl.notifier)
-                                        .generateLoginCode();
-
-                                    final userState =
-                                        ref.read(userServiceProviderImpl);
-                                    if (userState.error != null) {
-                                      showSnackBar(context, userState.error!);
-                                    } else {
-                                      setState(() {
-                                        if (!isCodeClicked) {
-                                          isCodeClicked = !isCodeClicked;
-                                        }
-                                      });
-                                    }
+                    ),
+                  ),
+                  isCodeClicked
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: SizedBox(
+                            width: width * 0.90,
+                            child: TextInputComponent(
+                                controller: _codeController,
+                                labelText:
+                                    AppLocalizations.of(context)!.password,
+                                hintText: AppLocalizations.of(context)!
+                                    .hintPassword,
+                                validatorFunction: (value) {
+                                  return (value!.isEmpty
+                                      ? AppLocalizations.of(context)!
+                                          .validatorPassword
+                                      : null);
+                                }),
+                          ),
+                        )
+                      : Container(),
+                  isLoginCodeEnabled == null || !isLoginCodeEnabled!
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: ButtonComponent(
+                              text: !isCodeClicked
+                                  ? AppLocalizations.of(context)!.generateCode
+                                  : AppLocalizations.of(context)!.login,
+                              backgroundColor: GlobalColors.primaryColor,
+                              foregroundColor:
+                                  const Color.fromRGBO(255, 255, 255, 1),
+                              onTap: () async {
+                                if (!isCodeClicked) {
+                                  await ref
+                                      .read(userServiceProviderImpl.notifier)
+                                      .generateLoginCode();
+            
+                                  final userState =
+                                      ref.read(userServiceProviderImpl);
+                                  if (userState.error != null) {
+                                    showSnackBar(context, userState.error!);
                                   } else {
                                     setState(() {
                                       if (!isCodeClicked) {
                                         isCodeClicked = !isCodeClicked;
                                       }
                                     });
-                                    await ref
-                                        .read(userServiceProviderImpl.notifier)
-                                        .loginUser(
-                                            username!, _codeController.text);
-
-                                    final userState =
-                                        ref.read(userServiceProviderImpl);
-                                    if (userState.error != null) {
-                                      showSnackBar(context, userState.error!);
-                                    } else {
-                                      SharedPreferences prefs =
-                                          await SharedPreferencesService
-                                              .getSharedPreferences();
-
-                                      if (prefs
-                                              .get('is_profile_completed')
-                                              .toString() ==
-                                          'true') {
-                                        Routemaster.of(context)
-                                            .replace('/homepage');
-                                      } else if (prefs
-                                              .get('is_target_snapshots')
-                                              .toString() ==
-                                          'true') {
-                                        Routemaster.of(context)
-                                            .push('/profile-pictures');
-                                      } else if (prefs
-                                              .get('is_my_snapshots')
-                                              .toString() ==
-                                          'true') {
-                                        Routemaster.of(context)
-                                            .push('/target-snapshot');
-                                      } else if (prefs
-                                              .get('is_profile_created')
-                                              .toString() ==
-                                          'true') {
-                                        Routemaster.of(context)
-                                            .replace('/snapshots');
-                                      } else if (prefs
-                                              .get('isRegistered')
-                                              .toString() ==
-                                          'true') {
-                                        Routemaster.of(context)
-                                            .replace('/profile/');
-                                      }
+                                  }
+                                } else {
+                                  setState(() {
+                                    if (!isCodeClicked) {
+                                      isCodeClicked = !isCodeClicked;
+                                    }
+                                  });
+                                  await ref
+                                      .read(userServiceProviderImpl.notifier)
+                                      .loginUser(
+                                          username!, _codeController.text);
+            
+                                  final userState =
+                                      ref.read(userServiceProviderImpl);
+                                  if (userState.error != null) {
+                                    showSnackBar(context, userState.error!);
+                                  } else {
+                                    SharedPreferences prefs =
+                                        await SharedPreferencesService
+                                            .getSharedPreferences();
+            
+                                    if (prefs
+                                            .get('is_profile_completed')
+                                            .toString() ==
+                                        'true') {
+                                      Routemaster.of(context)
+                                          .replace('/homepage');
+                                    } else if (prefs
+                                            .get('is_target_snapshots')
+                                            .toString() ==
+                                        'true') {
+                                      Routemaster.of(context)
+                                          .push('/profile-pictures');
+                                    } else if (prefs
+                                            .get('is_my_snapshots')
+                                            .toString() ==
+                                        'true') {
+                                      Routemaster.of(context)
+                                          .push('/target-snapshot');
+                                    } else if (prefs
+                                            .get('is_profile_created')
+                                            .toString() ==
+                                        'true') {
+                                      Routemaster.of(context)
+                                          .replace('/snapshots');
+                                    } else if (prefs
+                                            .get('isRegistered')
+                                            .toString() ==
+                                        'true') {
+                                      Routemaster.of(context)
+                                          .replace('/profile/');
                                     }
                                   }
-                                }),
-                          ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Stack(
-                        children: [
-                          _canCheckBiometrics
-                              ? BiometricButtonComponent(
-                                  onTap: () async {
-                                    await _authenticateUsingBiometrics(context);
-                                  },
-                                )
-                              : const SizedBox.shrink(),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+                                }
+                              }),
+                        ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Stack(
+                      children: [
+                        _canCheckBiometrics
+                            ? BiometricButtonComponent(
+                                onTap: () async {
+                                  await _authenticateUsingBiometrics(context);
+                                },
+                              )
+                            : const SizedBox.shrink(),
+                      ],
+                    ),
+                  )
+                ],
               ),
             ),
-    ));
+          ),
+      ),
+        );
   }
 }
