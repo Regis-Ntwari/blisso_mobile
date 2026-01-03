@@ -43,7 +43,9 @@ class WebSocketNotifier extends StateNotifier<String> {
   void listenToMessages() async {
     _webSocketService.messageStream.listen((message) async {
       dynamic receivedMessage = jsonDecode(message);
+      print(receivedMessage);
       if (receivedMessage['action'] == 'typing') {
+        print("typing---");
         ref.read(typingStatusProvider.notifier).updateTypingStatus(receivedMessage['sender'], true);
       } else {
         if (receivedMessage['action'] == 'edited') {

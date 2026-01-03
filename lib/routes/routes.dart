@@ -19,6 +19,7 @@ import 'package:blisso_mobile/screens/home/components/stories/view_shared_story_
 import 'package:blisso_mobile/screens/home/components/stories/view_story_component.dart';
 import 'package:blisso_mobile/screens/home/homepage_screen.dart';
 import 'package:blisso_mobile/screens/my-profile/favorite_profile_screen.dart';
+import 'package:blisso_mobile/screens/onboarding/onboarding_screen.dart';
 import 'package:blisso_mobile/screens/splash/splash_screen.dart';
 import 'package:blisso_mobile/screens/utils/autowrite_screen.dart';
 import 'package:blisso_mobile/screens/utils/subscription/card_form_subscription.dart';
@@ -28,14 +29,13 @@ import 'package:blisso_mobile/screens/utils/subscription/verify_card_pin.dart';
 import 'package:blisso_mobile/screens/utils/subscription/verify_otp.dart';
 import 'package:blisso_mobile/screens/utils/video_player_screen.dart';
 import 'package:blisso_mobile/screens/utils/view_photo_screen.dart';
-import 'package:blisso_mobile/screens/welcome/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
 
 class Routing {
   static final routes = RouteMap(routes: {
     '/': (_) => const MaterialPage(child: SplashScreen()),
-    '/welcome': (_) => const MaterialPage(child: WelcomeScreen()),
+    '/welcome': (_) => const MaterialPage(child: OnboardingScreen()),
     '/register/:type': (route) => MaterialPage(
         child: RegisterScreen(type: route.pathParameters['type']!)),
     '/matching-selection': (_) =>

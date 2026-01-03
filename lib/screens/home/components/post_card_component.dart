@@ -206,7 +206,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                     backgroundImage: CachedNetworkImageProvider(widget
                                 .profile['profile_picture_url'] ==
                             null
-                        ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d?q=80&w=580&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+                        ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d'
                         : widget.profile['profile_picture_url']),
                   ),
                   contentPadding: const EdgeInsets.only(left: 5),

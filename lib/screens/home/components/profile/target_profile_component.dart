@@ -216,7 +216,10 @@ class _TargetProfileComponentState
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
                                 child: CachedNetworkImage(
-                                    imageUrl: targetProfile.profilePictureUri!,
+                                    imageUrl: targetProfile.profilePictureUri ==
+                                            null
+                                        ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d'
+                                        : targetProfile.profilePictureUri!,
                                     placeholder: (context, url) {
                                       return const Center(
                                         child: CircularProgressIndicator(
@@ -428,113 +431,109 @@ class _TargetProfileComponentState
                 Padding(
                   padding: const EdgeInsets.only(left: 20.0),
                   child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Group snapshots by sub_category
-                          ..._groupBySubCategory(
-                                  targetProfile.lifesnapshots!)
-                              .entries
-                              .map((entry) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Sub-category title
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 8),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.label),
-                                              SizedBox(
-                                                width: 5,
-                                              ),
-                                              Text(
-                                                entry.key,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: isLightTheme ? Colors.black87 : Colors.white,
-                                                ),
-                                              ),
-                                            ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Group snapshots by sub_category
+                      ..._groupBySubCategory(targetProfile.lifesnapshots!)
+                          .entries
+                          .map((entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Sub-category title
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.label),
+                                          SizedBox(
+                                            width: 5,
                                           ),
-                                        ),
-                                        // Horizontal scrollable badges
-                                        SizedBox(
-                                          height: 40,
-                                          child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                              children: [
-                                                ...entry.value.map((snap) =>
-                                                    Container(
-                                                      margin:
-                                                          const EdgeInsets.only(
-                                                              right: 8),
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [
-                                                            GlobalColors
-                                                                .primaryColor,
-                                                            GlobalColors
-                                                                .primaryColor
-                                                                .withOpacity(0.8),
-                                                          ],
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                20),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(0.1),
-                                                            blurRadius: 4,
-                                                            offset: const Offset(
-                                                                0, 2),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 8,
-                                                      ),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            snap['name'],
-                                                            style:
-                                                                const TextStyle(
-                                                              color: Colors.white,
-                                                              fontSize: 14,
-                                                              fontWeight:
-                                                                  FontWeight.w500,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    )),
-                                                const SizedBox(
-                                                    width:
-                                                        4), // Add some end padding
-                                              ],
+                                          Text(
+                                            entry.key,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: isLightTheme
+                                                  ? Colors.black87
+                                                  : Colors.white,
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  )),
-                        ],
-                      ),
+                                    // Horizontal scrollable badges
+                                    SizedBox(
+                                      height: 40,
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          children: [
+                                            ...entry.value.map((snap) =>
+                                                Container(
+                                                  margin: const EdgeInsets.only(
+                                                      right: 8),
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        GlobalColors
+                                                            .primaryColor,
+                                                        GlobalColors
+                                                            .primaryColor
+                                                            .withOpacity(0.8),
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.1),
+                                                        blurRadius: 4,
+                                                        offset:
+                                                            const Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 8,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        snap['name'],
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )),
+                                            const SizedBox(
+                                                width:
+                                                    4), // Add some end padding
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )),
+                    ],
+                  ),
                 ),
               Padding(
                 padding: const EdgeInsets.only(left: 10.0),
@@ -564,152 +563,112 @@ class _TargetProfileComponentState
                 ),
               ),
               if (expandedField == 'target')
-              //   Padding(
-              //     padding: const EdgeInsets.only(left: 20.0),
-              //     child: Wrap(
-              //       alignment: WrapAlignment.start,
-              //       children: targetProfile.targetLifesnapshots!
-              //           .map<Widget>((snapshot) {
-              //         return IntrinsicWidth(
-              //           child: Container(
-              //             margin: const EdgeInsets.only(right: 2),
-              //             decoration: BoxDecoration(
-              //                 color: GlobalColors.primaryColor,
-              //                 borderRadius: BorderRadius.circular(10)),
-              //             padding: const EdgeInsets.symmetric(
-              //                 vertical: 3, horizontal: 5),
-              //             child: Text(
-              //               snapshot['name'],
-              //               style: const TextStyle(
-              //                   color: Colors.white, fontSize: 12),
-              //               textAlign: TextAlign.start,
-              //             ),
-              //           ),
-              //         );
-              //       }).toList(),
-              //     ),
-              //   ),
-              // if (targetProfile.distanceAnnot != null)
-              //   Padding(
-              //     padding: const EdgeInsets.only(top: 10),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Text(
-              //             '${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
-              //       ],
-              //     ),
-              //   ),
-              Padding(
+                Padding(
                   padding: const EdgeInsets.only(left: 20.0),
                   child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Group snapshots by sub_category
-                          ..._groupBySubCategory(
-                                  targetProfile.targetLifesnapshots!)
-                              .entries
-                              .map((entry) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Sub-category title
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 8),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.label),
-                                              SizedBox(
-                                                width: 5,
-                                              ),
-                                              Text(
-                                                entry.key,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: isLightTheme ? Colors.black87 : Colors.white,
-                                                ),
-                                              ),
-                                            ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Group snapshots by sub_category
+                      ..._groupBySubCategory(targetProfile.targetLifesnapshots!)
+                          .entries
+                          .map((entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Sub-category title
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.label),
+                                          SizedBox(
+                                            width: 5,
                                           ),
-                                        ),
-                                        // Horizontal scrollable badges
-                                        SizedBox(
-                                          height: 40,
-                                          child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                              children: [
-                                                ...entry.value.map((snap) =>
-                                                    Container(
-                                                      margin:
-                                                          const EdgeInsets.only(
-                                                              right: 8),
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [
-                                                            GlobalColors
-                                                                .primaryColor,
-                                                            GlobalColors
-                                                                .primaryColor
-                                                                .withOpacity(0.8),
-                                                          ],
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                20),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(0.1),
-                                                            blurRadius: 4,
-                                                            offset: const Offset(
-                                                                0, 2),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 8,
-                                                      ),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            snap['name'],
-                                                            style:
-                                                                const TextStyle(
-                                                              color: Colors.white,
-                                                              fontSize: 14,
-                                                              fontWeight:
-                                                                  FontWeight.w500,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    )),
-                                                const SizedBox(
-                                                    width:
-                                                        4), // Add some end padding
-                                              ],
+                                          Text(
+                                            entry.key,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: isLightTheme
+                                                  ? Colors.black87
+                                                  : Colors.white,
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  )),
-                        ],
-                      ),
+                                    // Horizontal scrollable badges
+                                    SizedBox(
+                                      height: 40,
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          children: [
+                                            ...entry.value.map((snap) =>
+                                                Container(
+                                                  margin: const EdgeInsets.only(
+                                                      right: 8),
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        GlobalColors
+                                                            .primaryColor,
+                                                        GlobalColors
+                                                            .primaryColor
+                                                            .withOpacity(0.8),
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.1),
+                                                        blurRadius: 4,
+                                                        offset:
+                                                            const Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 8,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        snap['name'],
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )),
+                                            const SizedBox(
+                                                width:
+                                                    4), // Add some end padding
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )),
+                    ],
+                  ),
                 ),
               Padding(
                 padding: const EdgeInsets.only(top: 10),
@@ -729,14 +688,14 @@ class _TargetProfileComponentState
                 child: Column(
                   children: [
                     Container(
-                        height: 300,
+                        height: 460,
                         padding: const EdgeInsets.only(
                           bottom: 2,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: SizedBox(
-                            height: 250,
+                            height: 400,
                             child: DefaultTabController(
                               length: 2,
                               child: Column(
@@ -751,7 +710,7 @@ class _TargetProfileComponentState
                                         GlobalColors.secondaryColor,
                                   ),
                                   SizedBox(
-                                    height: 240,
+                                    height: 400,
                                     child: Padding(
                                       padding:
                                           const EdgeInsets.only(left: 10.0),
@@ -761,7 +720,7 @@ class _TargetProfileComponentState
                                           GridView.builder(
                                             gridDelegate:
                                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 3,
+                                              crossAxisCount: 2,
                                               crossAxisSpacing: 4,
                                               mainAxisSpacing: 4,
                                             ),

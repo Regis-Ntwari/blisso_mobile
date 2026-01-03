@@ -98,6 +98,11 @@ flutter:
     - assets/images/blisso-cont.svg
     - assets/images/blisso.svg
     - assets/images/welcome1.jpg
+    - assets/images/foster.png
+    - assets/images/handshake.png
+    - assets/images/heart.png
+    - assets/images/hold.png
+    - assets/images/peace.png
     - assets/images/welcome2.jpg
     - assets/images/welcome3.jpg
     - assets/images/avatar1.jpg

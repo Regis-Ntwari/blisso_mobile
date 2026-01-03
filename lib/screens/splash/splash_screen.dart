@@ -13,8 +13,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late final Animation<AlignmentGeometry> _alignAnimation;
-  late final Animation<double> _rotationAnimation;
 
   @override
   void initState() {
@@ -22,13 +20,6 @@ class _SplashScreenState extends State<SplashScreen>
     _controller =
         AnimationController(duration: const Duration(seconds: 3), vsync: this)
           ..repeat();
-
-    _alignAnimation = Tween<AlignmentGeometry>(
-            begin: Alignment.centerLeft, end: Alignment.centerRight)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.bounceIn));
-
-    _rotationAnimation = Tween<double>(begin: 0, end: 2)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.bounceIn));
 
     navigateToRegister();
   }
@@ -52,29 +43,16 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Container(
-      decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.black54, Colors.black87])),
-      child: Align(
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/blisso.png'),
-              SizedBox(
-                height: 50,
-                child: AlignTransition(
-                    alignment: _alignAnimation,
-                    child: RotationTransition(
-                      turns: _rotationAnimation,
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.red,
-                      ),
-                    )),
-              )
-            ],
-          )),
-    ));
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    return Scaffold(
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      body: SafeArea(
+          child: Center(
+              child: Image.asset(
+        'assets/images/blisso.png',
+        width: 200,
+        height: 200,
+      ))),
+    );
   }
 }

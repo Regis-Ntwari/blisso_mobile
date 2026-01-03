@@ -142,28 +142,35 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
       );
     }
 
-    return PageView.builder(
-      controller: _pageController,
-      scrollDirection: Axis.vertical,
-      itemCount: videos.length,
-      onPageChanged: (index) => _handlePageChanged(index, videos),
-      itemBuilder: (context, index) {
-        final controller = _videoManager.getController(index);
-        final isActive = index == _currentIndex;
-        
-        if (isActive && controller != null && !controller.value.isPlaying) {
-          // Start playing when video becomes active
-          controller.play();
-          // Ensure sound is on for active video
-          _videoManager.unmuteController(index);
-        }
-        
-        return ShortStoryPlayer(
-          video: videos[index],
-          videoController: controller,
-          isActive: isActive,
-        );
-      },
+    return MediaQuery.removePadding(
+      context: context,
+      removeRight: true,
+      removeBottom: true,
+      removeLeft: true,
+      removeTop: true,
+      child: PageView.builder(
+        controller: _pageController,
+        scrollDirection: Axis.vertical,
+        itemCount: videos.length,
+        onPageChanged: (index) => _handlePageChanged(index, videos),
+        itemBuilder: (context, index) {
+          final controller = _videoManager.getController(index);
+          final isActive = index == _currentIndex;
+          
+          if (isActive && controller != null && !controller.value.isPlaying) {
+            // Start playing when video becomes active
+            controller.play();
+            // Ensure sound is on for active video
+            _videoManager.unmuteController(index);
+          }
+          
+          return ShortStoryPlayer(
+            video: videos[index],
+            videoController: controller,
+            isActive: isActive,
+          );
+        },
+      ),
     );
   }
 }

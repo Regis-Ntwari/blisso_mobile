@@ -35,13 +35,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     TextScaler textScaler = MediaQuery.textScalerOf(context);
 
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return SafeArea(
-      child: Scaffold(
-          backgroundColor:
-              isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-          body: userState.isLoading
-              ? const LoadingScreen()
-              : SingleChildScrollView(
+    return Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+        body: userState.isLoading
+            ? const LoadingScreen()
+            : SafeArea(
+              child: SingleChildScrollView(
                   child: userState.isLoading
                       ? const LoadingScreen()
                       : Column(
@@ -149,7 +149,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                                         .validate()) {
                                                       _formKey.currentState!
                                                           .save();
-
+                  
                                                       await ref
                                                           .read(
                                                               userServiceProviderImpl
@@ -164,7 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                                               firstname.text,
                                                               lastname.text,
                                                               widget.type);
-
+                  
                                                       final userState = ref.read(
                                                           userServiceProviderImpl);
                                                       if (userState.error !=
@@ -219,7 +219,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                           ],
                         ),
-                )),
-    );
+                ),
+            ));
   }
 }
