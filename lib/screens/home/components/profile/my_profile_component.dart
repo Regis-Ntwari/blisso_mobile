@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 //import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
@@ -8,14 +7,13 @@ import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_p
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_target_snapshot_dialog.dart';
 import 'package:blisso_mobile/screens/home/components/profile/video_post_options_component.dart';
-import 'package:blisso_mobile/screens/utils/subscription/chosen_options_provider.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
-import 'package:blisso_mobile/services/subscriptions/create_subscription_service_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
+import 'package:blisso_mobile/services/video-post/user_video_post_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 //import 'package:blisso_mobile/utils/subscription_design.dart';
@@ -40,6 +38,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
   String expandedField = '';
   File? chosenPicture;
   String selectedOption = 'RWF';
+
   Future<void> getNames() async {
     await SharedPreferencesService.getPreference('firstname').then((value) {
       setState(() {
@@ -63,7 +62,6 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
 
   Future<void> fetchMyProfile() async {
     final profileState = ref.read(myProfileServiceProviderImpl.notifier);
-
     await profileState.getMyProfile();
   }
 
@@ -75,14 +73,12 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
 
   Future<void> replaceImage(Map<String, dynamic> image) async {
     final profileRef = ref.read(myProfileServiceProviderImpl.notifier);
-
     await profileRef.replaceImage(chosenPicture!, image['id']);
 
     final profileState = ref.read(myProfileServiceProviderImpl);
 
     if (profileState.error == null) {
       Navigator.of(context).pop();
-
       await profileRef.getMyProfile();
     } else {
       showSnackBar(context, profileState.error!);
@@ -91,115 +87,16 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
 
   Future<void> updateProfilePicture(TargetProfileModel model) async {
     final profileRef = ref.read(myProfileServiceProviderImpl.notifier);
-
     await profileRef.updateProfilePicture(model, chosenPicture!);
 
     final profileState = ref.read(myProfileServiceProviderImpl);
 
     if (profileState.error == null) {
       Navigator.of(context).pop();
-
       await profileRef.getMyProfile();
     } else {
       showSnackBar(context, profileState.error!);
     }
-  }
-
-  void showPopupPayment(dynamic payment) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String? tempSelected = selectedOption;
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Choose Currency'),
-                    const SizedBox(height: 10),
-                    RadioListTile<String>(
-                      title: const Text('RWF'),
-                      value: 'RWF',
-                      groupValue: tempSelected,
-                      onChanged: (value) {
-                        setState(() {
-                          tempSelected = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('USD'),
-                      value: 'USD',
-                      groupValue: tempSelected,
-                      onChanged: (value) {
-                        setState(() {
-                          tempSelected = value!;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    ButtonComponent(
-                      text: 'Continue',
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      onTap: () async {
-                        Navigator.pop(context);
-                        // Update the actual selectedOption in parent
-                        setState(() {
-                          selectedOption = tempSelected!;
-                        });
-                        final chosenOptionRef =
-                            ref.read(chosenOptionsProviderImpl.notifier);
-                        chosenOptionRef.addOption('currency', selectedOption);
-                        chosenOptionRef.addOption(
-                            'amount',
-                            selectedOption == 'RWF'
-                                ? payment['rw_price']
-                                : payment['usd_price']);
-
-                        chosenOptionRef.addOption('code', payment['code']);
-                        if ((selectedOption == 'RWF' &&
-                                payment['rw_price'] == 0) ||
-                            (selectedOption == 'USD' &&
-                                payment['usd_price'] == 0.0)) {
-                          await ref
-                              .read(createSubscriptionProviderImpl.notifier)
-                              .createSubscription({
-                            "plan_code": payment['code'],
-                            "price": selectedOption == 'RWF'
-                                ? payment['rw_price']
-                                : payment['usd_price'],
-                            "currency": selectedOption,
-                          });
-
-                          await ref
-                              .read(myProfileServiceProviderImpl.notifier)
-                              .getMyProfile();
-                        } else {
-                          Routemaster.of(context).push(
-                            '/homepage/subscription'
-                            '?code=${payment['code']}'
-                            '&name=${payment['name']}'
-                            '&rwPrice=${payment['rw_price']}'
-                            '&usdPrice=${payment['usd_price']}'
-                            '&months=${payment['months']}'
-                            '&currency=$selectedOption',
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -217,7 +114,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
             .getSubscriptionPlans();
       }
 
-      ref.read(videoPostServiceProviderImpl.notifier).getUserVideos();
+      ref.read(userVideoPostServiceProviderImpl.notifier).getUserVideos();
     });
   }
 
@@ -227,809 +124,905 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    TextScaler scaler = MediaQuery.textScalerOf(context);
     final profileState = ref.watch(myProfileServiceProviderImpl);
-    //final subscriptionState = ref.watch(subscriptionServiceProviderImpl);
-    final videoPostState = ref.watch(videoPostServiceProviderImpl);
+    final videoPostState = ref.watch(userVideoPostServiceProviderImpl);
     final snapshotState = ref.watch(snapshotServiceProviderImpl);
     double width = MediaQuery.sizeOf(context).width;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return SafeArea(
-      child: Scaffold(
+    final Color cardColor =
+        isLightTheme ? Colors.grey.shade50 : Colors.grey.shade900;
+    final Color dividerColor =
+        isLightTheme ? Colors.grey.shade300 : Colors.grey.shade700;
+
+    return Scaffold(
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      appBar: AppBar(
+        centerTitle: true,
         backgroundColor: isLightTheme ? Colors.white : Colors.black,
-        body: profileState.isLoading || profileState.data == null
-            ? const LoadingScreen()
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.topCenter,
-                        child: SizedBox(
-                          height: width * 0.85,
-                          width: width * 0.85,
-                          child: InkWell(
-                            onTap: () => Routemaster.of(context).push(
-                                '/homepage/image-viewer?url=${profileState.data['profile_picture_url']}&id=-1&isProfilePic=true&isMe=true'),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Image(
-                                image: CachedNetworkImageProvider(
-                                    profileState.data['profile_picture_url']),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Row(
+        title: Text(
+          'My Profile',
+          style: TextStyle(
+            fontSize: 24,
+            color: GlobalColors.primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          onPressed: () => Routemaster.of(context).pop(),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: GlobalColors.primaryColor,
+          ),
+        ),
+        elevation: 0,
+      ),
+      body: profileState.isLoading || profileState.data == null
+          ? const LoadingScreen()
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile Header
+                    Center(
+                      child: Column(
                         children: [
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          SizedBox(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 10.0, bottom: 10),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '$firstname $lastname',
-                                          style: TextStyle(
-                                              fontSize: scaler.scale(24)),
-                                        ),
-                                        Text(
-                                          '${profileState.data['user']['email']}',
-                                          style: TextStyle(
-                                              fontSize: scaler.scale(10),
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                      ]),
-                                  IconButton(
-                                      onPressed: () => Routemaster.of(context)
-                                          .push('/homepage/edit-profile'),
-                                      icon: const Icon(
-                                        Icons.edit_note,
-                                        size: 50,
-                                        color: GlobalColors.primaryColor,
-                                      ))
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      profileState.data['feeling_caption'] != null
-                          ? Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                  'Feeling ${profileState.data['feeling_caption']}${profileState.data['feeling_emojis']}'),
-                            )
-                          : const SizedBox.shrink(),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          SizedBox(
-                            width: width * 0.85,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Date of Birth',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(DateFormat('MMMM d, y').format(
-                                            DateTime.parse(
-                                                profileState.data['dob'])))
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Gender',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(profileState.data['gender']
-                                            .toString()
-                                            .toUpperCase())
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Marital Status',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(profileState.data['marital_status']
-                                            .toString()
-                                            .toUpperCase())
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Home Address',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(profileState.data['home_address']
-                                            .toUpperCase())
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Nickname',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text('${profileState.data['nickname']}')
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Username',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(profileState.data['user']
-                                            ['username'])
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Date Joined',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(
-                                            '${profileState.data['user']['date_joined'].split("T")[0]}')
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Last Login',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(profileState.data['user']
-                                                ['last_login']
-                                            .split("T")[0])
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Show Me',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(
-                                            '${profileState.data['show_me'].toString().toUpperCase()}')
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Distance Measure',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(profileState
-                                            .data['distance_measure'])
-                                      ],
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      const Divider(),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      // SizedBox(
-                      //   height: 600,
-                      //   child: Padding(
-                      //     padding: const EdgeInsets.only(left: 2.0),
-                      //     child: subscriptionState.isLoading ||
-                      //             subscriptionState.data == null
-                      //         ? const Center(
-                      //             child: CircularProgressIndicator(
-                      //               color: GlobalColors.primaryColor,
-                      //             ),
-                      //           )
-                      //         : ListView.builder(
-                      //             scrollDirection: Axis.horizontal,
-                      //             itemCount: subscriptionState.data.length,
-                      //             itemBuilder: (context, index) {
-                      //               // Sort the subscriptions to show active one first
-                      //               List<dynamic> sortedSubscriptions =
-                      //                   List.from(subscriptionState.data);
-                      //               sortedSubscriptions.sort((a, b) {
-                      //                 bool aIsActive =
-                      //                     profileState.data['subscription']
-                      //                             ['plan_code'] ==
-                      //                         a['code'];
-                      //                 bool bIsActive =
-                      //                     profileState.data['subscription']
-                      //                             ['plan_code'] ==
-                      //                         b['code'];
-
-                      //                 if (aIsActive && !bIsActive) return -1;
-                      //                 if (!aIsActive && bIsActive) return 1;
-                      //                 return 0;
-                      //               });
-
-                      //               final subscription =
-                      //                   sortedSubscriptions[index];
-                      //               final isActive =
-                      //                   profileState.data['subscription']
-                      //                           ['plan_code'] ==
-                      //                       subscription['code'];
-
-                      //               return Padding(
-                      //                 padding: const EdgeInsets.symmetric(
-                      //                     horizontal: 2.0),
-                      //                 child: InkWell(
-                      //                   onTap: () {
-                      //                     if (profileState.data['subscription']
-                      //                                 ['plan_code'] !=
-                      //                             null &&
-                      //                         !isActive) {
-                      //                       showPopupComponent(
-                      //                           context: context,
-                      //                           icon: Icons.error,
-                      //                           message:
-                      //                               'You already have an active subscription');
-                      //                     } else if (!isActive) {
-                      //                       showPopupPayment(subscription);
-                      //                     }
-                      //                   },
-                      //                   child: SubscriptionDesign(
-                      //                     onTap: () {
-                      //                       if (profileState.data[
-                      //                                       'subscription']
-                      //                                   ['plan_code'] !=
-                      //                               null &&
-                      //                           !isActive) {
-                      //                         showPopupComponent(
-                      //                             context: context,
-                      //                             icon: Icons.error,
-                      //                             message:
-                      //                                 'You already have an active subscription');
-                      //                       } else if (!isActive) {
-                      //                         showPopupPayment(subscription);
-                      //                       }
-                      //                     },
-                      //                     rwPrice: double.parse(
-                      //                         subscription['rw_price']
-                      //                             .toString()),
-                      //                     usdPrice: double.parse(
-                      //                         subscription['usd_price']
-                      //                             .toString()),
-                      //                     isActive: isActive,
-                      //                     title: subscription['name'],
-                      //                     isChat: subscription['rw_price'] == 0
-                      //                         ? false
-                      //                         : true,
-                      //                     postStory:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                     viewStory: true,
-                      //                     viewStoryCaption:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                     postVideos:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                     viewRecommendations: true,
-                      //                     viewProfiles:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                     viewVideos: true,
-                      //                     viewVideoCaption:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                     shareProfile:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                     shareVideos:
-                      //                         subscription['rw_price'] == 0
-                      //                             ? false
-                      //                             : true,
-                      //                   ),
-                      //                 ),
-                      //               );
-                      //             },
-                      //           ),
-                      //   ),
-                      // ),
-                      SizedBox(
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 460,
-                              padding: const EdgeInsets.only(bottom: 2),
-                              decoration: BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(
-                                          color: isLightTheme
-                                              ? Colors.black
-                                              : Colors.white))),
-                              child: DefaultTabController(
-                                length: 2,
-                                child: Column(
-                                  children: [
-                                    TabBar(
-                                      tabs: const [
-                                        Tab(text: 'Profile Pictures'),
-                                        Tab(text: 'Video Posts'),
-                                      ],
-                                      labelColor: GlobalColors.primaryColor,
-                                      unselectedLabelColor:
-                                          GlobalColors.secondaryColor,
-                                    ),
-                                    SizedBox(
-                                      height: 400,
-                                      child: TabBarView(
-                                        children: [
-                                          // Pictures Tab
-                                          GridView.builder(
-                                            gridDelegate:
-                                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 2,
-                                              crossAxisSpacing: 4,
-                                              mainAxisSpacing: 4,
-                                            ),
-                                            itemCount: profileState
-                                                .data['profile_images'].length,
-                                            itemBuilder: (context, index) {
-                                              return InkWell(
-                                                onTap: () => Routemaster.of(
-                                                        context)
-                                                    .push(
-                                                        '/homepage/image-viewer?url=${profileState.data['profile_images'][index]['image_url']}&isMe=true&isProfilePic=false&id=${profileState.data['profile_images'][index]['id']}'),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: profileState.data[
-                                                          'profile_images']
-                                                      [index]['image_url'],
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          // Videos Tab
-                                          videoPostState.isLoading
-                                              ? const Center(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    color: GlobalColors
-                                                        .primaryColor,
-                                                  ),
-                                                )
-                                              : videoPostState.data.isEmpty
-                                                  ? Center(
-                                                      child: Text(
-                                                        'No videos yet',
-                                                        style: TextStyle(
-                                                          color: GlobalColors
-                                                              .secondaryColor,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : GridView.builder(
-                                                      gridDelegate:
-                                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                                        crossAxisCount: 3,
-                                                        crossAxisSpacing: 4,
-                                                        mainAxisSpacing: 4,
-                                                      ),
-                                                      itemCount: videoPostState
-                                                          .data.length,
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                        return GestureDetector(
-                                                          onLongPress:
-                                                              () async {
-                                                            showVideoPostOptions(
-                                                                context,
-                                                                videoPostState
-                                                                        .data[
-                                                                    index]['id']);
-                                                            await ref
-                                                                .read(profileServiceProviderImpl
-                                                                    .notifier)
-                                                                .getMyProfile();
-                                                          },
-                                                          onTap: () {
-                                                            Routemaster.of(
-                                                                    context)
-                                                                .push(
-                                                                    '/homepage/video-player?id=${Uri.encodeComponent(videoPostState.data[index]['id'].toString())}');
-                                                          },
-                                                          child: Container(
-                                                            color: isLightTheme
-                                                                ? Colors.black
-                                                                : Colors
-                                                                    .grey[800],
-                                                            height: 50,
-                                                            width: 50,
-                                                            child: const Center(
-                                                              child: Icon(
-                                                                Icons
-                                                                    .play_arrow,
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            InkWell(
-                              onTap: () {
-                                if (expandedField == 'interest') {
-                                  setState(() {
-                                    expandedField = '';
-                                  });
-                                } else {
-                                  setState(() {
-                                    expandedField = 'interest';
-                                  });
-                                }
-                              },
-                              child: ListTile(
-                                title: const Text(
-                                  'My Interests',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                    '${profileState.data['lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}'),
-                                trailing: expandedField == 'interest'
-                                    ? const Icon(Icons.keyboard_arrow_down)
-                                    : const Icon(Icons.keyboard_arrow_right),
-                              ),
-                            ),
-                            if (expandedField == 'interest')
-                              SingleChildScrollView(
-                                child: snapshotState.isLoading
-                                    ? const CircularProgressIndicator(
-                                        color: GlobalColors.primaryColor,
-                                      )
-                                    : Wrap(
-                                        children: [
-                                          InkWell(
-                                            onTap: () {
-                                              final snaps = ref.read(
-                                                  addedSnapsProviderImpl
-                                                      .notifier);
-                                              snaps.reset();
-                                              for (var snap in profileState
-                                                  .data['lifesnapshots']) {
-                                                snaps.addSnapshot(
-                                                    snap['lifesnapshot_id']);
-                                              }
-                                              showSnapshotDialog(context, ref);
-                                            },
-                                            child: const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 20.0),
-                                              child: Row(
-                                                children: [
-                                                  Icon(Icons.add),
-                                                  SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Text('Add Snapshots')
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          ...profileState.data['lifesnapshots']
-                                              .map<Widget>((snapshot) {
-                                            return ListTile(
-                                              title: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      color:
-                                                          const Color.fromARGB(
-                                                              255,
-                                                              139,
-                                                              42,
-                                                              42)),
-                                                  child: Text(
-                                                    snapshot['name'],
-                                                    textAlign: TextAlign.center,
-                                                    style: const TextStyle(
-                                                        color: Colors.white),
-                                                  )),
-                                              trailing: IconButton(
-                                                onPressed: () async {
-                                                  await ref
-                                                      .read(
-                                                          snapshotServiceProviderImpl
-                                                              .notifier)
-                                                      .deleteProfileSnapshot(
-                                                          snapshot['id']);
-                                                  ref
-                                                      .read(
-                                                          myProfileServiceProviderImpl
-                                                              .notifier)
-                                                      .removeSnapshotById(
-                                                          snapshot['id']);
-                                                },
-                                                icon: const Icon(
-                                                  Icons.delete,
-                                                  color:
-                                                      GlobalColors.primaryColor,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList()
-                                        ],
-                                      ),
-                              ),
-                            InkWell(
-                              onTap: () {
-                                if (expandedField == 'target') {
-                                  setState(() {
-                                    expandedField = '';
-                                  });
-                                } else {
-                                  setState(() {
-                                    expandedField = 'target';
-                                  });
-                                }
-                              },
-                              child: ListTile(
-                                title: const Text('My interests in a person',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
-                                subtitle: Text(
-                                    '${profileState.data['target_lifesnapshots'].map((snapshot) => snapshot['name']).join(", ")}'),
-                                trailing: expandedField == 'target'
-                                    ? const Icon(Icons.keyboard_arrow_down)
-                                    : const Icon(Icons.keyboard_arrow_right),
-                              ),
-                            ),
-                            if (expandedField == 'target')
-                              SingleChildScrollView(
-                                child: Wrap(children: [
-                                  InkWell(
-                                    onTap: () {
-                                      showTargetSnapshotDialog(context, ref);
-                                    },
-                                    child: const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 20.0),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.add),
-                                          SizedBox(width: 10),
-                                          Text('Add Target Snapshot')
-                                        ],
-                                      ),
-                                    ),
+                          // Profile Picture
+                          Stack(
+                            children: [
+                              Container(
+                                width: width * 0.4,
+                                height: width * 0.4,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: GlobalColors.primaryColor,
+                                    width: 3,
                                   ),
-                                  ...profileState.data['target_lifesnapshots']
-                                      .map<Widget>((snapshot) {
-                                    return ListTile(
-                                      title: Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: GlobalColors.primaryColor),
-                                          child: Text(
-                                            '${snapshot['name']} - ${snapshot['target_scale']}/10',
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          )),
-                                      trailing: IconButton(
-                                        onPressed: () async {
-                                          await ref
-                                              .read(snapshotServiceProviderImpl
-                                                  .notifier)
-                                              .deleteTargetSnapshot(
-                                                  snapshot['id']);
-                                          ref
-                                              .read(myProfileServiceProviderImpl
-                                                  .notifier)
-                                              .removeTargetSnapshot(
-                                                  snapshot['id']);
-                                        },
-                                        icon: const Icon(
-                                          Icons.delete,
+                                ),
+                                child: ClipOval(
+                                  child: InkWell(
+                                    onTap: () => Routemaster.of(context).push(
+                                      '/homepage/profile/image-viewer?url=${profileState.data['profile_picture_url']}&id=-1&isProfilePic=true&isMe=true',
+                                    ),
+                                    child: CachedNetworkImage(
+                                      imageUrl: profileState
+                                          .data['profile_picture_url'],
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Center(
+                                        child: CircularProgressIndicator(
                                           color: GlobalColors.primaryColor,
                                         ),
                                       ),
-                                    );
-                                  }).toList(),
-                                ]),
+                                      errorWidget: (context, url, error) =>
+                                          Icon(
+                                        Icons.person,
+                                        size: width * 0.2,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: GlobalColors.primaryColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isLightTheme
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: IconButton(
+                                    onPressed: () => Routemaster.of(context)
+                                        .push('/homepage/profile/edit-profile'),
+                                    icon: Icon(
+                                      Icons.edit,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 40,
+                                      minHeight: 40,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          // Name and Email
+                          Text(
+                            '$firstname $lastname',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: isLightTheme ? Colors.black : Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            profileState.data['user']['email'],
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: GlobalColors.secondaryColor,
+                            ),
+                          ),
+                          // Feeling Status
+                          if (profileState.data['feeling_caption'] != null) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    GlobalColors.primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Feeling ${profileState.data['feeling_caption']}${profileState.data['feeling_emojis']}',
+                                style: TextStyle(
+                                  color: GlobalColors.primaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Personal Info Card
+                    Card(
+                      color: cardColor,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            // Row 1
+                            _buildInfoRow(
+                              label: 'Date of Birth',
+                              value: DateFormat('MMMM d, y').format(
+                                DateTime.parse(profileState.data['dob']),
+                              ),
+                              isFirst: true,
+                            ),
+                            _buildInfoRow(
+                              label: 'Gender',
+                              value: profileState.data['gender']
+                                  .toString()
+                                  .toUpperCase(),
+                              isLast: true,
+                            ),
+                            const SizedBox(height: 16),
+                            // Row 2
+                            _buildInfoRow(
+                              label: 'Marital Status',
+                              value: profileState.data['marital_status']
+                                  .toString()
+                                  .toUpperCase(),
+                              isFirst: true,
+                            ),
+                            _buildInfoRow(
+                              label: 'Home Address',
+                              value: profileState.data['home_address']
+                                  .toUpperCase(),
+                              isLast: true,
+                            ),
+                            const SizedBox(height: 16),
+                            // Row 3
+                            _buildInfoRow(
+                              label: 'Nickname',
+                              value: profileState.data['nickname'],
+                              isFirst: true,
+                            ),
+                            _buildInfoRow(
+                              label: 'Username',
+                              value: profileState.data['user']['username'],
+                              isLast: true,
+                            ),
+                            const SizedBox(height: 16),
+                            // Row 4
+                            _buildInfoRow(
+                              label: 'Date Joined',
+                              value: profileState.data['user']['date_joined']
+                                  .split("T")[0],
+                              isFirst: true,
+                            ),
+                            _buildInfoRow(
+                              label: 'Last Login',
+                              value: profileState.data['user']['last_login']
+                                  .split("T")[0],
+                              isLast: true,
+                            ),
+                            const SizedBox(height: 16),
+                            // Row 5
+                            _buildInfoRow(
+                              label: 'Show Me',
+                              value: profileState.data['show_me']
+                                  .toString()
+                                  .toUpperCase(),
+                              isFirst: true,
+                            ),
+                            _buildInfoRow(
+                              label: 'Distance Measure',
+                              value: profileState.data['distance_measure'],
+                              isLast: true,
+                            ),
                           ],
                         ),
                       ),
-                      SwitchListTile(
-                        activeColor: GlobalColors.primaryColor,
-                        title: Text(
-                            'Profile is ${profileState.data['hide_profile'] ? 'hidden' : 'not hidden'}'),
-                        value: profileState.data['hide_profile'],
-                        onChanged: (value) async {
-                          setState(() {
-                            profileState.data['hide_profile'] = value;
-                          });
+                    ),
 
-                          await ref
-                              .read(myProfileServiceProviderImpl.notifier)
-                              .updateProfile(
-                                  TargetProfileModel.fromMapNewNoProfile({
-                                ...profileState.data,
-                                'hide_profile': value
-                              }));
-                        },
+                    const SizedBox(height: 24),
+
+                    // Media Tabs
+                    Card(
+                      color: cardColor,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      // SwitchListTile(
-                      //   activeColor: GlobalColors.primaryColor,
-                      //   title: const Text('Push Notifications'),
-                      //   value: profileState.data['push_notifications'],
-                      //   onChanged: (value) async {
-                      //     setState(() {
-                      //       profileState.data['push_notifications'] = value;
-                      //     });
-                      //     await ref
-                      //         .read(myProfileServiceProviderImpl.notifier)
-                      //         .updateProfile(
-                      //             TargetProfileModel.fromMapNewNoProfile({
-                      //           ...profileState.data,
-                      //           'push_notifications': value
-                      //         }));
-                      //   },
-                      // ),
-                      SwitchListTile(
-                        activeColor: GlobalColors.primaryColor,
-                        title: Text(
-                            'Login code is ${profileState.data['login_code_enabled'] ? 'enabled' : 'disabled'}'),
-                        value: profileState.data['login_code_enabled'],
-                        onChanged: (value) async {
-                          setState(() {
-                            profileState.data['login_code_enabled'] = value;
-                          });
-                          await SharedPreferencesService.setPreference(
-                              'login_code_enabled', value);
-                          await ref
-                              .read(myProfileServiceProviderImpl.notifier)
-                              .updateProfile(
-                                  TargetProfileModel.fromMapNewNoProfile({
-                                ...profileState.data,
-                                'login_code_enabled': value
-                              }));
-                        },
-                      )
-                    ],
-                  ),
+                      child: DefaultTabController(
+                        length: 2,
+                        child: Column(
+                          children: [
+                            Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                  ),
+                                  color: isLightTheme
+                                      ? Colors.grey.shade100
+                                      : Colors.grey.shade800,
+                                ),
+                                child: TabBar(
+                                  indicator: const UnderlineTabIndicator(
+                                    borderSide: BorderSide(
+                                      color: GlobalColors.primaryColor,
+                                      width: 3,
+                                    ),
+                                    insets:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                  ),
+                                  labelColor: GlobalColors.primaryColor,
+                                  unselectedLabelColor:
+                                      GlobalColors.secondaryColor,
+                                  tabs: const [
+                                    Tab(
+                                      icon: Icon(Icons.photo_library),
+                                      text: 'Photos',
+                                    ),
+                                    Tab(
+                                      icon: Icon(Icons.video_library),
+                                      text: 'Videos',
+                                    ),
+                                  ],
+                                )),
+                            SizedBox(
+                              height: 400,
+                              child: TabBarView(
+                                children: [
+                                  // Photos Tab
+                                  profileState.data['profile_images'].isEmpty
+                                      ? Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.photo_library_outlined,
+                                                size: 64,
+                                                color:
+                                                    GlobalColors.secondaryColor,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                'No photos yet',
+                                                style: TextStyle(
+                                                  color: GlobalColors
+                                                      .secondaryColor,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : GridView.builder(
+                                          padding: const EdgeInsets.all(16),
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            crossAxisSpacing: 12,
+                                            mainAxisSpacing: 12,
+                                            mainAxisExtent: 160,
+                                          ),
+                                          itemCount: profileState
+                                              .data['profile_images'].length,
+                                          itemBuilder: (context, index) {
+                                            return ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: InkWell(
+                                                onTap: () =>
+                                                    Routemaster.of(context)
+                                                        .push(
+                                                  '/homepage/profile/image-viewer?url=${profileState.data['profile_images'][index]['image_url']}&isMe=true&isProfilePic=false&id=${profileState.data['profile_images'][index]['id']}',
+                                                ),
+                                                child: Stack(
+                                                  children: [
+                                                    CachedNetworkImage(
+                                                      imageUrl: profileState
+                                                                  .data[
+                                                              'profile_images']
+                                                          [index]['image_url'],
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                      height: double.infinity,
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        gradient:
+                                                            LinearGradient(
+                                                          begin: Alignment
+                                                              .bottomCenter,
+                                                          end: Alignment
+                                                              .topCenter,
+                                                          colors: [
+                                                            Colors.black
+                                                                .withOpacity(
+                                                                    0.5),
+                                                            Colors.transparent,
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                  // Videos Tab
+                                  videoPostState.isLoading
+                                      ? const Center(
+                                          child: CircularProgressIndicator(
+                                            color: GlobalColors.primaryColor,
+                                          ),
+                                        )
+                                      : videoPostState.data.isEmpty
+                                          ? Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.videocam_off_outlined,
+                                                    size: 64,
+                                                    color: GlobalColors
+                                                        .secondaryColor,
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  Text(
+                                                    'No videos yet',
+                                                    style: TextStyle(
+                                                      color: GlobalColors
+                                                          .secondaryColor,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          : GridView.builder(
+                                              padding: const EdgeInsets.all(16),
+                                              gridDelegate:
+                                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 3,
+                                                crossAxisSpacing: 8,
+                                                mainAxisSpacing: 8,
+                                                mainAxisExtent: 120,
+                                              ),
+                                              itemCount:
+                                                  videoPostState.data.length,
+                                              itemBuilder: (context, index) {
+                                                return GestureDetector(
+                                                  onLongPress: () async {
+                                                    showVideoPostOptions(
+                                                      context,
+                                                      videoPostState.data[index]
+                                                          ['id'],
+                                                    );
+                                                    await ref
+                                                        .read(
+                                                            profileServiceProviderImpl
+                                                                .notifier)
+                                                        .getMyProfile();
+                                                  },
+                                                  onTap: () {
+                                                    Routemaster.of(context)
+                                                        .push(
+                                                      '/homepage/profile/video-player?id=${Uri.encodeComponent(videoPostState.data[index]['id'].toString())}',
+                                                    );
+                                                  },
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                    child: Stack(
+                                                      children: [
+                                                        Container(
+                                                          color: isLightTheme
+                                                              ? Colors
+                                                                  .grey.shade800
+                                                              : Colors.grey
+                                                                  .shade900,
+                                                          child: const Center(
+                                                            child: Icon(
+                                                              Icons
+                                                                  .play_arrow_rounded,
+                                                              size: 32,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            gradient:
+                                                                LinearGradient(
+                                                              begin: Alignment
+                                                                  .bottomCenter,
+                                                              end: Alignment
+                                                                  .topCenter,
+                                                              colors: [
+                                                                Colors.black
+                                                                    .withOpacity(
+                                                                        0.6),
+                                                                Colors
+                                                                    .transparent,
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Positioned(
+                                                          bottom: 8,
+                                                          left: 8,
+                                                          right: 8,
+                                                          child: Text(
+                                                            'Video ${index + 1}',
+                                                            style:
+                                                                const TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Interests Sections
+                    _buildExpandableSection(
+                      title: 'My Interests',
+                      subtitle: profileState.data['lifesnapshots']
+                          .map((snapshot) => snapshot['name'])
+                          .join(", "),
+                      isExpanded: expandedField == 'interest',
+                      onTap: () {
+                        setState(() {
+                          expandedField =
+                              expandedField == 'interest' ? '' : 'interest';
+                        });
+                      },
+                      expandedContent: snapshotState.isLoading
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                color: GlobalColors.primaryColor,
+                              ),
+                            )
+                          : Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                // Add Snapshot Button
+                                _buildAddButton(
+                                  icon: Icons.add,
+                                  label: 'Add Snapshots',
+                                  onTap: () {
+                                    final snaps = ref.read(
+                                      addedSnapsProviderImpl.notifier,
+                                    );
+                                    snaps.reset();
+                                    for (var snap
+                                        in profileState.data['lifesnapshots']) {
+                                      snaps.addSnapshot(
+                                        snap['lifesnapshot_id'],
+                                      );
+                                    }
+                                    showSnapshotDialog(context, ref);
+                                  },
+                                ),
+                                // Snapshot Items
+                                ...profileState.data['lifesnapshots']
+                                    .map<Widget>((snapshot) {
+                                  return Chip(
+                                    backgroundColor: GlobalColors.primaryColor,
+                                    label: Text(
+                                      snapshot['name'],
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                    deleteIcon: Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    onDeleted: () async {
+                                      await ref
+                                          .read(snapshotServiceProviderImpl
+                                              .notifier)
+                                          .deleteProfileSnapshot(
+                                              snapshot['id']);
+                                      ref
+                                          .read(myProfileServiceProviderImpl
+                                              .notifier)
+                                          .removeSnapshotById(snapshot['id']);
+                                    },
+                                  );
+                                }).toList(),
+                              ],
+                            ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    _buildExpandableSection(
+                      title: 'My interests in a person',
+                      subtitle: profileState.data['target_lifesnapshots']
+                          .map((snapshot) => snapshot['name'])
+                          .join(", "),
+                      isExpanded: expandedField == 'target',
+                      onTap: () {
+                        setState(() {
+                          expandedField =
+                              expandedField == 'target' ? '' : 'target';
+                        });
+                      },
+                      expandedContent: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          // Add Target Button
+                          _buildAddButton(
+                            icon: Icons.add,
+                            label: 'Add Target Snapshot',
+                            onTap: () {
+                              showTargetSnapshotDialog(context, ref);
+                            },
+                          ),
+                          // Target Snapshot Items
+                          ...profileState.data['target_lifesnapshots']
+                              .map<Widget>((snapshot) {
+                            return Chip(
+                              backgroundColor: GlobalColors.primaryColor,
+                              label: Text(
+                                '${snapshot['name']} - ${snapshot['target_scale']}/10',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              deleteIcon: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                              onDeleted: () async {
+                                await ref
+                                    .read(snapshotServiceProviderImpl.notifier)
+                                    .deleteTargetSnapshot(snapshot['id']);
+                                ref
+                                    .read(myProfileServiceProviderImpl.notifier)
+                                    .removeTargetSnapshot(snapshot['id']);
+                              },
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Settings
+                    Card(
+                      color: cardColor,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            activeColor: GlobalColors.primaryColor,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            title: Text(
+                              'Profile Visibility',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isLightTheme ? Colors.black : Colors.white,
+                              ),
+                            ),
+                            subtitle: Text(
+                              profileState.data['hide_profile']
+                                  ? 'Your profile is hidden from others'
+                                  : 'Your profile is visible to others',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: GlobalColors.secondaryColor,
+                              ),
+                            ),
+                            value: !profileState.data['hide_profile'],
+                            onChanged: (value) async {
+                              setState(() {
+                                profileState.data['hide_profile'] = !value;
+                              });
+
+                              await ref
+                                  .read(myProfileServiceProviderImpl.notifier)
+                                  .updateProfile(
+                                    TargetProfileModel.fromMapNewNoProfile({
+                                      ...profileState.data,
+                                      'hide_profile': !value,
+                                    }),
+                                  );
+                            },
+                          ),
+                          Divider(
+                            height: 1,
+                            color: dividerColor,
+                            indent: 20,
+                          ),
+                          SwitchListTile(
+                            activeColor: GlobalColors.primaryColor,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            title: Text(
+                              'Login Code',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isLightTheme ? Colors.black : Colors.white,
+                              ),
+                            ),
+                            subtitle: Text(
+                              profileState.data['login_code_enabled']
+                                  ? 'Login Code is enabled'
+                                  : 'Click to enable login code',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: GlobalColors.secondaryColor,
+                              ),
+                            ),
+                            value: profileState.data['login_code_enabled'],
+                            onChanged: (value) async {
+                              setState(() {
+                                profileState.data['login_code_enabled'] = value;
+                              });
+                              await SharedPreferencesService.setPreference(
+                                'login_code_enabled',
+                                value,
+                              );
+                              await ref
+                                  .read(myProfileServiceProviderImpl.notifier)
+                                  .updateProfile(
+                                    TargetProfileModel.fromMapNewNoProfile({
+                                      ...profileState.data,
+                                      'login_code_enabled': value,
+                                    }),
+                                  );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+                  ],
                 ),
               ),
+            ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required String label,
+    required String value,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: isLast
+              ? BorderSide.none
+              : BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1),
+                ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: GlobalColors.secondaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black
+                    : Colors.white,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableSection({
+    required String title,
+    required String subtitle,
+    required bool isExpanded,
+    required VoidCallback onTap,
+    required Widget expandedContent,
+  }) {
+    return Card(
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.grey.shade50
+          : Colors.grey.shade900,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: onTap,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 12,
+            ),
+            title: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black
+                    : Colors.white,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(
+                color: GlobalColors.secondaryColor,
+                fontSize: 14,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Icon(
+              isExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              color: GlobalColors.primaryColor,
+              size: 28,
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: expandedContent,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: GlobalColors.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: GlobalColors.primaryColor.withOpacity(0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: GlobalColors.primaryColor,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: GlobalColors.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

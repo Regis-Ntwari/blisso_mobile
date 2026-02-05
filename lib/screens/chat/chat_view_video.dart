@@ -32,16 +32,6 @@ class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
       return const LoadingScreen();
     }
 
-    /**id: video['id'].toString(),
-          username: video['username'],
-          nickname: video['nickname'],
-          profilePicture: video['profile_picture_uri'],
-          videoUrl: video['post_file_url'],
-          description: video['caption'] ?? '',
-          likes: video['likes'] ?? 0,
-          peopleLiked: video['people_liked'] ?? [],
-          likedThisStory: video['liked_this_story']); */
-
     final story = ShortStoryModel(
         id: videoState.data['id'].toString(),
         username: videoState.data['username'],

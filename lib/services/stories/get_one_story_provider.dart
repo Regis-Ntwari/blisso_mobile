@@ -14,6 +14,8 @@ class GetOneStoryProvider extends StateNotifier<ApiState> {
     try {
       final response = await storiesService.getOneStory(id);
 
+      print(response);
+
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);
       } else {

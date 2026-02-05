@@ -53,8 +53,6 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
         setState(() {
           username = value!;
         });
-        debugPrint(username);
-        debugPrint(value);
       },
     );
   }

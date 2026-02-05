@@ -2,17 +2,20 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/video_post_modal.dart';
+import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
 import 'package:blisso_mobile/screens/home/components/home_component.dart';
-import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
 import 'package:blisso_mobile/services/chat/number_messages_provider.dart';
+import 'package:blisso_mobile/services/matching/paginated_matching_service_provider.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/first_profiles_provider.dart';
 import 'package:blisso_mobile/services/profile/paginated_profiles_provider.dart';
-import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
+import 'package:blisso_mobile/services/stories/paginated_video_post_provider.dart';
 import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,6 +34,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   int _selectedScreenIndex = 0;
   bool isSearchVisible = false;
   bool isProfileLoaded = false;
+  String? firstname;
+  String? lastname;
+  String? profilePicture;
 
   String searchAttribute = 'Firstname';
   TextEditingController searchValue = TextEditingController();
@@ -45,7 +51,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
 
     _scrollController = ScrollController()..addListener(_onScroll);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async{
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!ref.read(firstProfileProviderImpl)) {
         await ref.read(paginatedProfilesProvider.notifier).loadFirstPage();
       }
@@ -56,25 +62,53 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         await ref.read(storiesServiceProviderImpl.notifier).getStories();
       }
 
-      if (ref.read(getVideoPostProviderImpl).data == null) {
-        await ref.read(getVideoPostProviderImpl.notifier).getVideoPosts();
+      if (ref.read(paginatedVideoPostProvider).data.isEmpty) {
+        await ref.read(paginatedVideoPostProvider.notifier).loadFirstPage();
+      }
+      if (ref.read(paginatedProfilesProvider).data.isEmpty) {
+        await ref
+            .read(paginatedMatchingServiceProvider.notifier)
+            .loadFirstPage();
       }
 
-      await ref.read(getNumberOfMessagesProvider.notifier).getNumberOfMessages();
+      await ref
+          .read(getNumberOfMessagesProvider.notifier)
+          .getNumberOfMessages();
+
+      await SharedPreferencesService.getPreference('firstname').then((value) {
+        setState(() {
+          firstname = value;
+        });
+      });
+
+      await SharedPreferencesService.getPreference('lastname').then((value) {
+        setState(() {
+          lastname = value;
+        });
+      });
+
+      await SharedPreferencesService.getPreference('profile_picture')
+          .then((value) {
+        setState(() {
+          profilePicture = value;
+        });
+      });
     });
   }
 
-  void _onScroll() async{
+  void _onScroll() async {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       if (_selectedScreenIndex == 0) {
         await ref.read(paginatedProfilesProvider.notifier).loadNextPage();
-      } 
-      if(_selectedScreenIndex == 1) {
-        //ref.read(provider)
       }
-      if(_selectedScreenIndex == 2) {
-        // load next videos
+      if (_selectedScreenIndex == 1) {
+        await ref
+            .read(paginatedMatchingServiceProvider.notifier)
+            .loadNextPage();
+      }
+      if (_selectedScreenIndex == 2) {
+        await ref.read(paginatedVideoPostProvider.notifier).loadNextPage();
       }
     }
   }
@@ -188,26 +222,24 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                     ),
                   ),
               ] else if (_selectedScreenIndex == 1)
-                const SliverFillRemaining(
-                  child: MatchingRecommendations(),
-                )
+                MatchingRecommendations()
               else if (_selectedScreenIndex == 2)
                 const SliverFillRemaining(
                   child: ExploreComponent(),
                 )
               else
                 const SliverFillRemaining(
-                  child: MyProfileComponent(),
+                  child: ChatScreen(),
                 ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(isLightTheme),
+      bottomNavigationBar: _buildBottomNav(isLightTheme, context),
     );
   }
 
-  BottomNavigationBar _buildBottomNav(bool isLightTheme) {
+  BottomNavigationBar _buildBottomNav(bool isLightTheme, BuildContext context) {
     // Determine if we're on the Explore tab (index 2)
     final isExploreTab = _selectedScreenIndex == 2;
 
@@ -231,8 +263,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       },
       selectedItemColor: selectedColor,
       unselectedItemColor: unselectedColor,
-      // Remove the duplicated selectedLabelStyle and unselectedLabelStyle
-      // Let the selectedItemColor and unselectedItemColor handle text colors
       type: BottomNavigationBarType.fixed, // Fixed prevents shifting
       showSelectedLabels: true,
       showUnselectedLabels: true,
@@ -250,8 +280,27 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
           label: 'Explore',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(Icons.chat),
+              ref.watch(getNumberOfMessagesProvider)
+                  ? Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: GlobalColors.primaryColor,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ],
+          ),
+          label: 'Chat',
         ),
       ],
     );
@@ -286,11 +335,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          _selectedScreenIndex == 3
-              ? 'Profile'
-              : _selectedScreenIndex == 1
-                  ? 'Matching Recommendations'
-                  : 'Blisso',
+          _selectedScreenIndex == 1 ? 'Matching Recommendations' : 'Blisso',
           style: TextStyle(
             color: GlobalColors.primaryColor,
             fontSize: 24,
@@ -352,35 +397,97 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   }
 
   Widget _buildChatButtonWithBadge() {
-    return Container(
-      width: 48,
-      height: 48,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chat),
-            onPressed: () {
-              Routemaster.of(context).push('/chat');
-            },
-          ),
-          ref.watch(getNumberOfMessagesProvider)
-              ? Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: GlobalColors.primaryColor,
-                      borderRadius: BorderRadius.circular(5),
+  return FutureBuilder<Map<String, String?>>(
+    future: getInitials(),
+    builder: (context, snapshot) {
+      // Use local variables from snapshot or from state
+      final profilePic = profilePicture ?? snapshot.data?['profile_picture'];
+      final firstName = firstname ?? snapshot.data?['firstname'];
+      final lastName = lastname ?? snapshot.data?['lastname'];
+
+      if (profilePic != null && profilePic.isNotEmpty) {
+        // Show circular profile picture
+        return InkWell(
+          onTap: () => Routemaster.of(context).push('/homepage/profile'),
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              border: Border.all(color: GlobalColors.primaryColor, width: 2.0),
+              borderRadius: BorderRadius.circular(15), // Half of 30 for perfect circle
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15), // Half of 30 for perfect circle
+              child: CachedNetworkImage(
+                imageUrl: profilePic,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => CircleAvatar(
+                  radius: 15,
+                  backgroundColor: GlobalColors.primaryColor.withOpacity(0.3),
+                  child: Text(
+                    '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                    '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                )
-              : const SizedBox.shrink(),
-        ],
-      ),
-    );
+                ),
+                errorWidget: (context, url, error) => CircleAvatar(
+                  radius: 15,
+                  backgroundColor: GlobalColors.primaryColor,
+                  child: Text(
+                    '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                    '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      } else {
+        // Show initials as fallback
+        return InkWell(
+          onTap: () => Routemaster.of(context).push('/homepage/profile'),
+          child: CircleAvatar(
+            radius: 15,
+            backgroundColor: GlobalColors.primaryColor,
+            child: Text(
+              '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+              '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      }
+    },
+  );
+}
+
+  //
+
+  Future<Map<String, String?>> getInitials() async {
+    String? profilePicture =
+        await SharedPreferencesService.getPreference('profile_picture');
+    String? firstname =
+        await SharedPreferencesService.getPreference('firstname');
+    String? lastname = await SharedPreferencesService.getPreference('lastname');
+
+    return {
+      'profile_picture': profilePicture,
+      'firstname': firstname,
+      'lastname': lastname
+    };
   }
 
   PreferredSizeWidget _buildSearchBar(bool isLightTheme) {

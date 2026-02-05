@@ -21,13 +21,12 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
   final bool isActive;
   final bool showStory;
 
-  const ShortStoryPlayer({
-    super.key,
-    required this.video,
-    this.videoController,
-    required this.isActive,
-    this.showStory = true
-  });
+  const ShortStoryPlayer(
+      {super.key,
+      required this.video,
+      this.videoController,
+      required this.isActive,
+      this.showStory = true});
 
   @override
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
@@ -44,37 +43,29 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   @override
   void initState() {
     super.initState();
-    
-    _controller = widget.videoController ??
-        VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
-    
-    _initializeController();
-    
+
+    if (widget.videoController != null) {
+      _controller = widget.videoController!;
+      _isInitialized = _controller.value.isInitialized;
+      _isLoading = !_isInitialized;
+    } else {
+      _controller =
+          VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
+      _initializeController();
+    }
+
     _controller.addListener(_handleVideoListener);
-    
+
     if (widget.isActive) {
       _playIfReady();
     }
   }
 
   Future<void> _initializeController() async {
-    // If controller is already initialized (preloaded), use it immediately
-    if (_controller.value.isInitialized) {
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-          _isLoading = false;
-          _isBuffering = false;
-        });
-      }
-      return;
-    }
-    
-    // Otherwise initialize it
     try {
       await _controller.initialize();
       _controller.setLooping(true);
-      
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -82,26 +73,24 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
         });
       }
     } catch (e) {
+      debugPrint('Video init error: $e');
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
-      debugPrint('Failed to initialize video: $e');
     }
   }
 
   void _handleVideoListener() {
     if (!mounted) return;
-    
+
     // Update buffering state
     final isBuffering = _controller.value.isBuffering;
     if (isBuffering != _isBuffering) {
       setState(() => _isBuffering = isBuffering);
     }
-    
+
     // Show loading if video hasn't started playing yet
-    if (!_controller.value.isPlaying && 
+    if (!_controller.value.isPlaying &&
         _controller.value.position == Duration.zero &&
         !_isBuffering &&
         _isInitialized) {
@@ -126,7 +115,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
       // Wait for initialization before playing
       await _initializeController();
     }
-    
+
     if (_isInitialized && !_controller.value.isPlaying) {
       await _controller.play();
       if (mounted) {
@@ -146,27 +135,23 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   @override
   void didUpdateWidget(covariant ShortStoryPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.isActive != oldWidget.isActive) {
-      if (widget.isActive) {
-        _playIfReady();
-      } else {
-        _pauseIfPlaying();
-      }
+      widget.isActive ? _playIfReady() : _pauseIfPlaying();
     }
   }
 
   @override
-  void dispose() {
-    _controller.removeListener(_handleVideoListener);
-    
-    // Only dispose if this widget created the controller
-    if (widget.videoController == null) {
-      _controller.dispose();
-    }
-    
-    super.dispose();
+void dispose() {
+  _controller.removeListener(_handleVideoListener);
+
+  if (widget.videoController == null) {
+    _controller.dispose();
   }
+
+  super.dispose();
+}
+
 
   Widget _buildLoadingIndicator() {
     return Stack(
@@ -253,11 +238,10 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
           _buildLoadingIndicator()
         else
           _buildVideoPlayer(),
-        
+
         // Buffering overlay (on top of video)
-        if (_isBuffering && _isInitialized)
-          _buildBufferingIndicator(),
-        
+        if (_isBuffering && _isInitialized) _buildBufferingIndicator(),
+
         // Right side action buttons
         Positioned(
           right: 2,
@@ -291,8 +275,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                                       ref.read(anyProfileServiceProviderImpl);
 
                                   targetProfile.updateTargetProfile(
-                                      TargetProfileModel.fromMap(profileData.data
-                                          as Map<String, dynamic>));
+                                      TargetProfileModel.fromMap(profileData
+                                          .data as Map<String, dynamic>));
                                   setState(() {
                                     isProfileLoading = false;
                                   });
@@ -326,9 +310,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                           ),
                   ),
                 ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Like button
               _buildShimmerPlaceholder(
                 SizedBox(
@@ -348,7 +332,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   ),
                 ),
               ),
-              
+
               // Likes count
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
@@ -375,9 +359,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Share button
               _buildShimmerPlaceholder(
                 SizedBox(
@@ -386,7 +370,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   child: IconButton(
                     onPressed: _isInitialized
                         ? () {
-                            ref.read(permissionProviderImpl)['can_share_video_post']
+                            ref.read(permissionProviderImpl)[
+                                    'can_share_video_post']
                                 ? showShareVideoModal(context, widget.video)
                                 : showPopupComponent(
                                     context: context,
@@ -405,7 +390,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   ),
                 ),
               ),
-              
+
               // Shares count
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
@@ -432,9 +417,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Caption button
               _buildShimmerPlaceholder(
                 InkWell(
@@ -444,7 +429,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                                   'can_view_video_post_caption']
                               ? showModalBottomSheet(
                                   context: context,
-                                  backgroundColor: Colors.black.withOpacity(0.6),
+                                  backgroundColor:
+                                      Colors.black.withOpacity(0.6),
                                   builder: (ctx) {
                                     return SingleChildScrollView(
                                       child: Padding(

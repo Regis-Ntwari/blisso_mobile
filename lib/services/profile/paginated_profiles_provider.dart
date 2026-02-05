@@ -44,7 +44,6 @@ class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
   
 
   Future<void> loadNextPage() async {
-    print("Loading next page");
     if (state.isLoading || !state.hasMore) return;
 
     state = state.copyWith(isLoading: true);

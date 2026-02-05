@@ -94,7 +94,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   ? widget.message['receiver']
                                   : widget.message['sender'];
                           Routemaster.of(context)
-                              .push('/chat-detail/$chatUser/image-viewer?url=${widget.message['content_file_url']}&isMe=false&isProfilePic=false');
+                              .push('/homepage/chat-detail/$chatUser/image-viewer?url=${widget.message['content_file_url']}&isMe=false&isProfilePic=false');
                         },
                         child: SizedBox(
                           height: 400,
@@ -146,7 +146,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
 
                           ref.read(byteImageProviderImpl.notifier).updateState(widget.message['content_file']);
                           Routemaster.of(context)
-                              .push('/chat-detail/$chatUser/image-viewer?url=hellothere&bytes=true');
+                              .push('/homepage/chat-detail/$chatUser/image-viewer?url=hellothere&bytes=true');
                           
                         },
                         child: SizedBox(
@@ -333,7 +333,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               InkWell(
                                 onTap: () {
                                   Routemaster.of(context).push(
-                                      '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
+                                      '/homepage/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
                                 },
                                 child: Container(
                                   height: 300,
@@ -383,7 +383,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               InkWell(
                                 onTap: () {
                                   Routemaster.of(context).push(
-                                      '/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
+                                      '/homepage/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
                                 },
                                 child: Container(
                                   height: 300,
@@ -451,7 +451,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
                                       Routemaster.of(context).push(
-                                          '/chat-detail/$chatUser/story-player?id=${widget.message['content_file_type']}');
+                                          '/homepage/chat-detail/$chatUser/story-player?id=${widget.message['content_file_type']}');
                                       // final shortStoryRef = ref.read(
                                       //     getOneStoryProviderImpl.notifier);
 
@@ -516,7 +516,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                         isLoading = false;
                                       });
                                       Routemaster.of(context).push(
-                                          '/chat-detail/$chatUser/profile');
+                                          '/homepage/chat-detail/$chatUser/profile');
                                     },
                                     leading: CircleAvatar(
                                       backgroundImage:
@@ -535,7 +535,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
                                           Routemaster.of(context).push(
-                                              '/chat-detail/$chatUser/${widget.message['parent_content']}');
+                                              '/homepage/chat-detail/$chatUser/${widget.message['parent_content']}');
                                         },
                                         leading: const Icon(
                                           Icons.play_arrow,

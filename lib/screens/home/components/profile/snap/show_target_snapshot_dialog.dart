@@ -18,17 +18,17 @@ void showTargetSnapshotDialog(BuildContext context, WidgetRef ref) async {
 
   final Map<String, List<Snapshot>> grouped = {};
   for (var snap in snapshots) {
-  if (!addedSnaps.contains(snap['id'])) {
-    grouped.putIfAbsent(snap['sub_category'], () => []).add(
-      Snapshot(
-        id: snap['id'],
-        category: snap['category'],
-        subCategory: snap['sub_category'],
-        name: snap['name'],
-      ),
-    );
+    if (!addedSnaps.contains(snap['id'])) {
+      grouped.putIfAbsent(snap['sub_category'], () => []).add(
+            Snapshot(
+              id: snap['id'],
+              category: snap['category'],
+              subCategory: snap['sub_category'],
+              name: snap['name'],
+            ),
+          );
+    }
   }
-}
   final subCategories = grouped.keys.toList();
 
   showDialog(
@@ -79,8 +79,10 @@ void showTargetSnapshotDialog(BuildContext context, WidgetRef ref) async {
                     .read(snapshotServiceProviderImpl.notifier)
                     .addTargetSnapshot(newSnaps);
 
-                for(var sn in newSnaps) {
-                  ref.read(myProfileServiceProviderImpl.notifier).addTargetSnapshot(sn);
+                for (var sn in newSnaps) {
+                  ref
+                      .read(myProfileServiceProviderImpl.notifier)
+                      .addTargetSnapshot(sn);
                 }
 
                 Navigator.of(context).pop();

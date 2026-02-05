@@ -465,7 +465,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
             alignment: Alignment.center,
             child: IconButton(
               onPressed: () {
-                Routemaster.of(context).replace('/chat');
+                Routemaster.of(context).pop();
               },
               icon: const Icon(
                 Icons.keyboard_arrow_left,

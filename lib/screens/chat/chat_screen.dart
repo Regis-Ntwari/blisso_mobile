@@ -150,7 +150,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       'nickname': nickname,
       'messages': messages,
     });
-    Routemaster.of(context).push('/chat-detail/$username');
+    Routemaster.of(context).push('/homepage/chat-detail/$username');
   }
 
   // Premium overlay widget
@@ -414,6 +414,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         : message;
   }
 
+  Widget _buildTopBar() {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isLight ? Colors.white : Colors.black,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          SizedBox(height: 6), // top spacing like AppBar
+          TabBar(
+            indicatorColor: GlobalColors.primaryColor,
+            labelColor: GlobalColors.primaryColor,
+            unselectedLabelColor: Colors.grey,
+            tabs: [
+              Tab(text: "Chats"),
+              Tab(text: "Message Requests"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildChatListContent() {
     final chatState = ref.watch(chatServiceProviderImpl);
 
@@ -498,45 +530,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         backgroundColor: Theme.of(context).brightness == Brightness.light
             ? GlobalColors.lightBackgroundColor
             : Colors.black,
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).brightness == Brightness.light
-              ? Colors.white
-              : Colors.black,
-          centerTitle: true,
-          leading: IconButton(
-            onPressed: () => Routemaster.of(context).replace('/homepage'),
-            icon: const Icon(Icons.keyboard_arrow_left),
-          ),
-          title: Text(
-            'Chat',
-            style: TextStyle(
-              fontSize: scaler.scale(24),
-              color: GlobalColors.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          bottom: const TabBar(
-            indicatorColor: GlobalColors.primaryColor,
-            labelStyle: TextStyle(color: GlobalColors.primaryColor),
-            tabs: [
-              Tab(text: "Chats"),
-              Tab(text: "Message Requests"),
-            ],
-          ),
-        ),
         body: SafeArea(
-          child: TabBarView(
+          child: Column(
             children: [
-              // First tab - Chat List
-              _buildChatListContent(),
-
-              // Second tab - Message Requests
-              !_canViewRequests
-                  ? _buildPremiumOverlay(
-                      child: const ChatMessageRequest(),
-                      message: 'Upgrade your plan to view message requests',
-                    )
-                  : const ChatMessageRequest(),
+              _buildTopBar(),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    // First tab - Chat List
+                    _buildChatListContent(),
+                
+                    // Second tab - Message Requests
+                    !_canViewRequests
+                        ? _buildPremiumOverlay(
+                            child: const ChatMessageRequest(),
+                            message: 'Upgrade your plan to view message requests',
+                          )
+                        : const ChatMessageRequest(),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

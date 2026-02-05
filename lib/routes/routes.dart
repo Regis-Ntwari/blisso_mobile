@@ -12,6 +12,7 @@ import 'package:blisso_mobile/screens/auth/register_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_view_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_view_video.dart';
+import 'package:blisso_mobile/screens/home/components/profile/my_profile_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/my_profile_settings.dart';
 import 'package:blisso_mobile/screens/home/components/profile/target_profile_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/view_profile_video_component.dart';
@@ -64,6 +65,13 @@ class Routing {
           id: int.parse(route.queryParameters['id']!),
           isProfilePic: bool.parse(route.queryParameters['isProfilePic']!),
         )),
+    '/homepage/profile/image-viewer': (route) => MaterialPage(
+            child: ViewPhotoScreen(
+          imageURL: route.queryParameters['url']!,
+          isMe: bool.parse(route.queryParameters['isMe']!),
+          id: int.parse(route.queryParameters['id']!),
+          isProfilePic: bool.parse(route.queryParameters['isProfilePic']!),
+        )),
     '/homepage/target-profile': (route) =>
         const MaterialPage(child: TargetProfileComponent()),
     '/homepage/target-profile/image-viewer': (route) => MaterialPage(
@@ -82,19 +90,19 @@ class Routing {
     '/homepage/webview-complete/:url': (route) => MaterialPage(
         child: WebviewVerification(url: route.pathParameters['url']!)),
     '/chat': (_) => const MaterialPage(child: ChatScreen()),
-    '/chat-detail/:username': (route) => MaterialPage(
+    '/homepage/chat-detail/:username': (route) => MaterialPage(
           child: ChatViewScreen(
             username: route.pathParameters['username']!,
           ),
         ),
-    '/chat-detail/:username/:id': (route) => MaterialPage(
+    '/homepage/chat-detail/:username/:id': (route) => MaterialPage(
         child: ChatViewVideo(videoId: int.parse(route.pathParameters['id']!))),
-    '/chat-detail/:username/story-player': (route) => MaterialPage(
+    '/homepage/chat-detail/:username/story-player': (route) => MaterialPage(
         child:
             ViewSharedStoryScreen(id: int.parse(route.queryParameters['id']!))),
-    '/chat-detail/:username/profile': (route) =>
+    '/homepage/chat-detail/:username/profile': (route) =>
         const MaterialPage(child: TargetProfileComponent()),
-    '/chat-detail/:username/image-viewer': (route) => MaterialPage(
+    '/homepage/chat-detail/:username/image-viewer': (route) => MaterialPage(
             child: ViewPhotoScreen(
           imageURL: route.queryParameters['url']!,
           isBytes: bool.parse(
@@ -102,21 +110,22 @@ class Routing {
           isMe: bool.parse(route.queryParameters['isMe']!),
           isProfilePic: bool.parse(route.queryParameters['isProfilePic']!),
         )),
-    '/chat-detail/:username/video-player': (route) => MaterialPage(
+    '/homepage/chat-detail/:username/video-player': (route) => MaterialPage(
             child: VideoPlayerScreen(
           username: route.pathParameters['username'],
           videoUrl: route.queryParameters['videoUrl'],
           bytes: route.queryParameters['bytes'],
         )),
-    '/homepage/video-player': (route) => MaterialPage(
+    '/homepage/profile': (_) => MaterialPage(child: MyProfileComponent()),
+    '/homepage/profile/video-player': (route) => MaterialPage(
             child: ViewProfileVideoComponent(
           videoId: int.parse(route.queryParameters['id']!),
         )),
     '/homepage/view-story': (_) =>
         const MaterialPage(child: ViewStoryComponent()),
-    '/homepage/edit-profile': (_) =>
+    '/homepage/profile/edit-profile': (_) =>
         const MaterialPage(child: MyProfileSettings()),
-    '/homepage/subscription': (route) => MaterialPage(
+    '/homepage/profile/subscription': (route) => MaterialPage(
         child: PaySubsriptionScreen(
             code: route.queryParameters['code']!,
             name: route.queryParameters['name']!,
