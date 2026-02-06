@@ -23,7 +23,7 @@ class VideoPostServiceProvider extends StateNotifier<ApiState> {
       } else {
         state = ApiState(
             isLoading: false,
-            data: response.result,
+            data: response.result['posts'],
             statusCode: response.statusCode);
       }
     } catch (e) {

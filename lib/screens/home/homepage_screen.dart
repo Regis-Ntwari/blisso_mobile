@@ -14,6 +14,7 @@ import 'package:blisso_mobile/services/profile/paginated_profiles_provider.dart'
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/stories/paginated_video_post_provider.dart';
 import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
+import 'package:blisso_mobile/tracking/tracking_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -56,24 +57,20 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         await ref.read(paginatedProfilesProvider.notifier).loadFirstPage();
       }
 
-      ref.read(firstProfileProviderImpl.notifier).updateProfile();
-
       if (ref.read(storiesServiceProviderImpl).data == null) {
         await ref.read(storiesServiceProviderImpl.notifier).getStories();
       }
 
+      ref.read(firstProfileProviderImpl.notifier).updateProfile();
+
       if (ref.read(paginatedVideoPostProvider).data.isEmpty) {
-        await ref.read(paginatedVideoPostProvider.notifier).loadFirstPage();
+        ref.read(paginatedVideoPostProvider.notifier).loadFirstPage();
       }
       if (ref.read(paginatedProfilesProvider).data.isEmpty) {
-        await ref
-            .read(paginatedMatchingServiceProvider.notifier)
-            .loadFirstPage();
+        ref.read(paginatedMatchingServiceProvider.notifier).loadFirstPage();
       }
 
-      await ref
-          .read(getNumberOfMessagesProvider.notifier)
-          .getNumberOfMessages();
+      ref.read(getNumberOfMessagesProvider.notifier).getNumberOfMessages();
 
       await SharedPreferencesService.getPreference('firstname').then((value) {
         setState(() {
@@ -162,6 +159,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     _scrollController.dispose();
     super.dispose();
   }
+
+  Map<int, String> tabs = {0: 'Home', 1: 'Matching', 2: 'Videos', 3: 'Profile'};
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +256,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       backgroundColor: backgroundColor,
       currentIndex: _selectedScreenIndex,
       onTap: (index) {
+        TrackingService.instance.track("tab_changed", {
+          "to": tabs[index],
+        });
         setState(() {
           _selectedScreenIndex = index;
         });
@@ -397,82 +399,85 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   }
 
   Widget _buildChatButtonWithBadge() {
-  return FutureBuilder<Map<String, String?>>(
-    future: getInitials(),
-    builder: (context, snapshot) {
-      // Use local variables from snapshot or from state
-      final profilePic = profilePicture ?? snapshot.data?['profile_picture'];
-      final firstName = firstname ?? snapshot.data?['firstname'];
-      final lastName = lastname ?? snapshot.data?['lastname'];
+    return FutureBuilder<Map<String, String?>>(
+      future: getInitials(),
+      builder: (context, snapshot) {
+        // Use local variables from snapshot or from state
+        final profilePic = profilePicture ?? snapshot.data?['profile_picture'];
+        final firstName = firstname ?? snapshot.data?['firstname'];
+        final lastName = lastname ?? snapshot.data?['lastname'];
 
-      if (profilePic != null && profilePic.isNotEmpty) {
-        // Show circular profile picture
-        return InkWell(
-          onTap: () => Routemaster.of(context).push('/homepage/profile'),
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              border: Border.all(color: GlobalColors.primaryColor, width: 2.0),
-              borderRadius: BorderRadius.circular(15), // Half of 30 for perfect circle
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15), // Half of 30 for perfect circle
-              child: CachedNetworkImage(
-                imageUrl: profilePic,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => CircleAvatar(
-                  radius: 15,
-                  backgroundColor: GlobalColors.primaryColor.withOpacity(0.3),
-                  child: Text(
-                    '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
-                    '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+        if (profilePic != null && profilePic.isNotEmpty) {
+          // Show circular profile picture
+          return InkWell(
+            onTap: () => Routemaster.of(context).push('/homepage/profile'),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                border:
+                    Border.all(color: GlobalColors.primaryColor, width: 2.0),
+                borderRadius:
+                    BorderRadius.circular(15), // Half of 30 for perfect circle
+              ),
+              child: ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(15), // Half of 30 for perfect circle
+                child: CachedNetworkImage(
+                  imageUrl: profilePic,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => CircleAvatar(
+                    radius: 15,
+                    backgroundColor: GlobalColors.primaryColor.withOpacity(0.3),
+                    child: Text(
+                      '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                      '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                errorWidget: (context, url, error) => CircleAvatar(
-                  radius: 15,
-                  backgroundColor: GlobalColors.primaryColor,
-                  child: Text(
-                    '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
-                    '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  errorWidget: (context, url, error) => CircleAvatar(
+                    radius: 15,
+                    backgroundColor: GlobalColors.primaryColor,
+                    child: Text(
+                      '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                      '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      } else {
-        // Show initials as fallback
-        return InkWell(
-          onTap: () => Routemaster.of(context).push('/homepage/profile'),
-          child: CircleAvatar(
-            radius: 15,
-            backgroundColor: GlobalColors.primaryColor,
-            child: Text(
-              '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
-              '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+          );
+        } else {
+          // Show initials as fallback
+          return InkWell(
+            onTap: () => Routemaster.of(context).push('/homepage/profile'),
+            child: CircleAvatar(
+              radius: 15,
+              backgroundColor: GlobalColors.primaryColor,
+              child: Text(
+                '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        );
-      }
-    },
-  );
-}
+          );
+        }
+      },
+    );
+  }
 
   //
 

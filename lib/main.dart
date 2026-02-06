@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/boot/app_bootstrap.dart';
 import 'package:blisso_mobile/l10n/l10n.dart';
 import 'package:blisso_mobile/routes/routes.dart';
 import 'package:flutter/material.dart';
@@ -22,24 +23,26 @@ void main() async {
   WidgetsBinding.instance.addObserver(AppLifecycleTracker());
 
   runApp(
-    ProviderScope(
-      child: OverlaySupport.global(
-        child: MaterialApp.router(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: L10n.allLocales,
-          locale: const Locale('en'),
-          themeMode: ThemeMode.system,
-          theme: ThemeData.light(),
-          title: 'Blisso',
-          darkTheme: ThemeData.dark(),
-          routerDelegate:
-              RoutemasterDelegate(routesBuilder: (context) => Routing.routes),
-          routeInformationParser: const RoutemasterParser(),
+    AppBootstrap(
+      child: ProviderScope(
+        child: OverlaySupport.global(
+          child: MaterialApp.router(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: L10n.allLocales,
+            locale: const Locale('en'),
+            themeMode: ThemeMode.system,
+            theme: ThemeData.light(),
+            title: 'Blisso',
+            darkTheme: ThemeData.dark(),
+            routerDelegate:
+                RoutemasterDelegate(routesBuilder: (context) => Routing.routes),
+            routeInformationParser: const RoutemasterParser(),
+          ),
         ),
       ),
     ),

@@ -422,14 +422,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     } else {
                                       showSuccessSnackBar(
                                         context,
-                                        'Verification code has been sent',
+                                        'Verification code has been sent to the respective email',
                                       );
                                       setState(() {
                                         isCodeClicked = true;
                                       });
                                     }
                                   } else {
-                                    // Login with code
                                     if (_codeController.text.length != 8) {
                                       showSnackBar(
                                         context,

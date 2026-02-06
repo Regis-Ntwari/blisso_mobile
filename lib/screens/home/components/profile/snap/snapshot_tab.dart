@@ -1,4 +1,4 @@
-import 'package:blisso_mobile/screens/home/components/profile/snap/new_snap.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,34 +15,30 @@ class SnapshotTab extends ConsumerStatefulWidget {
 class _SnapshotTabState extends ConsumerState<SnapshotTab> {
   @override
   Widget build(BuildContext context) {
+    final newSnaps = ref.watch(addedSnapsProviderImpl);
+    bool isLightTheme = Theme.brightnessOf(context) == Brightness.light;
     return GridView.builder(
       padding: const EdgeInsets.all(8),
       itemCount: widget.snapshots.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // change to 3 if you want tighter layout
+        crossAxisCount: 2,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
         childAspectRatio: 3 / 2,
       ),
       itemBuilder: (context, index) {
         final snap = widget.snapshots[index];
-        var isSelected = false;
 
-        for(var i in ref.read(newSnapProviderImpl)) {
-          if(i['id'] == snap.id) {
-            isSelected = true;
-          }
-        }
+        final isSelected =
+            newSnaps.any((element) => element['lifesnapshot_id'] == snap.id);
 
         return GestureDetector(
           onTap: () {
-            setState(() {
-              ref.read(newSnapProviderImpl.notifier).addSnapshot({
-                'id': snap.id,
-                'name': snap.name,
-                'sub_category': snap.subCategory,
-                'category': snap.category
-              });
+            ref.read(addedSnapsProviderImpl.notifier).addSnapshot({
+              'lifesnapshot_id': snap.id,
+              'name': snap.name,
+              'sub_category': snap.subCategory,
+              'category': snap.category,
             });
           },
           child: Stack(
@@ -63,9 +59,9 @@ class _SnapshotTabState extends ConsumerState<SnapshotTab> {
                     snap.name,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Colors.black,
+                      color: isLightTheme
+                          ? Colors.black
+                          : Colors.white,
                     ),
                   ),
                 ),

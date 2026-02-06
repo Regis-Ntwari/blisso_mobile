@@ -19,6 +19,7 @@ class AppLifecycleTracker with WidgetsBindingObserver {
 
       case AppLifecycleState.detached:
         TrackingService.instance.track("app_terminated", {});
+        debugPrint("App detached");
         break;
 
       default:

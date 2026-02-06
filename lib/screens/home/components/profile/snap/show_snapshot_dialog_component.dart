@@ -1,5 +1,4 @@
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
-import 'package:blisso_mobile/screens/home/components/profile/snap/new_snap.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/snapshot_tab.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
@@ -12,31 +11,29 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
   if (ref.read(snapshotServiceProviderImpl).data == null) {
     await ref.read(snapshotServiceProviderImpl.notifier).getLifeSnapshots();
   }
-  final snapshots = ref.watch(snapshotServiceProviderImpl).data;
-
-  final addedSnaps = ref.read(addedSnapsProviderImpl);
-
-  final Map<String, List<Snapshot>> grouped = {};
-  for (var snap in snapshots) {
-  if (!addedSnaps.contains(snap['id'])) {
-    grouped.putIfAbsent(snap['sub_category'], () => []).add(
-      Snapshot(
-        id: snap['id'],
-        category: snap['category'],
-        subCategory: snap['sub_category'],
-        name: snap['name'],
-      ),
-    );
-  }
-}
-
-
-  final subCategories = grouped.keys.toList();
 
   showDialog(
     context: context,
     builder: (context) {
       final snapshotWatch = ref.watch(snapshotServiceProviderImpl);
+      final snapshots = snapshotWatch.data ?? [];
+
+      final Map<String, List<Snapshot>> grouped = {};
+
+      for (var snap in snapshots) {
+        if (!ref.read(addedSnapsProviderImpl.notifier).exists(snap['id'])) {
+          grouped.putIfAbsent(snap['sub_category'], () => []).add(
+                Snapshot(
+                  id: snap['id'],
+                  category: snap['category'],
+                  subCategory: snap['sub_category'],
+                  name: snap['name'],
+                ),
+              );
+        }
+      }
+
+      final subCategories = grouped.keys.toList();
       return DefaultTabController(
         length: subCategories.length,
         child: AlertDialog(
@@ -76,14 +73,22 @@ void showSnapshotDialog(BuildContext context, WidgetRef ref) async {
             ),
             TextButton(
               onPressed: () async {
-                final newSnaps = ref.read(newSnapProviderImpl);
+                final newSnaps = ref.read(addedSnapsProviderImpl);
+
+                List<dynamic> filtered = [];
+
+                for(var s in newSnaps) {
+                  filtered.add(s['lifesnapshot_id']);
+                }
+
                 await ref
                     .read(snapshotServiceProviderImpl.notifier)
-                    .editProfileSnapshots(newSnaps);
+                    .editProfileSnapshots(filtered);
 
-                for(var sn in newSnaps) {
-                  ref.read(myProfileServiceProviderImpl.notifier).addSnapshot(sn);
-                }
+                  ref
+                      .read(myProfileServiceProviderImpl.notifier)
+                      .addSnapshot(newSnaps);
+                
 
                 Navigator.of(context).pop();
               },

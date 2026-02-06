@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'event_queue.dart';
@@ -18,6 +19,7 @@ class TrackingService {
 
   void startSession() {
     _sessionId = _uuid.v4();
+    debugPrint(_sessionId);
     track("session_start", {});
   }
 

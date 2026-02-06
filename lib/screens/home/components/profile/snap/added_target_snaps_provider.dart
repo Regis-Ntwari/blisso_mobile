@@ -1,22 +1,37 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AddedTargetSnapsProvider extends StateNotifier<List<int>> {
+class AddedTargetSnapsProvider extends StateNotifier<List<dynamic>> {
   AddedTargetSnapsProvider() : super([]);
 
-  addSnapshot(int id) {
-    if (state.contains(id)) {
-      state.remove(id);
+  void addSnapshot(dynamic snap) {
+    final exists = state.any((s) => s == snap['lifesnapshot_id']);
+
+    if (exists) {
+      return;
     } else {
-      state = [...state, id];
+      state = [...state, snap];
     }
   }
 
+  void removeSnapshot(int id) {
+    state = state.where((s) => s['lifesnapshot_id'] != id).toList();
+  }
+
+  bool exists(dynamic id) {
+    for (var snap in state) {
+      if (snap['lifesnapshot_id'] == id) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   reset() {
-    state = [];
+    state.clear();
   }
 }
 
 final addedTargetSnapsProviderImpl =
-    StateNotifierProvider<AddedTargetSnapsProvider, List>((_) {
+    StateNotifierProvider<AddedTargetSnapsProvider, List<dynamic>>((_) {
   return AddedTargetSnapsProvider();
 });

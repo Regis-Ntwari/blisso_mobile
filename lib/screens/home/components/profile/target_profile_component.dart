@@ -63,11 +63,6 @@ class _TargetProfileComponentState
         isLoading = true;
       });
 
-      // if (await checkIfChatExists(targetUsername)) {
-      //   if (context.mounted) {
-      //     Routemaster.of(context).push('/chat-detail/$targetUsername');
-      //   }
-      // }
       try {
         final messageRequestRef =
             ref.read(addMessageRequestServiceProviderImpl.notifier);
@@ -169,6 +164,56 @@ class _TargetProfileComponentState
     });
   }
 
+  Widget _buildInfoRow({
+    required String label,
+    required String value,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: isLast
+              ? BorderSide.none
+              : BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1),
+                ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: GlobalColors.secondaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black
+                    : Colors.white,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     TextScaler scaler = MediaQuery.textScalerOf(context);
@@ -176,260 +221,176 @@ class _TargetProfileComponentState
     double width = MediaQuery.sizeOf(context).width;
     double height = MediaQuery.sizeOf(context).height;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final Color cardColor =
+        isLightTheme ? Colors.grey.shade50 : Color(0xFF050505);
+    final Color dividerColor =
+        isLightTheme ? Colors.grey.shade300 : Colors.grey.shade700;
     final videoState = ref.watch(videoPostServiceProviderImpl);
+
     return Scaffold(
       backgroundColor: isLightTheme ? Colors.white : Colors.black,
       appBar: AppBar(
         backgroundColor: isLightTheme ? Colors.white : Colors.black,
-        leading: InkWell(
-          //onTap: () => Routemaster.of(context).push('/homepage'),
-          onTap: () => Routemaster.of(context).pop(),
-          child: const Icon(Icons.keyboard_arrow_left),
+        leading: IconButton(
+          onPressed: () => Routemaster.of(context).pop(),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: GlobalColors.primaryColor,
+          ),
         ),
         centerTitle: true,
         title: Text(
           '${targetProfile.nickname}',
           style: TextStyle(
-              color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
+            fontSize: 24,
+            color: GlobalColors.primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 10.0, left: 5),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: width * 0.85,
-                            width: width * 0.85,
-                            child: InkWell(
-                              onTap: () => Routemaster.of(context).push(
-                                  '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: CachedNetworkImage(
-                                    imageUrl: targetProfile.profilePictureUri ==
-                                            null
-                                        ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d'
-                                        : targetProfile.profilePictureUri!,
-                                    placeholder: (context, url) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(
-                                          color: GlobalColors.primaryColor,
-                                        ),
-                                      );
-                                    },
-                                    fit: BoxFit.cover),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: height * 0.09,
-                            width: width * 0.85,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 10.0),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${targetProfile.user!['first_name'].toString().toUpperCase()} ${targetProfile.user!['last_name'].toString().toUpperCase()}',
-                                      style: TextStyle(
-                                        fontSize: scaler.scale(24),
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: width * 0.85,
+                          width: width * 0.85,
+                          child: InkWell(
+                            onTap: () => Routemaster.of(context).push(
+                                '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: CachedNetworkImage(
+                                  imageUrl: targetProfile.profilePictureUri ==
+                                          null
+                                      ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d'
+                                      : targetProfile.profilePictureUri!,
+                                  placeholder: (context, url) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(
+                                        color: GlobalColors.primaryColor,
                                       ),
-                                    ),
-                                    targetProfile.feeling == null
-                                        ? const SizedBox.shrink()
-                                        : Text(
-                                            'Feeling ${targetProfile.feeling!}',
-                                            style: TextStyle(
-                                                color: GlobalColors
-                                                    .secondaryColor),
-                                          )
-                                  ]),
+                                    );
+                                  },
+                                  fit: BoxFit.cover),
                             ),
                           ),
-                          SizedBox(
-                            height: height * 0.15,
-                            width: width * 0.85,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Date of Birth',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(DateFormat('MMMM d, y').format(
-                                            DateTime.parse(targetProfile.dob!)))
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Gender',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(
-                                            targetProfile.gender!.toUpperCase())
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Marital Status',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(targetProfile.maritalStatus!
-                                            .toUpperCase())
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Home Address',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(targetProfile.homeAddress!
-                                            .toUpperCase())
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                // Row(
-                                //   mainAxisAlignment:
-                                //       MainAxisAlignment.spaceEvenly,
-                                //   children: [
-                                //     Wrap(
-                                //       children: [
-                                //         const Icon(Icons.join_right_rounded),
-                                //         Text('${targetProfile.maritalStatus}')
-                                //       ],
-                                //     ),
-                                //     Wrap(
-                                //       children: [
-                                //         const Icon(Icons.language),
-                                //         Text('${targetProfile.lang}')
-                                //       ],
-                                //     )
-                                //   ],
-                                // ),
-                                // Row(
-                                //   mainAxisAlignment:
-                                //       MainAxisAlignment.spaceEvenly,
-                                //   children: [
-                                //     Wrap(children: [
-                                //       const Icon(Icons.home),
-                                //       targetProfile.homeAddress == '' ||
-                                //               targetProfile.homeAddress == null
-                                //           ? const Text('Not Said')
-                                //           : Text('${targetProfile.homeAddress}')
-                                //     ]),
-                                //     Wrap(children: [
-                                //       const Icon(Icons.check_circle),
-                                //       Text('${targetProfile.showMe}')
-                                //     ]),
-                                //   ],
-                                // )
-                              ],
-                            ),
-                          )
-                        ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Name and Feeling
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Text(
+                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: isLightTheme ? Colors.black : Colors.white,
+                      ),
+                    ),
+                    if (targetProfile.feeling != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: GlobalColors.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Feeling ${targetProfile.feeling}',
+                          style: TextStyle(
+                            color: GlobalColors.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Personal Info Card
+              Card(
+                color: cardColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        label: 'Date of Birth',
+                        value: DateFormat('MMMM d, y').format(
+                          DateTime.parse(targetProfile.dob!),
+                        ),
+                        isFirst: true,
+                      ),
+                      _buildInfoRow(
+                        label: 'Gender',
+                        value: targetProfile.gender.toString().toUpperCase(),
+                        isFirst: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInfoRow(
+                        label: 'Marital Status',
+                        value: targetProfile.maritalStatus
+                            .toString()
+                            .toUpperCase(),
+                        isFirst: true,
+                      ),
+                      _buildInfoRow(
+                        label: 'Home Address',
+                        value:
+                            targetProfile.homeAddress.toString().toUpperCase(),
+                        isLast: true,
                       ),
                     ],
                   ),
                 ),
               ),
-              InkWell(
+
+              const SizedBox(height: 24),
+
+              // Interests Sections
+              _buildExpandableSection(
+                title: "${targetProfile.nickname}'s interests",
+                subtitle: targetProfile.lifesnapshots!
+                    .map((snapshot) => snapshot['name'])
+                    .join(", "),
+                isExpanded: expandedField == 'interest',
                 onTap: () {
-                  if (expandedField == 'interest') {
-                    setState(() {
-                      expandedField = '';
-                    });
-                  } else {
-                    setState(() {
-                      expandedField = 'interest';
-                    });
-                  }
+                  setState(() {
+                    expandedField =
+                        expandedField == 'interest' ? '' : 'interest';
+                  });
                 },
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: ListTile(
-                    title: Text(
-                      "${targetProfile.nickname}'s interests",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(targetProfile.lifesnapshots!
-                        .map((snapshot) => snapshot['name'])
-                        .join(", ")),
-                    trailing: expandedField == 'interest'
-                        ? const Icon(Icons.keyboard_arrow_down)
-                        : const Icon(Icons.keyboard_arrow_right),
-                  ),
-                ),
-              ),
-              if (expandedField == 'interest')
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 20.0),
-                //   child: Wrap(
-                //     children:
-                //         targetProfile.lifesnapshots!.map<Widget>((snapshot) {
-                //       return IntrinsicWidth(
-                //         child: Container(
-                //           margin: const EdgeInsets.only(right: 2),
-                //           decoration: BoxDecoration(
-                //               color: GlobalColors.primaryColor,
-                //               borderRadius: BorderRadius.circular(10)),
-                //           padding: const EdgeInsets.symmetric(
-                //               vertical: 3, horizontal: 5),
-                //           child: Text(
-                //             snapshot['name'],
-                //             style: const TextStyle(
-                //                 color: Colors.white, fontSize: 12),
-                //             textAlign: TextAlign.start,
-                //           ),
-                //         ),
-                //       );
-                //     }).toList(),
-                //   ),
-                // ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
+                expandedContent: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -445,12 +406,13 @@ class _TargetProfileComponentState
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 8),
                                       child: Row(
-                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.label),
-                                          SizedBox(
-                                            width: 5,
+                                          Icon(
+                                            Icons.category_rounded,
+                                            size: 18,
+                                            color: GlobalColors.primaryColor,
                                           ),
+                                          const SizedBox(width: 8),
                                           Text(
                                             entry.key,
                                             style: TextStyle(
@@ -464,70 +426,23 @@ class _TargetProfileComponentState
                                         ],
                                       ),
                                     ),
-                                    // Horizontal scrollable badges
-                                    SizedBox(
-                                      height: 40,
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          children: [
-                                            ...entry.value.map((snap) =>
-                                                Container(
-                                                  margin: const EdgeInsets.only(
-                                                      right: 8),
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        GlobalColors
-                                                            .primaryColor,
-                                                        GlobalColors
-                                                            .primaryColor
-                                                            .withOpacity(0.8),
-                                                      ],
-                                                      begin: Alignment.topLeft,
-                                                      end:
-                                                          Alignment.bottomRight,
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.black
-                                                            .withOpacity(0.1),
-                                                        blurRadius: 4,
-                                                        offset:
-                                                            const Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 8,
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Text(
-                                                        snap['name'],
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )),
-                                            const SizedBox(
-                                                width:
-                                                    4), // Add some end padding
-                                          ],
-                                        ),
-                                      ),
+                                    // Wrap badges
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        ...entry.value.map((snap) => Chip(
+                                              backgroundColor:
+                                                  GlobalColors.primaryColor,
+                                              label: Text(
+                                                snap['name'],
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            )),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -535,36 +450,23 @@ class _TargetProfileComponentState
                     ],
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10.0),
-                child: InkWell(
-                  onTap: () {
-                    if (expandedField == 'target') {
-                      setState(() {
-                        expandedField = '';
-                      });
-                    } else {
-                      setState(() {
-                        expandedField = 'target';
-                      });
-                    }
-                  },
-                  child: ListTile(
-                    title: Text(
-                        "${targetProfile.nickname}'s interests in a person",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(targetProfile.targetLifesnapshots!
-                        .map((snapshot) => snapshot['name'])
-                        .join(", ")),
-                    trailing: expandedField == 'target'
-                        ? const Icon(Icons.keyboard_arrow_down)
-                        : const Icon(Icons.keyboard_arrow_right),
-                  ),
-                ),
               ),
-              if (expandedField == 'target')
-                Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
+
+              const SizedBox(height: 16),
+
+              _buildExpandableSection(
+                title: "${targetProfile.nickname}'s interests in a person",
+                subtitle: targetProfile.targetLifesnapshots!
+                    .map((snapshot) => snapshot['name'])
+                    .join(", "),
+                isExpanded: expandedField == 'target',
+                onTap: () {
+                  setState(() {
+                    expandedField = expandedField == 'target' ? '' : 'target';
+                  });
+                },
+                expandedContent: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -580,12 +482,13 @@ class _TargetProfileComponentState
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 8),
                                       child: Row(
-                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.label),
-                                          SizedBox(
-                                            width: 5,
+                                          Icon(
+                                            Icons.category_rounded,
+                                            size: 18,
+                                            color: GlobalColors.primaryColor,
                                           ),
+                                          const SizedBox(width: 8),
                                           Text(
                                             entry.key,
                                             style: TextStyle(
@@ -599,70 +502,23 @@ class _TargetProfileComponentState
                                         ],
                                       ),
                                     ),
-                                    // Horizontal scrollable badges
-                                    SizedBox(
-                                      height: 40,
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          children: [
-                                            ...entry.value.map((snap) =>
-                                                Container(
-                                                  margin: const EdgeInsets.only(
-                                                      right: 8),
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        GlobalColors
-                                                            .primaryColor,
-                                                        GlobalColors
-                                                            .primaryColor
-                                                            .withOpacity(0.8),
-                                                      ],
-                                                      begin: Alignment.topLeft,
-                                                      end:
-                                                          Alignment.bottomRight,
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.black
-                                                            .withOpacity(0.1),
-                                                        blurRadius: 4,
-                                                        offset:
-                                                            const Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 8,
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Text(
-                                                        snap['name'],
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )),
-                                            const SizedBox(
-                                                width:
-                                                    4), // Add some end padding
-                                          ],
-                                        ),
-                                      ),
+                                    // Wrap badges
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        ...entry.value.map((snap) => Chip(
+                                              backgroundColor:
+                                                  GlobalColors.primaryColor,
+                                              label: Text(
+                                                snap['name'],
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            )),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -670,148 +526,313 @@ class _TargetProfileComponentState
                     ],
                   ),
                 ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // DM Button
               Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: SizedBox(
-                  height: 50,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: ButtonComponent(
-                        text: isLoading ? 'Loading...' : 'DM Me',
-                        backgroundColor: GlobalColors.primaryColor,
-                        foregroundColor: GlobalColors.lightBackgroundColor,
-                        onTap: isLoading ? () {} : () => handleDMTap(context)),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ButtonComponent(
+                  text: isLoading ? 'Sending...' : 'Send Message Request',
+                  backgroundColor: GlobalColors.primaryColor,
+                  foregroundColor: Colors.white,
+                  onTap: isLoading ? () {} : () => handleDMTap(context),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Media Tabs
+              Card(
+                color: cardColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
+                          color: isLightTheme
+                              ? Colors.grey.shade100
+                              : Color(0xFF050505),
+                        ),
+                        child: TabBar(
+                          indicator: const UnderlineTabIndicator(
+                            borderSide: BorderSide(
+                              color: GlobalColors.primaryColor,
+                              width: 3,
+                            ),
+                            insets: EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          labelColor: GlobalColors.primaryColor,
+                          unselectedLabelColor: GlobalColors.secondaryColor,
+                          tabs: const [
+                            Tab(
+                              icon: Icon(Icons.photo_library),
+                              text: 'Photos',
+                            ),
+                            Tab(
+                              icon: Icon(Icons.video_library),
+                              text: 'Videos',
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        height: 400,
+                        child: TabBarView(
+                          children: [
+                            // Photos Tab
+                            targetProfile.profileImages!.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.photo_library_outlined,
+                                          size: 64,
+                                          color: GlobalColors.secondaryColor,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'No photos yet',
+                                          style: TextStyle(
+                                            color: GlobalColors.secondaryColor,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : GridView.builder(
+                                    padding: const EdgeInsets.all(16),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 12,
+                                      mainAxisSpacing: 12,
+                                      mainAxisExtent: 160,
+                                    ),
+                                    itemCount:
+                                        targetProfile.profileImages!.length,
+                                    itemBuilder: (context, index) {
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: InkWell(
+                                          onTap: () => Routemaster.of(context).push(
+                                              '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
+                                          child: Stack(
+                                            children: [
+                                              CachedNetworkImage(
+                                                imageUrl: targetProfile
+                                                        .profileImages![index]
+                                                    ['image_url'],
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                              ),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin:
+                                                        Alignment.bottomCenter,
+                                                    end: Alignment.topCenter,
+                                                    colors: [
+                                                      Colors.black
+                                                          .withOpacity(0.5),
+                                                      Colors.transparent,
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                            // Videos Tab
+                            videoState.isLoading
+                                ? const Center(
+                                    child: CircularProgressIndicator(
+                                      color: GlobalColors.primaryColor,
+                                    ),
+                                  )
+                                : videoState.data.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.videocam_off_outlined,
+                                              size: 64,
+                                              color:
+                                                  GlobalColors.secondaryColor,
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'No videos yet',
+                                              style: TextStyle(
+                                                color:
+                                                    GlobalColors.secondaryColor,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : GridView.builder(
+                                        padding: const EdgeInsets.all(16),
+                                        gridDelegate:
+                                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 3,
+                                          crossAxisSpacing: 8,
+                                          mainAxisSpacing: 8,
+                                          mainAxisExtent: 120,
+                                        ),
+                                        itemCount: videoState.data.length,
+                                        itemBuilder: (context, index) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              Routemaster.of(context).push(
+                                                  '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
+                                            },
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Stack(
+                                                children: [
+                                                  Container(
+                                                    color: isLightTheme
+                                                        ? Colors.grey.shade800
+                                                        : Colors.grey.shade900,
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons
+                                                            .play_arrow_rounded,
+                                                        size: 32,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment
+                                                            .bottomCenter,
+                                                        end:
+                                                            Alignment.topCenter,
+                                                        colors: [
+                                                          Colors.black
+                                                              .withOpacity(0.6),
+                                                          Colors.transparent,
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    bottom: 8,
+                                                    left: 8,
+                                                    right: 8,
+                                                    child: Text(
+                                                      'Video ${index + 1}',
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(
-                child: Column(
-                  children: [
-                    Container(
-                        height: 460,
-                        padding: const EdgeInsets.only(
-                          bottom: 2,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 2.0),
-                          child: SizedBox(
-                            height: 400,
-                            child: DefaultTabController(
-                              length: 2,
-                              child: Column(
-                                children: [
-                                  TabBar(
-                                    tabs: const [
-                                      Tab(text: 'Profile Pictures'),
-                                      Tab(text: 'Video Posts'),
-                                    ],
-                                    labelColor: GlobalColors.primaryColor,
-                                    unselectedLabelColor:
-                                        GlobalColors.secondaryColor,
-                                  ),
-                                  SizedBox(
-                                    height: 400,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(left: 10.0),
-                                      child: TabBarView(
-                                        children: [
-                                          // Pictures Tab
-                                          GridView.builder(
-                                            gridDelegate:
-                                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 2,
-                                              crossAxisSpacing: 4,
-                                              mainAxisSpacing: 4,
-                                            ),
-                                            itemCount: targetProfile
-                                                .profileImages!.length,
-                                            itemBuilder: (context, index) {
-                                              return InkWell(
-                                                onTap: () => Routemaster.of(
-                                                        context)
-                                                    .push(
-                                                        '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: targetProfile
-                                                          .profileImages![index]
-                                                      ['image_url'],
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          // Videos Tab
-                                          videoState.isLoading
-                                              ? const Center(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    color: GlobalColors
-                                                        .primaryColor,
-                                                  ),
-                                                )
-                                              : videoState.data.isEmpty
-                                                  ? Center(
-                                                      child: Text(
-                                                        'No videos yet',
-                                                        style: TextStyle(
-                                                          color: GlobalColors
-                                                              .secondaryColor,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : GridView.builder(
-                                                      gridDelegate:
-                                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                                        crossAxisCount: 3,
-                                                        crossAxisSpacing: 4,
-                                                        mainAxisSpacing: 4,
-                                                      ),
-                                                      itemCount: videoState
-                                                          .data.length,
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                        return InkWell(
-                                                          onTap: () {
-                                                            Routemaster.of(
-                                                                    context)
-                                                                .push(
-                                                                    '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
-                                                          },
-                                                          child: Container(
-                                                            color: isLightTheme
-                                                                ? Colors.black
-                                                                : Colors
-                                                                    .grey[800],
-                                                            height: 50,
-                                                            width: 50,
-                                                            child: const Center(
-                                                              child: Icon(
-                                                                Icons
-                                                                    .play_arrow,
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )),
-                  ],
-                ),
-              ),
+
+              const SizedBox(height: 32),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildExpandableSection({
+    required String title,
+    required String subtitle,
+    required bool isExpanded,
+    required VoidCallback onTap,
+    required Widget expandedContent,
+  }) {
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
+    return Card(
+      color: isLightTheme ? Colors.grey.shade50 : Color(0xFF050505),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: onTap,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 12,
+            ),
+            title: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: isLightTheme ? Colors.black : Colors.white,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(
+                color: GlobalColors.secondaryColor,
+                fontSize: 14,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Icon(
+              isExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              color: GlobalColors.primaryColor,
+              size: 28,
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: expandedContent,
+            ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:blisso_mobile/components/loading_component.dart';
 //import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/added_snaps_provider.dart';
+import 'package:blisso_mobile/screens/home/components/profile/snap/added_target_snaps_provider.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_snapshot_dialog_component.dart';
 import 'package:blisso_mobile/screens/home/components/profile/snap/show_target_snapshot_dialog.dart';
 import 'package:blisso_mobile/screens/home/components/profile/video_post_options_component.dart';
@@ -130,7 +131,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     double width = MediaQuery.sizeOf(context).width;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     final Color cardColor =
-        isLightTheme ? Colors.grey.shade50 : Colors.grey.shade900;
+        isLightTheme ? Colors.grey.shade50 : Color(0xFF050505);
     final Color dividerColor =
         isLightTheme ? Colors.grey.shade300 : Colors.grey.shade700;
 
@@ -391,7 +392,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                   ),
                                   color: isLightTheme
                                       ? Colors.grey.shade100
-                                      : Colors.grey.shade800,
+                                      : Color(0xFF050505),
                                 ),
                                 child: TabBar(
                                   indicator: const UnderlineTabIndicator(
@@ -675,9 +676,11 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                     for (var snap
                                         in profileState.data['lifesnapshots']) {
                                       snaps.addSnapshot(
-                                        snap['lifesnapshot_id'],
+                                        snap,
                                       );
                                     }
+
+                                    print(ref.read(addedSnapsProviderImpl));
                                     showSnapshotDialog(context, ref);
                                   },
                                 ),
@@ -701,16 +704,17 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                           .read(snapshotServiceProviderImpl
                                               .notifier)
                                           .deleteProfileSnapshot(
-                                              snapshot['id']);
+                                              snapshot['lifesnapshot_id']);
                                       ref
                                           .read(myProfileServiceProviderImpl
                                               .notifier)
-                                          .removeSnapshotById(snapshot['id']);
+                                          .removeSnapshotById(
+                                              snapshot['lifesnapshot_id']);
                                     },
                                   );
                                 }).toList(),
                               ],
-                            ),
+                              ),
                     ),
 
                     const SizedBox(height: 16),
@@ -736,6 +740,18 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             icon: Icons.add,
                             label: 'Add Target Snapshot',
                             onTap: () {
+                              ref
+                                  .read(addedTargetSnapsProviderImpl.notifier)
+                                  .reset();
+                              final snapTarget = ref
+                                  .read(addedTargetSnapsProviderImpl.notifier);
+                              for (var snap in profileState
+                                  .data['target_lifesnapshots']) {
+                                print(snap);
+                                snapTarget.addSnapshot(
+                                  snap,
+                                );
+                              }
                               showTargetSnapshotDialog(context, ref);
                             },
                           ),
@@ -756,10 +772,12 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               onDeleted: () async {
                                 await ref
                                     .read(snapshotServiceProviderImpl.notifier)
-                                    .deleteTargetSnapshot(snapshot['id']);
+                                    .deleteTargetSnapshot(
+                                        snapshot['lifesnapshot_id']);
                                 ref
                                     .read(myProfileServiceProviderImpl.notifier)
-                                    .removeTargetSnapshot(snapshot['id']);
+                                    .removeTargetSnapshot(
+                                        snapshot['lifesnapshot_id']);
                               },
                             );
                           }).toList(),
@@ -936,7 +954,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     return Card(
       color: Theme.of(context).brightness == Brightness.light
           ? Colors.grey.shade50
-          : Colors.grey.shade900,
+          : Color(0xFF050505),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
