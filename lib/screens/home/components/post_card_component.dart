@@ -104,7 +104,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
               setState(() {
                 isLoading = false;
               });
-              Routemaster.of(context).push('/chat-detail/$targetUsername');
+              Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {
                 isLoading = false;

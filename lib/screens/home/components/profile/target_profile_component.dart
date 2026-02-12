@@ -98,7 +98,7 @@ class _TargetProfileComponentState
               setState(() {
                 isLoading = false;
               });
-              Routemaster.of(context).push('/chat-detail/$targetUsername');
+              Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {
                 isLoading = false;
@@ -116,7 +116,7 @@ class _TargetProfileComponentState
               showPopupComponent(
                 context: context,
                 icon: Icons.error,
-                iconColor: Colors.red,
+                iconColor: GlobalColors.primaryColor,
                 message: messageRequestResponse.error!,
               );
             }
@@ -128,6 +128,7 @@ class _TargetProfileComponentState
           showPopupComponent(
               context: context,
               icon: Icons.error,
+              iconColor: GlobalColors.primaryColor,
               message: messageRequestResponse.error!);
         }
       } catch (e) {
@@ -216,15 +217,11 @@ class _TargetProfileComponentState
 
   @override
   Widget build(BuildContext context) {
-    TextScaler scaler = MediaQuery.textScalerOf(context);
     final targetProfile = ref.watch(targetProfileProvider);
     double width = MediaQuery.sizeOf(context).width;
-    double height = MediaQuery.sizeOf(context).height;
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
     final Color cardColor =
         isLightTheme ? Colors.grey.shade50 : Color(0xFF050505);
-    final Color dividerColor =
-        isLightTheme ? Colors.grey.shade300 : Colors.grey.shade700;
     final videoState = ref.watch(videoPostServiceProviderImpl);
 
     return Scaffold(
@@ -534,7 +531,7 @@ class _TargetProfileComponentState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ButtonComponent(
-                  text: isLoading ? 'Sending...' : 'Send Message Request',
+                  text: isLoading ? 'Sending...' : 'DM Me',
                   backgroundColor: GlobalColors.primaryColor,
                   foregroundColor: Colors.white,
                   onTap: isLoading ? () {} : () => handleDMTap(context),

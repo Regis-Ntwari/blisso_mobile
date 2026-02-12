@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/services/message_requests/accept_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/get_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/message_requests/reject_message_request_service_provider.dart';
@@ -51,7 +52,8 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
     });
   }
 
-  Widget _buildPremiumOverlay({required Widget child, required String message}) {
+  Widget _buildPremiumOverlay(
+      {required Widget child, required String message}) {
     return Stack(
       children: [
         // Blurred content
@@ -201,8 +203,9 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
 
   @override
   Widget build(BuildContext context) {
-    final canViewRequests = ref.read(permissionProviderImpl)['can_view_message_requests'];
-    
+    final canViewRequests =
+        ref.read(permissionProviderImpl)['can_view_message_requests'];
+
     if (!canViewRequests) {
       return _buildPremiumOverlay(
         child: _buildShimmerLoader(),
@@ -225,9 +228,10 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
     }
 
     if (messageRequests.error != null) {
-      return Center(
-        child: Text('An error occurred: ${messageRequests.error}'),
-      );
+      showSnackBar(context, 'Error: ${messageRequests.error}');
+      // return Center(
+      //   child: Text('An error occurred: ${messageRequests.error}'),
+      // );
     }
 
     final List<dynamic> requests = messageRequests.data ?? [];

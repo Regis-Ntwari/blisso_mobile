@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'tracking_event.dart';
@@ -9,8 +10,13 @@ class EventQueue {
 
   final _box = Hive.box<TrackingEvent>('tracking_events');
 
-  static const _endpoint =
-      "https://api.yourdomain.com/events/batch";
+  dynamic loadVariables() async {
+    final configData = await rootBundle.loadString('assets/config/config.json');
+
+    final configs = jsonDecode(configData);
+
+    return configs;
+  }
 
   Future<void> enqueue(TrackingEvent event) async {
     await _box.put(event.id, event);
@@ -22,9 +28,11 @@ class EventQueue {
 
     final batch = _box.values.take(25).toList();
 
+    dynamic configs = await loadVariables();
+
     try {
       final res = await http.post(
-        Uri.parse(_endpoint),
+        Uri.parse("${configs['BACKEND_URL']}/blisso_administration/mobile-user-activity/"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "events": batch.map((e) => e.toJson()).toList(),

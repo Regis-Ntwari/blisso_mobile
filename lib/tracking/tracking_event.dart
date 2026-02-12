@@ -32,11 +32,12 @@ class TrackingEvent extends HiveObject {
   });
 
   Map<String, dynamic> toJson() => {
-        "id": id,
+        //"id": id,
         "type": type,
-        "timestamp": timestamp.toIso8601String(),
-        "userId": userId,
-        "sessionId": sessionId,
-        "payload": payload,
+        "activity_happened_at": timestamp.toIso8601String(),
+        //"userId": userId,
+        "session_id": sessionId,
+        "from": payload['from'],
+        "to": payload["to"]
       };
 }

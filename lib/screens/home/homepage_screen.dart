@@ -257,6 +257,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       currentIndex: _selectedScreenIndex,
       onTap: (index) {
         TrackingService.instance.track("tab_changed", {
+          "from": tabs[_selectedScreenIndex],
           "to": tabs[index],
         });
         setState(() {
@@ -399,83 +400,86 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   }
 
   Widget _buildChatButtonWithBadge() {
-    return FutureBuilder<Map<String, String?>>(
-      future: getInitials(),
-      builder: (context, snapshot) {
-        // Use local variables from snapshot or from state
-        final profilePic = profilePicture ?? snapshot.data?['profile_picture'];
-        final firstName = firstname ?? snapshot.data?['firstname'];
-        final lastName = lastname ?? snapshot.data?['lastname'];
-
-        if (profilePic != null && profilePic.isNotEmpty) {
-          // Show circular profile picture
-          return InkWell(
-            onTap: () => Routemaster.of(context).push('/homepage/profile'),
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                border:
-                    Border.all(color: GlobalColors.primaryColor, width: 2.0),
-                borderRadius:
-                    BorderRadius.circular(15), // Half of 30 for perfect circle
-              ),
-              child: ClipRRect(
-                borderRadius:
-                    BorderRadius.circular(15), // Half of 30 for perfect circle
-                child: CachedNetworkImage(
-                  imageUrl: profilePic,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => CircleAvatar(
-                    radius: 15,
-                    backgroundColor: GlobalColors.primaryColor.withOpacity(0.3),
-                    child: Text(
-                      '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
-                      '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.only(left: 5.0),
+      child: FutureBuilder<Map<String, String?>>(
+        future: getInitials(),
+        builder: (context, snapshot) {
+          // Use local variables from snapshot or from state
+          final profilePic = profilePicture ?? snapshot.data?['profile_picture'];
+          final firstName = firstname ?? snapshot.data?['firstname'];
+          final lastName = lastname ?? snapshot.data?['lastname'];
+      
+          if (profilePic != null && profilePic.isNotEmpty) {
+            // Show circular profile picture
+            return InkWell(
+              onTap: () => Routemaster.of(context).push('/homepage/profile'),
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  border:
+                      Border.all(color: GlobalColors.primaryColor, width: 2.0),
+                  borderRadius:
+                      BorderRadius.circular(15), // Half of 30 for perfect circle
+                ),
+                child: ClipRRect(
+                  borderRadius:
+                      BorderRadius.circular(15), // Half of 30 for perfect circle
+                  child: CachedNetworkImage(
+                    imageUrl: profilePic,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => CircleAvatar(
+                      radius: 15,
+                      backgroundColor: GlobalColors.primaryColor.withOpacity(0.3),
+                      child: Text(
+                        '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                        '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => CircleAvatar(
-                    radius: 15,
-                    backgroundColor: GlobalColors.primaryColor,
-                    child: Text(
-                      '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
-                      '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    errorWidget: (context, url, error) => CircleAvatar(
+                      radius: 15,
+                      backgroundColor: GlobalColors.primaryColor,
+                      child: Text(
+                        '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                        '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        } else {
-          // Show initials as fallback
-          return InkWell(
-            onTap: () => Routemaster.of(context).push('/homepage/profile'),
-            child: CircleAvatar(
-              radius: 15,
-              backgroundColor: GlobalColors.primaryColor,
-              child: Text(
-                '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
-                '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            );
+          } else {
+            // Show initials as fallback
+            return InkWell(
+              onTap: () => Routemaster.of(context).push('/homepage/profile'),
+              child: CircleAvatar(
+                radius: 15,
+                backgroundColor: GlobalColors.primaryColor,
+                child: Text(
+                  '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
+                  '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 
