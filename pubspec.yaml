@@ -67,6 +67,7 @@ dependencies:
   hive_generator: ^2.0.1
   build_runner: ^2.5.4
   pinput: ^6.0.2
+  country_search: ^2.8.5
 
 dev_dependencies:
   flutter_test:

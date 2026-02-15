@@ -88,14 +88,16 @@ class StoriesService {
     return response;
   }
 
-  Future<ApiResponse> updateShareCount(int storyId) async {
+  Future<ApiResponse> updateShareCount(int storyId, String to) async {
     String accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response = await ApiService().postData(
         endpoint: 'posts/video-posts/$storyId/share/',
         token: accessToken,
-        body: {});
+        body: {
+          'shared_to': to
+        });
 
     return response;
   }

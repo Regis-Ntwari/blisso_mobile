@@ -14,26 +14,36 @@ class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
 
   final Ref ref;
 
+  String? _filterOption;
+  String? _filterValue;
+  double? _latitude;
+  double? _longitude;
+
+  /* ---------------- FIRST PAGE ---------------- */
+
   Future<void> loadFirstPage() async {
     state = state.copyWith(isLoading: true, data: [], currentPage: 1);
 
     try {
-      Position position = await ref
-          .watch(locationServiceProviderImpl.notifier)
+      final Position position = await ref
+          .read(locationServiceProviderImpl.notifier)
           .getLatitudeAndLongitude();
-      await ref
-          .read(profileServiceProviderImpl.notifier)
-          .getAllProfiles(page: 1, latitude: position.latitude, longitude: position.longitude);
+
+      _latitude = position.latitude;
+      _longitude = position.longitude;
+
+      await ref.read(profileServiceProviderImpl.notifier).getAllProfiles(
+            page: 1,
+            latitude: _latitude,
+            longitude: _longitude,
+          );
 
       final profilesData = ref.read(profileServiceProviderImpl);
 
-      final data = profilesData.data as List;
-      final pagination = profilesData.pagination;
-
       state = PaginatedState(
-        data: data,
-        currentPage: pagination['current_page'],
-        totalPages: pagination['total_pages'],
+        data: profilesData.data as List,
+        currentPage: profilesData.pagination['current_page'],
+        totalPages: profilesData.pagination['total_pages'],
         isLoading: false,
       );
     } catch (e) {
@@ -41,29 +51,76 @@ class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
     }
   }
 
-  
+  /* ---------------- SEARCH ---------------- */
+
+  Future<void> searchProfiles({
+    required String filterOption,
+    required String filterValue,
+  }) async {
+    if (filterValue.trim().isEmpty) return;
+
+    _filterOption = filterOption;
+    _filterValue = filterValue;
+
+    state = state.copyWith(
+      isLoading: true,
+      data: [],
+      currentPage: 1,
+    );
+
+    try {
+      await ref.read(profileServiceProviderImpl.notifier).getAllProfiles(
+            page: 1,
+            latitude: _latitude,
+            longitude: _longitude,
+            filterOption: filterOption,
+            filterValue: filterValue,
+          );
+
+      final profilesData = ref.read(profileServiceProviderImpl);
+
+      state = PaginatedState(
+        data: profilesData.data as List,
+        currentPage: profilesData.pagination['current_page'],
+        totalPages: profilesData.pagination['total_pages'],
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(error: e.toString(), isLoading: false);
+    }
+  }
+
+  /* ---------------- CLEAR SEARCH ---------------- */
+
+  Future<void> clearSearch() async {
+    _filterOption = null;
+    _filterValue = null;
+    await loadFirstPage();
+  }
+
+  /* ---------------- PAGINATION ---------------- */
 
   Future<void> loadNextPage() async {
     if (state.isLoading || !state.hasMore) return;
 
     state = state.copyWith(isLoading: true);
-
     final nextPage = state.currentPage + 1;
 
     try {
-      await ref
-          .read(profileServiceProviderImpl.notifier)
-          .getAllProfiles(page: nextPage);
+      await ref.read(profileServiceProviderImpl.notifier).getAllProfiles(
+            page: nextPage,
+            latitude: _latitude,
+            longitude: _longitude,
+            filterOption: _filterOption,
+            filterValue: _filterValue,
+          );
 
-      final profileData = await ref.read(profileServiceProviderImpl);
-
-      final data = profileData.data as List;
-      final pagination = profileData.pagination;
+      final profileData = ref.read(profileServiceProviderImpl);
 
       state = state.copyWith(
-        data: [...state.data, ...data],
-        currentPage: pagination['current_page'],
-        totalPages: pagination['total_pages'],
+        data: [...state.data, ...(profileData.data as List)],
+        currentPage: profileData.pagination['current_page'],
+        totalPages: profileData.pagination['total_pages'],
         isLoading: false,
       );
     } catch (e) {

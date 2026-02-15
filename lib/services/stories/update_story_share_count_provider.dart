@@ -9,10 +9,10 @@ class UpdateStoryShareCountProvider extends StateNotifier<ApiState>{
 
   UpdateStoryShareCountProvider({required this.storiesService}) : super(ApiState());
 
-  Future<void> updateStoryShareCount(int id) async{
+  Future<void> updateStoryShareCount(int id, String to) async{
     state = ApiState(isLoading: true);
     try {
-      final response = await storiesService.updateShareCount(id);
+      final response = await storiesService.updateShareCount(id, to);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(isLoading: false, error: response.errorMessage);

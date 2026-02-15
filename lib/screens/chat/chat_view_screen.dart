@@ -10,6 +10,7 @@ import 'package:blisso_mobile/screens/chat/utils/message_view.dart';
 import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/chat/number_messages_provider.dart';
+import 'package:blisso_mobile/services/chat/typing_message_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
@@ -801,6 +802,18 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                             ),
                     ],
                   )),
+                  ref.watch(typingStatusProvider.select((statuses) =>
+                          statuses[widget.username]?.isTyping ?? false))
+                      ? Padding(
+                          padding:
+                              const EdgeInsets.only(left: 20.0, bottom: 8.0),
+                          child: Text(
+                            '${chatDetailsRef['full_name']} is typing...',
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      : SizedBox.shrink(),
                   ValueListenableBuilder<bool>(
                     valueListenable: isEmojiPickerVisible,
                     builder: (context, isVisible, child) {
@@ -1027,7 +1040,10 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
                                                   final message =
                                                       messageController.text
                                                           .trim();
-                                                  sendTextMessage(message);
+
+                                                  if (message.isNotEmpty) {
+                                                    sendTextMessage(message);
+                                                  }
 
                                                   if (message.isNotEmpty) {
                                                     messageController.clear();

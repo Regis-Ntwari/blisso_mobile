@@ -8,112 +8,125 @@ import 'package:blisso_mobile/services/shared_preferences_service.dart';
 
 class ProfileService {
   Future<ApiResponse> createProfile(ProfileModel profile) async {
-    String accessToken =
-        await SharedPreferencesService.getPreference('accessToken');
-
-    ApiResponse response = await ApiService().postFormDataRequest(
-        endpoint: 'profiles/', body: profile.toMap(), token: accessToken);
-
-    return response;
-  }
-
-  Future<ApiResponse> getAnyProfile(String username) async {
-    String accessToken =
-        await SharedPreferencesService.getPreference('accessToken');
-
-    ApiResponse response =
-        await ApiService().getData('profiles/$username/', accessToken);
-
-    return response;
-  }
-
-  Future<ApiResponse> getMyProfile() async {
-    String accessToken =
-        await SharedPreferencesService.getPreference('accessToken');
-
-    ApiResponse response =
-        await ApiService().getData('profiles/my/profile/', accessToken);
-
-    return response;
-  }
-
-  Future<ApiResponse> likeProfile(int id) async {
-    String accessToken =
-        await SharedPreferencesService.getPreference('accessToken');
-
-    ApiResponse response = await ApiService().postData(
-        endpoint: 'profiles/like_or_dislike/profile/$id/',
-        token: accessToken,
-        body: {});
-
-    return response;
-  }
-
-  Future<ApiResponse> getAllProfiles({int page = 1, double? latitude, double? longitude}) async {
     final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    return ApiService().getData('/profiles/?latitude=$latitude&longitude=$longitude&page=$page', accessToken);
+    return ApiService().postFormDataRequest(
+      endpoint: 'profiles/',
+      body: profile.toMap(),
+      token: accessToken,
+    );
   }
 
-  Future<ApiResponse> updateProfileFeeling(String emoji, String caption) async {
-    String accessToken =
+  Future<ApiResponse> getAnyProfile(String username) async {
+    final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().postData(
-        endpoint: '/profiles/my/profile/update-feeling/',
-        token: accessToken,
-        body: {"feeling_caption": caption, "feeling_emojis": emoji});
+    return ApiService().getData('profiles/$username/', accessToken);
+  }
 
-    return response;
+  Future<ApiResponse> getMyProfile() async {
+    final accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    return ApiService().getData('profiles/my/profile/', accessToken);
+  }
+
+  Future<ApiResponse> likeProfile(int id) async {
+    final accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    return ApiService().postData(
+      endpoint: 'profiles/like_or_dislike/profile/$id/',
+      token: accessToken,
+      body: {},
+    );
+  }
+
+  /* ---------------- PROFILES (WITH SEARCH) ---------------- */
+
+  Future<ApiResponse> getAllProfiles({
+    int page = 1,
+    double? latitude,
+    double? longitude,
+    String? filterOption,
+    String? filterValue,
+  }) async {
+    final accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    final query = <String>[
+      if (latitude != null) 'latitude=$latitude',
+      if (longitude != null) 'longitude=$longitude',
+      'page=$page',
+      if (filterOption != null && filterValue != null)
+        'filter_option=${filterOption.toLowerCase()}',
+      if (filterValue != null) 'filter_value=$filterValue',
+    ].join('&');
+
+    return ApiService().getData('/profiles/?$query', accessToken);
+  }
+
+  /* ---------------- OTHER METHODS (UNCHANGED) ---------------- */
+
+  Future<ApiResponse> updateProfileFeeling(String emoji, String caption) async {
+    final accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    return ApiService().postData(
+      endpoint: '/profiles/my/profile/update-feeling/',
+      token: accessToken,
+      body: {
+        "feeling_caption": caption,
+        "feeling_emojis": emoji,
+      },
+    );
   }
 
   Future<ApiResponse> replaceImage(File newImage, int oldId) async {
-    String accessToken =
+    final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().postFormDataRequest(
-        endpoint: '/profiles/my/profile/replace/profile-image/$oldId/',
-        body: {'image': newImage},
-        token: accessToken);
-
-    return response;
+    return ApiService().postFormDataRequest(
+      endpoint: '/profiles/my/profile/replace/profile-image/$oldId/',
+      body: {'image': newImage},
+      token: accessToken,
+    );
   }
 
   Future<ApiResponse> updateProfile(TargetProfileModel myProfile) async {
-    String accessToken =
+    final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().postFormDataRequest(
-        endpoint: '/profiles/my/profile/',
-        body: myProfile.profilePic == null
-            ? myProfile.toMapNoProfiles()
-            : myProfile.toMapNoProfile(),
-        token: accessToken);
-
-    return response;
+    return ApiService().postFormDataRequest(
+      endpoint: '/profiles/my/profile/',
+      body: myProfile.profilePic == null
+          ? myProfile.toMapNoProfiles()
+          : myProfile.toMapNoProfile(),
+      token: accessToken,
+    );
   }
 
   Future<ApiResponse> updateProfilePicture(
       Map<String, dynamic> myProfile) async {
-    String accessToken =
+    final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().postFormDataRequest(
-        endpoint: '/profiles/my/profile/', body: myProfile, token: accessToken);
-
-    return response;
+    return ApiService().postFormDataRequest(
+      endpoint: '/profiles/my/profile/',
+      body: myProfile,
+      token: accessToken,
+    );
   }
 
   Future<ApiResponse> changeLocation(Map<String, dynamic> myProfile) async {
-    String accessToken =
+    final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
-    ApiResponse response = await ApiService().postFormDataRequest(
-        endpoint: '/profiles/my/profile/update-location',
-        body: myProfile,
-        token: accessToken);
-
-    return response;
+    return ApiService().postFormDataRequest(
+      endpoint: '/profiles/my/profile/update-location',
+      body: myProfile,
+      token: accessToken,
+    );
   }
 }

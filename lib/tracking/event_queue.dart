@@ -34,9 +34,9 @@ class EventQueue {
       final res = await http.post(
         Uri.parse("${configs['BACKEND_URL']}/blisso_administration/mobile-user-activity/"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "events": batch.map((e) => e.toJson()).toList(),
-        }),
+        body: jsonEncode(
+          batch.map((e) => e.toJson()).toList(),
+        ),
       );
 
       if (res.statusCode == 200) {

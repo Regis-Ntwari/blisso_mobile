@@ -15,7 +15,6 @@ import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
 import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/user_video_post_service_provider.dart';
-import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 //import 'package:blisso_mobile/utils/subscription_design.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -321,9 +320,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               isFirst: true,
                             ),
                             _buildInfoRow(
-                              label: 'Home Address',
-                              value: profileState.data['home_address']
-                                  .toUpperCase(),
+                              label: 'Nationality',
+                              value: profileState.data['nationality'],
                               isLast: true,
                             ),
                             const SizedBox(height: 16),
@@ -364,6 +362,20 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             _buildInfoRow(
                               label: 'Distance Measure',
                               value: profileState.data['distance_measure'],
+                              isLast: true,
+                            ),
+                            const SizedBox(height: 16),
+                            // Row 5
+                            _buildInfoRow(
+                              label: 'Residence Country',
+                              value: profileState.data['residence_country']
+                                  .toString()
+                                  .toUpperCase(),
+                              isFirst: true,
+                            ),
+                            _buildInfoRow(
+                              label: 'Residence City',
+                              value: profileState.data['residence_city'],
                               isLast: true,
                             ),
                           ],
@@ -604,27 +616,27 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                             ),
                                                           ),
                                                         ),
-                                                        Positioned(
-                                                          bottom: 8,
-                                                          left: 8,
-                                                          right: 8,
-                                                          child: Text(
-                                                            'Video ${index + 1}',
-                                                            style:
-                                                                const TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                        ),
+                                                        // Positioned(
+                                                        //   bottom: 8,
+                                                        //   left: 8,
+                                                        //   right: 8,
+                                                        //   child: Text(
+                                                        //     'Video ${index + 1}',
+                                                        //     style:
+                                                        //         const TextStyle(
+                                                        //       color:
+                                                        //           Colors.white,
+                                                        //       fontSize: 10,
+                                                        //       fontWeight:
+                                                        //           FontWeight
+                                                        //               .w500,
+                                                        //     ),
+                                                        //     maxLines: 1,
+                                                        //     overflow:
+                                                        //         TextOverflow
+                                                        //             .ellipsis,
+                                                        //   ),
+                                                        // ),
                                                       ],
                                                     ),
                                                   ),

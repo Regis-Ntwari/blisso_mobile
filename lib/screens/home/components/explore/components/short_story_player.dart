@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/share_story_modal.dart';
@@ -20,13 +22,16 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
   final VideoPlayerController? videoController;
   final bool isActive;
   final bool showStory;
+  final Function(DateTime startTimestamp, DateTime endTimestamp)? onTimeTrack; // Callback for time tracking
 
-  const ShortStoryPlayer(
-      {super.key,
-      required this.video,
-      this.videoController,
-      required this.isActive,
-      this.showStory = true});
+  const ShortStoryPlayer({
+    super.key,
+    required this.video,
+    this.videoController,
+    required this.isActive,
+    this.showStory = true,
+    this.onTimeTrack, // Optional callback
+  });
 
   @override
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
@@ -39,6 +44,11 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   bool _isLoading = true;
   bool isProfileLoading = false;
   bool showCaption = false;
+  
+  // Time tracking variables
+  DateTime? _startTimestamp;
+  bool _isTracking = false;
+  Timer? _trackingTimer;
 
   @override
   void initState() {
@@ -98,6 +108,59 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     } else if (_controller.value.isPlaying || _isBuffering) {
       setState(() => _isLoading = false);
     }
+    
+    // Handle tracking when video starts/pauses
+    _handleTrackingOnVideoState();
+  }
+  
+  void _handleTrackingOnVideoState() {
+    if (!_isInitialized) return;
+    
+    if (_controller.value.isPlaying && !_isTracking) {
+      // Video started playing - start tracking
+      _startTracking();
+    } else if (!_controller.value.isPlaying && _isTracking) {
+      // Video paused - stop tracking and send data
+      _stopAndSendTracking();
+    }
+  }
+  
+  void _startTracking() {
+    if (!_isInitialized || _isTracking) return;
+    
+    _startTimestamp = DateTime.now();
+    _isTracking = true;
+    
+    // Optional: Set up a periodic timer to check if tracking should continue
+    _trackingTimer?.cancel();
+    _trackingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || !_controller.value.isPlaying) {
+        timer.cancel();
+      }
+    });
+    
+    debugPrint('Started tracking video ${widget.video.id} at $_startTimestamp');
+  }
+  
+  void _stopAndSendTracking() {
+    if (!_isTracking || _startTimestamp == null) return;
+    
+    final endTimestamp = DateTime.now();
+    
+    // Call the callback if provided
+    if (widget.onTimeTrack != null) {
+      widget.onTimeTrack!(_startTimestamp!, endTimestamp);
+    }
+    
+    debugPrint('Stopped tracking video ${widget.video.id}: start=$_startTimestamp, end=$endTimestamp');
+    
+    // Reset tracking variables
+    _isTracking = false;
+    _startTimestamp = null;
+    
+    // Cancel any active timer
+    _trackingTimer?.cancel();
+    _trackingTimer = null;
   }
 
   void _handleLike() {
@@ -140,18 +203,38 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
       widget.isActive ? _playIfReady() : _pauseIfPlaying();
     }
   }
-
+  
   @override
-void dispose() {
-  _controller.removeListener(_handleVideoListener);
-
-  if (widget.videoController == null) {
-    _controller.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Handle cases when the widget is removed from the tree (like swiping away)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted && _isTracking) {
+        _stopAndSendTracking();
+      }
+    });
   }
 
-  super.dispose();
-}
+  @override
+  void dispose() {
+    // Stop tracking and send final data if still tracking
+    if (_isTracking) {
+      _stopAndSendTracking();
+    }
+    
+    // Cancel any pending timer
+    _trackingTimer?.cancel();
+    _trackingTimer = null;
+    
+    _controller.removeListener(_handleVideoListener);
 
+    if (widget.videoController == null) {
+      _controller.dispose();
+    }
+
+    super.dispose();
+  }
 
   Widget _buildLoadingIndicator() {
     return Stack(
@@ -226,6 +309,28 @@ void dispose() {
             child: child,
           )
         : child;
+  }
+
+  String formatCompactNumber(int value) {
+    if (value < 1000) return value.toString();
+
+    String format(num number, String suffix) {
+      String formatted = number.toStringAsFixed(1);
+      if (formatted.endsWith('.0')) {
+        formatted = formatted.substring(0, formatted.length - 2);
+      }
+      return '$formatted$suffix';
+    }
+
+    if (value < 1000000) {
+      return format(value / 1000, 'k');
+    }
+
+    if (value < 1000000000) {
+      return format(value / 1000000, 'M');
+    }
+
+    return format(value / 1000000000, 'B');
   }
 
   @override
@@ -313,6 +418,43 @@ void dispose() {
 
               const SizedBox(height: 16),
 
+              _buildShimmerPlaceholder(
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(Icons.remove_red_eye),
+                ),
+              ),
+
+              // views count
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: _buildShimmerPlaceholder(
+                  Container(
+                    width: 40,
+                    alignment: Alignment.center,
+                    child: Text(
+                      ' ${formatCompactNumber(widget.video.views)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        shadows: _isInitialized
+                            ? [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.8),
+                                  blurRadius: 2,
+                                )
+                              ]
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
               // Like button
               _buildShimmerPlaceholder(
                 SizedBox(
@@ -341,7 +483,7 @@ void dispose() {
                     width: 40,
                     alignment: Alignment.center,
                     child: Text(
-                      '${widget.video.likes}',
+                      '${formatCompactNumber(widget.video.likes)}',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -399,7 +541,7 @@ void dispose() {
                     width: 40,
                     alignment: Alignment.center,
                     child: Text(
-                      '${widget.video.shares}',
+                      '${formatCompactNumber(widget.video.shares)}',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,

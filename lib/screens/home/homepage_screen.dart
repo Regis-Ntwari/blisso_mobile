@@ -1,3 +1,4 @@
+import 'dart:async'; // Add this import
 import 'dart:io';
 
 import 'package:blisso_mobile/components/popup_component.dart';
@@ -6,7 +7,9 @@ import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
 import 'package:blisso_mobile/screens/home/components/home_component.dart';
+import 'package:blisso_mobile/screens/home/feeling_popup_component.dart';
 import 'package:blisso_mobile/services/chat/number_messages_provider.dart';
+import 'package:blisso_mobile/services/feeling/feeling_provider.dart';
 import 'package:blisso_mobile/services/matching/paginated_matching_service_provider.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/first_profiles_provider.dart';
@@ -14,6 +17,7 @@ import 'package:blisso_mobile/services/profile/paginated_profiles_provider.dart'
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/stories/paginated_video_post_provider.dart';
 import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
+import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/tracking/tracking_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -43,6 +47,11 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   TextEditingController searchValue = TextEditingController();
   dynamic profiles;
 
+  // Tab tracking variables
+  DateTime? _currentTabEntryTime;
+  
+  Map<int, String> tabs = {0: 'Home', 1: 'Matching', 2: 'Videos', 3: 'Profile'};
+
   @override
   bool get wantKeepAlive => true;
 
@@ -53,6 +62,20 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     _scrollController = ScrollController()..addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      ref.read(webSocketNotifierProvider.notifier).connect();
+
+      ref.read(webSocketNotifierProvider.notifier).listenToMessages();
+
+      if (ref.read(feelingProviderImpl)) {
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierColor: Colors.black.withOpacity(0.5),
+          builder: (_) => const FeelingPopupComponent(),
+        );
+        ref.read(feelingProviderImpl.notifier).updateState();
+      }
+
       if (!ref.read(firstProfileProviderImpl)) {
         await ref.read(paginatedProfilesProvider.notifier).loadFirstPage();
       }
@@ -90,6 +113,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
           profilePicture = value;
         });
       });
+      
+      // Start tracking the initial tab (index 0 - Home)
+      _startTrackingCurrentTab();
     });
   }
 
@@ -154,13 +180,85 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     });
   }
 
+  void _startTrackingCurrentTab() {
+    // Record the entry time for the current tab
+    _currentTabEntryTime = DateTime.now();
+    debugPrint('Started tracking tab: ${tabs[_selectedScreenIndex]} at $_currentTabEntryTime');
+  }
+  
+  void _stopAndTrackCurrentTab(int nextTabIndex) {
+    final entryTime = _currentTabEntryTime;
+    
+    if (entryTime != null) {
+      final exitTime = DateTime.now();
+      final duration = exitTime.difference(entryTime).inMilliseconds;
+      
+      final fromTab = tabs[_selectedScreenIndex]!;
+      final toTab = tabs[nextTabIndex]!;
+      
+      _sendTabTrackingData(
+        from: fromTab,
+        to: toTab,
+        startTime: entryTime,
+        endTime: exitTime,
+        durationMs: duration,
+      );
+      
+      debugPrint('Left tab: $fromTab after ${duration}ms, going to: $toTab');
+    }
+  }
+  
+  void _sendTabTrackingData({
+    required String from,
+    required String to,
+    required DateTime startTime,
+    required DateTime endTime,
+    required int durationMs,
+  }) {
+    TrackingService.instance.track("tab_changed", {
+      "from": from,
+      "to": to,
+      "tab_from_departure_time": startTime.toIso8601String(),
+      "tab_from_arrival_time": endTime.toIso8601String(),
+      "activity_happened_at": DateTime.now().toIso8601String()
+    });
+    
+    
+  }
+
+  void _handleTabChange(int newIndex) {
+    if (newIndex == _selectedScreenIndex) return; 
+    
+    _stopAndTrackCurrentTab(newIndex);
+    
+    setState(() {
+      _selectedScreenIndex = newIndex;
+    });
+    
+    _startTrackingCurrentTab();
+  }
+
   @override
   void dispose() {
+    // Track the final tab when leaving the screen
+    if (_currentTabEntryTime != null) {
+      final exitTime = DateTime.now();
+      final duration = exitTime.difference(_currentTabEntryTime!).inMilliseconds;
+      
+      TrackingService.instance.track("tab_changed", {
+        "from": tabs[_selectedScreenIndex]!,
+        "to": null,
+        "tab_from_departure_time": _currentTabEntryTime!.toIso8601String(),
+        "tab_from_arrival_time": exitTime.toIso8601String(),
+        "activity_happened_at": DateTime.now().toIso8601String()
+      });
+      
+      debugPrint('Exited app from tab: ${tabs[_selectedScreenIndex]} after ${duration}ms');
+    }
+    
     _scrollController.dispose();
     super.dispose();
   }
-
-  Map<int, String> tabs = {0: 'Home', 1: 'Matching', 2: 'Videos', 3: 'Profile'};
 
   @override
   Widget build(BuildContext context) {
@@ -255,18 +353,10 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     return BottomNavigationBar(
       backgroundColor: backgroundColor,
       currentIndex: _selectedScreenIndex,
-      onTap: (index) {
-        TrackingService.instance.track("tab_changed", {
-          "from": tabs[_selectedScreenIndex],
-          "to": tabs[index],
-        });
-        setState(() {
-          _selectedScreenIndex = index;
-        });
-      },
+      onTap: _handleTabChange,
       selectedItemColor: selectedColor,
       unselectedItemColor: unselectedColor,
-      type: BottomNavigationBarType.fixed, // Fixed prevents shifting
+      type: BottomNavigationBarType.fixed,
       showSelectedLabels: true,
       showUnselectedLabels: true,
       items: [
@@ -406,10 +496,11 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         future: getInitials(),
         builder: (context, snapshot) {
           // Use local variables from snapshot or from state
-          final profilePic = profilePicture ?? snapshot.data?['profile_picture'];
+          final profilePic =
+              profilePicture ?? snapshot.data?['profile_picture'];
           final firstName = firstname ?? snapshot.data?['firstname'];
           final lastName = lastname ?? snapshot.data?['lastname'];
-      
+
           if (profilePic != null && profilePic.isNotEmpty) {
             // Show circular profile picture
             return InkWell(
@@ -420,18 +511,17 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                 decoration: BoxDecoration(
                   border:
                       Border.all(color: GlobalColors.primaryColor, width: 2.0),
-                  borderRadius:
-                      BorderRadius.circular(15), // Half of 30 for perfect circle
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(15), // Half of 30 for perfect circle
+                  borderRadius: BorderRadius.circular(15),
                   child: CachedNetworkImage(
                     imageUrl: profilePic,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => CircleAvatar(
                       radius: 15,
-                      backgroundColor: GlobalColors.primaryColor.withOpacity(0.3),
+                      backgroundColor:
+                          GlobalColors.primaryColor.withOpacity(0.3),
                       child: Text(
                         '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
                         '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
@@ -482,8 +572,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       ),
     );
   }
-
-  //
 
   Future<Map<String, String?>> getInitials() async {
     String? profilePicture =
@@ -582,7 +670,20 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                         child: TextField(
                           maxLines: 1,
                           controller: searchValue,
-                          onChanged: (value) => _onSearchChange(),
+                          onChanged: (value) {
+                            if (value.trim().isEmpty) {
+                              ref
+                                  .read(paginatedProfilesProvider.notifier)
+                                  .clearSearch();
+                            } else {
+                              ref
+                                  .read(paginatedProfilesProvider.notifier)
+                                  .searchProfiles(
+                                    filterOption: searchAttribute,
+                                    filterValue: value,
+                                  );
+                            }
+                          },
                           style: TextStyle(
                             color: isLightTheme ? Colors.black87 : Colors.white,
                             fontSize: 14,
@@ -636,12 +737,15 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                             isLightTheme ? Colors.grey[600] : Colors.grey[400],
                         size: 20,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           isSearchVisible = false;
                           searchValue.clear();
-                          _onSearchChange();
                         });
+
+                        await ref
+                            .read(paginatedProfilesProvider.notifier)
+                            .clearSearch();
                       },
                     ),
                   ),

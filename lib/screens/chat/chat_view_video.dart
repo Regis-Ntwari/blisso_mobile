@@ -41,6 +41,7 @@ class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
         description: videoState.data['caption'],
         likes: videoState.data['likes'],
         shares: videoState.data['shares'],
+        views: videoState.data['views'],
         peopleLiked: videoState.data['people_liked'],
         likedThisStory: videoState.data['liked_this_story']);
     return SafeArea(

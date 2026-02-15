@@ -1,3 +1,4 @@
+import 'dart:async'; // Add this import for Timer
 import 'dart:convert';
 import 'dart:math';
 
@@ -14,6 +15,7 @@ import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/stories/delete_story_provider.dart';
+import 'package:blisso_mobile/services/video-post/watching_time_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -38,6 +40,11 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   String nickname = '';
   bool isLiked = false;
   bool isSendingReply = false;
+  
+  // Time tracking variables
+  DateTime? _storyViewStartTime;
+  Timer? _storyViewTimer;
+  bool _isTrackingCurrentStory = false;
 
   @override
   void initState() {
@@ -72,6 +79,9 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   }
 
   void _loadStory() {
+    // Start tracking the new story
+    _startTrackingCurrentStory();
+    
     if (stories[currentIndex]['post_type'] == 'VIDEO') {
       _videoController = VideoPlayerController.networkUrl(
           Uri.parse(stories[currentIndex]['post_file_url']))
@@ -79,7 +89,52 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
           setState(() {});
           _videoController!.play();
         });
+    } else {
+      // For images, set a timer to simulate viewing time
+      // Images don't have a natural "end" like videos, so we'll track based on time spent
+      _setupImageTracking();
     }
+  }
+  
+  void _startTrackingCurrentStory() {
+    // Stop tracking previous story if any
+    _stopAndSendTracking();
+    
+    // Start tracking current story
+    _storyViewStartTime = DateTime.now();
+    _isTrackingCurrentStory = true;
+    
+    debugPrint('Started tracking story ${stories[currentIndex]['id']} at $_storyViewStartTime');
+  }
+  
+  void _setupImageTracking() {
+    // For images, we'll track until user moves to next/previous story
+    // No additional setup needed as tracking is handled by _startTrackingCurrentStory
+    // and will be stopped when navigating away
+  }
+  
+  void _stopAndSendTracking() {
+    if (!_isTrackingCurrentStory || _storyViewStartTime == null) return;
+    
+    final endTimestamp = DateTime.now();
+    final storyId = stories[currentIndex]['id'];
+    
+    // Here you can send the tracking data to your backend
+    // You can use a provider or directly call an API
+    _sendTrackingData(storyId, _storyViewStartTime!, endTimestamp);
+    
+    debugPrint('Stopped tracking story $storyId: start=$_storyViewStartTime, end=$endTimestamp');
+    
+    // Reset tracking variables
+    _isTrackingCurrentStory = false;
+    _storyViewStartTime = null;
+  }
+  
+  void _sendTrackingData(String storyId, DateTime startTime, DateTime endTime) {
+    ref.read(watchingTimeServiceProviderImpl.notifier).watchVideo(storyId, startTime, endTime);
+    
+    // You can create a new provider for tracking or use an existing one
+    debugPrint('Tracking data for story $storyId: startTime=${startTime}; endTime=${endTime}');
   }
 
   Future<void> getNickname() async {
@@ -91,6 +146,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   }
 
   void _nextStory() {
+    _stopAndSendTracking();
+    
     if (currentIndex < stories.length - 1) {
       setState(() {
         currentIndex++;
@@ -98,11 +155,13 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
         _loadStory();
       });
     } else {
-      Navigator.pop(context); // Close story view when finished
+      Navigator.pop(context); 
     }
   }
 
   void _previousStory() {
+    _stopAndSendTracking();
+    
     if (currentIndex > 0) {
       setState(() {
         currentIndex--;
@@ -206,6 +265,28 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     }
   }
 
+  String formatCompactNumber(int value) {
+    if (value < 1000) return value.toString();
+
+    String format(num number, String suffix) {
+      String formatted = number.toStringAsFixed(1);
+      if (formatted.endsWith('.0')) {
+        formatted = formatted.substring(0, formatted.length - 2);
+      }
+      return '$formatted$suffix';
+    }
+
+    if (value < 1000000) {
+      return format(value / 1000, 'k');
+    }
+
+    if (value < 1000000000) {
+      return format(value / 1000000, 'M');
+    }
+
+    return format(value / 1000000000, 'B');
+  }
+
   TextEditingController replyController = TextEditingController();
 
   void _handleLike() {
@@ -222,6 +303,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
 
   @override
   void dispose() {
+    _stopAndSendTracking();
     _videoController?.dispose();
     super.dispose();
   }
@@ -276,7 +358,10 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                     left: 10,
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        _stopAndSendTracking();
+                        Navigator.pop(context);
+                      },
                     ),
                   ),
                   if (stories[currentIndex]['nickname'] == nickname)
@@ -609,7 +694,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '${stories[currentIndex]['likes'] ?? 0}',
+                                  '${formatCompactNumber(stories[currentIndex]['likes'])}',
                                   style: const TextStyle(fontSize: 16),
                                 ),
                                 const SizedBox(
@@ -617,6 +702,18 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                                 ),
                                 const Icon(
                                   Icons.favorite,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 20,),
+                                Text(
+                                  '${formatCompactNumber(stories[currentIndex]['views'])}',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                const Icon(
+                                  Icons.remove_red_eye,
                                   size: 20,
                                 ),
                               ],

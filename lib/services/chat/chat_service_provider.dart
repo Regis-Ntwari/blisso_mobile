@@ -41,10 +41,7 @@ class ChatServiceProvider extends StateNotifier<ApiState> {
   for (int chatIndex = 0; chatIndex < updatedChats.length; chatIndex++) {
     final chat = Map<String, dynamic>.from(updatedChats[chatIndex]);
 
-    print("--- Replacing seen message ----");
-
     if (chat['username'] == chatKey) {
-      print("--- found discussion ---");
       final List messages = List.from(chat['messages']);
 
       for (int i = 0; i < messages.length; i++) {

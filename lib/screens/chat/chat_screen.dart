@@ -449,6 +449,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   Widget _buildChatListContent() {
     final chatState = ref.watch(chatServiceProviderImpl);
 
+    ref.listen(chatServiceProviderImpl, (previous, next) {
+      if (next.data != null && mounted) {
+        _updateFilteredChats(next.data!);
+      }
+    });
+
     if (chatState.isLoading) {
       return const LoadingScreen();
     }
@@ -539,12 +545,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   children: [
                     // First tab - Chat List
                     _buildChatListContent(),
-                
+
                     // Second tab - Message Requests
                     !_canViewRequests
                         ? _buildPremiumOverlay(
                             child: const ChatMessageRequest(),
-                            message: 'Upgrade your plan to view message requests',
+                            message:
+                                'Upgrade your plan to view message requests',
                           )
                         : const ChatMessageRequest(),
                   ],

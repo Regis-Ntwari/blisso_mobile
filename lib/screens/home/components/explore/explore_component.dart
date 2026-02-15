@@ -1,4 +1,5 @@
 import 'package:blisso_mobile/screens/home/components/explore/components/feed_video_controller_manager.dart';
+import 'package:blisso_mobile/services/video-post/watching_time_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:blisso_mobile/services/stories/paginated_video_post_provider.dart';
@@ -63,6 +64,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
         description: v['caption'] ?? '',
         likes: v['likes'] ?? 0,
         shares: v['shares'] ?? 0,
+        views: v['views'] ?? 0,
         peopleLiked: v['people_liked'] ?? [],
         likedThisStory: v['liked_this_story'] ?? false,
       );
@@ -78,6 +80,9 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
           video: videos[index],
           videoController: _manager.get(index),
           isActive: index == _currentIndex,
+          onTimeTrack: (startTimestamp, endTimestamp) => ref
+              .read(watchingTimeServiceProviderImpl.notifier)
+              .watchVideo(videos[index].id, startTimestamp, endTimestamp),
         );
       },
     );

@@ -222,6 +222,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  country_search:
+    dependency: "direct main"
+    description:
+      name: country_search
+      sha256: "75d434b3821113ee4c1733cfe5ea2575c23115e7f59bbcfa9f688a02831a9786"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.8.5"
   cross_file:
     dependency: transitive
     description:

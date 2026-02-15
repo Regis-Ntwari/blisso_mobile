@@ -29,10 +29,11 @@ class WebSocketNotifier extends StateNotifier<String> {
   void sendMessage(ChatMessageModel messageModel) {
     try {
       _webSocketService.sendMessage(messageModel);
-      ref
-          .read(chatServiceProviderImpl.notifier)
-          .addMessage(messageModel.toMap());
-
+      if (messageModel.action != 'typing') {
+        ref
+            .read(chatServiceProviderImpl.notifier)
+            .addMessage(messageModel.toMap());
+      }
       state = 'Sent: ${messageModel.toMap()}';
       debugPrint('Message sent');
     } catch (e) {
@@ -45,8 +46,9 @@ class WebSocketNotifier extends StateNotifier<String> {
       dynamic receivedMessage = jsonDecode(message);
       print(receivedMessage);
       if (receivedMessage['action'] == 'typing') {
-        print("typing---");
-        ref.read(typingStatusProvider.notifier).updateTypingStatus(receivedMessage['sender'], true);
+        ref
+            .read(typingStatusProvider.notifier)
+            .updateTypingStatus(receivedMessage['sender'], true);
       } else {
         if (receivedMessage['action'] == 'edited') {
           String? username =

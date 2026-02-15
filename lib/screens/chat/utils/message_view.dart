@@ -135,9 +135,6 @@ class _MessageViewState extends ConsumerState<MessageView> {
                           : const SizedBox.shrink(),
                       InkWell(
                         onTap: () async{
-                          // showPictureBytesDialog(
-                          //     context: context,
-                          //     image: widget.message['content_file']);
                           String username = await SharedPreferencesService.getPreference('username');
                           String chatUser =
                               username == widget.message['sender']
@@ -146,7 +143,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
 
                           ref.read(byteImageProviderImpl.notifier).updateState(widget.message['content_file']);
                           Routemaster.of(context)
-                              .push('/homepage/chat-detail/$chatUser/image-viewer?url=hellothere&bytes=true');
+                              .push('/homepage/chat-detail/$chatUser/image-viewer?url=hellothere&isProfilePic=false&isMe=false&bytes=true');
                           
                         },
                         child: SizedBox(

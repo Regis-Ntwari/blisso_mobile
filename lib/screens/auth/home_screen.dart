@@ -3,7 +3,6 @@ import 'package:blisso_mobile/components/button_component.dart';
 import 'package:blisso_mobile/components/loading_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/components/success_snackbar_component.dart';
-import 'package:blisso_mobile/components/text_input_component.dart';
 import 'package:blisso_mobile/services/auth/user_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -221,11 +220,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Logo
-                        SizedBox(
-                          height: height * 0.08,
-                          child: Image.asset(
-                            'assets/images/blisso.png',
-                            fit: BoxFit.contain,
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: SizedBox(
+                            height: height * 0.08,
+                            child: Image.asset(
+                              'assets/images/blisso.png',
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                         

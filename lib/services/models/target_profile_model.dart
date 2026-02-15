@@ -20,6 +20,9 @@ class TargetProfileModel {
   bool? loginCodeEnabled;
   String? homeAddress;
   String? profilePictureUri;
+  String? nationality;
+  String? residenceCountry;
+  String? residenceCity;
   String? feeling;
   File? profilePic;
   Map<String, dynamic>? subscription;
@@ -38,6 +41,9 @@ class TargetProfileModel {
       this.showMe,
       this.nickname,
       this.dob,
+      this.nationality,
+      this.residenceCity,
+      this.residenceCountry,
       this.location,
       this.latitude,
       this.longitude,
@@ -83,7 +89,9 @@ class TargetProfileModel {
       'location': location,
       'latitude': latitude,
       'longitude': longitude,
-      'home_address': homeAddress,
+      'nationality': nationality,
+      'residence_country': residenceCountry,
+      'residence_city': residenceCity,
       'distance_measure': distanceMeasure,
       'push_notifications': pushNotifications,
       'hide_profile': hideProfile,
@@ -102,7 +110,9 @@ class TargetProfileModel {
       'location': location,
       'latitude': latitude,
       'longitude': longitude,
-      'home_address': homeAddress,
+      'nationality': nationality,
+      'residence_country': residenceCountry,
+      'residence_city': residenceCity,
       'distance_measure': distanceMeasure,
       'push_notifications': pushNotifications,
       'hide_profile': hideProfile,
@@ -123,6 +133,9 @@ class TargetProfileModel {
             : null,
         showMe: map['show_me'] != null ? map['show_me'] as String : null,
         nickname: map['nickname'] != null ? map['nickname'] as String : null,
+        nationality: map['nationality'] != null ? map['nationality'] as String : null,
+        residenceCity: map['residence_city'] != null ? map['residence_city'] as String : null,
+        residenceCountry: map['residence_country'] != null ? map['residence_country'] as String : null,
         dob: map['dob'] != null ? map['dob'] as String : null,
         location: map['location'] != null ? map['location'] as String : null,
         latitude: map['latitude'] != null ? map['latitude'] as String : null,

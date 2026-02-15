@@ -193,7 +193,7 @@ class _ShareStoryModalState extends ConsumerState<ShareStoryModal> {
                         onTap: () async{
                           final shareRef = ref.read(updateStoryShareCountProviderImpl.notifier);
 
-                          await shareRef.updateStoryShareCount(int.parse(widget.story.id));
+                          shareRef.updateStoryShareCount(int.parse(widget.story.id), messageRequestRef.data[username]['username']);
                           shareVideo(messageRequestRef.data[username]
                               ['username']);
                         },

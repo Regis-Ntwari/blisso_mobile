@@ -8,6 +8,7 @@ class ShortStoryModel {
   final String profilePicture;
   final String videoUrl;
   final String description;
+  int views;
   int likes;
   int shares;
   final List<dynamic> peopleLiked;
@@ -24,6 +25,7 @@ class ShortStoryModel {
     required this.peopleLiked,
     required this.shares,
     required this.likedThisStory,
+    required this.views
   });
 
   ShortStoryModel copyWith({
@@ -37,6 +39,7 @@ class ShortStoryModel {
     int? shares,
     List<dynamic>? peopleLiked,
     bool? likedThisStory,
+    int? views
   }) {
     return ShortStoryModel(
         id: id ?? this.id,
@@ -47,6 +50,7 @@ class ShortStoryModel {
         description: description ?? this.description,
         likes: likes ?? this.likes,
         shares: shares ?? this.shares,
+        views: views ?? this.views,
         peopleLiked: peopleLiked ?? this.peopleLiked,
         likedThisStory: likedThisStory ?? this.likedThisStory);
   }
@@ -72,8 +76,9 @@ class ShortStoryModel {
         profilePicture: map['profile_picture'] as String,
         videoUrl: map['post_file_url'] as String,
         description: map['description'] as String,
-        likes: map['likes'] as int? ?? 0,
-        shares: map['shares'] as int? ?? 0,
+        likes: map['likes'] as int,
+        views: map['views'] as int,
+        shares: map['shares'] as int,
         peopleLiked: map['people_liked'] as List<dynamic>,
         likedThisStory: map['liked_this_story'] as bool);
   }

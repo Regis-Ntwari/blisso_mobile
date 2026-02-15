@@ -361,9 +361,21 @@ class _TargetProfileComponentState
                         isFirst: true,
                       ),
                       _buildInfoRow(
-                        label: 'Home Address',
+                        label: 'Nationality',
                         value:
-                            targetProfile.homeAddress.toString().toUpperCase(),
+                            targetProfile.nationality.toString().toUpperCase(),
+                        isLast: true,
+                      ),
+                      _buildInfoRow(
+                        label: 'Residence Country',
+                        value:
+                            targetProfile.residenceCountry.toString().toUpperCase(),
+                        isLast: true,
+                      ),
+                      _buildInfoRow(
+                        label: 'Residence City',
+                        value:
+                            targetProfile.residenceCity.toString().toUpperCase(),
                         isLast: true,
                       ),
                     ],
@@ -737,23 +749,23 @@ class _TargetProfileComponentState
                                                       ),
                                                     ),
                                                   ),
-                                                  Positioned(
-                                                    bottom: 8,
-                                                    left: 8,
-                                                    right: 8,
-                                                    child: Text(
-                                                      'Video ${index + 1}',
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
+                                                  // Positioned(
+                                                  //   bottom: 8,
+                                                  //   left: 8,
+                                                  //   right: 8,
+                                                  //   child: Text(
+                                                  //     'Video ${index + 1}',
+                                                  //     style: const TextStyle(
+                                                  //       color: Colors.white,
+                                                  //       fontSize: 10,
+                                                  //       fontWeight:
+                                                  //           FontWeight.w500,
+                                                  //     ),
+                                                  //     maxLines: 1,
+                                                  //     overflow:
+                                                  //         TextOverflow.ellipsis,
+                                                  //   ),
+                                                  // ),
                                                 ],
                                               ),
                                             ),

@@ -51,7 +51,8 @@ class _ExpandablePillsState extends State<ExpandablePillsComponent> {
                 child: Text(
                   "View less",
                   style: TextStyle(
-                      color: Colors.blue, fontWeight: FontWeight.w600),
+                    fontSize: 12,
+                      color: Colors.white, fontWeight: FontWeight.w600),
                 ),
               ),
             )

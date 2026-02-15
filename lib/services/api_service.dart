@@ -33,17 +33,17 @@ class ApiService {
         return ApiResponse.success(
           result: decodedData['data'],
           pagination: decodedData['pagination'],
-          statusCode: decodedData['status_code'],
+          statusCode: int.parse(decodedData['status_code'].toString()) ,
         );
       } else {
         return ApiResponse.failure(
             errorMessage: decodedData['message'],
-            statusCode: decodedData['status_code']);
+            statusCode: int.parse(decodedData['status_code'].toString()));
       }
     } catch (e) {
       return ApiResponse.failure(
           errorMessage: decodedData['message'],
-          statusCode: decodedData['status_code']);
+          statusCode: int.parse(decodedData['status_code'].toString()));
     }
   }
 
