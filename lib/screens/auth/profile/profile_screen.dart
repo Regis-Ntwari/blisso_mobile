@@ -32,8 +32,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _dayController = TextEditingController();
   final _monthController = TextEditingController();
   final _yearController = TextEditingController();
-  final _homeAddressController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  // Location fields
+  final _residenceCountryController = TextEditingController();
+  final _residenceCityController = TextEditingController();
+  final _nationalityController = TextEditingController();
 
   String chosenGender = '';
   String chosenSex = '';
@@ -43,18 +47,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final FocusNode _monthFocusNode = FocusNode();
   final FocusNode _yearFocusNode = FocusNode();
 
-  late Map<int, Widget> profile;
-
   int _index = 1;
 
   final List<String> genders = ['MALE', 'FEMALE'];
-  final List<String> statuses = ['MARRIED', 'SINGLE', 'WIDOWED', 'DIVORCED'];
+  final List<String> statuses = ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'];
   final List<String> sexes = ['MEN', 'WOMEN', 'EVERYONE'];
 
   Position? position;
-
   String? address;
-
   File? _profilePicture;
 
   @override
@@ -87,18 +87,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void saveProfile(BuildContext context) async {
     final profile = ProfileModel(
-        nickname: _nicknameController.text,
-        dob:
-            '${_yearController.text}-${_monthController.text}-${_dayController.text}',
-        // location: address == null ? '' : address!,
-        latitude: position!.latitude.toString(),
-        longitude: position!.longitude.toString(),
-        profilePic: _profilePicture!,
-        gender: chosenGender.toLowerCase(),
-        showMe: chosenSex.toLowerCase(),
-        homeAddress: _homeAddressController.text,
-        maritalStatus: chosenStatus.toLowerCase(),
-        lang: capitalize('ENGLISH'));
+      nickname: _nicknameController.text,
+      dob: '${_yearController.text}-${_monthController.text}-${_dayController.text}',
+      latitude: position!.latitude.toString(),
+      longitude: position!.longitude.toString(),
+      profilePic: _profilePicture!,
+      gender: chosenGender.toLowerCase(),
+      showMe: chosenSex.toLowerCase(),
+      residenceCountry: _residenceCountryController.text,
+      residenceCity: _residenceCityController.text,
+      nationality: _nationalityController.text,
+      maritalStatus: chosenStatus.toLowerCase(),
+      lang: capitalize('ENGLISH'),
+    );
 
     await ref.read(profileServiceProviderImpl.notifier).createProfile(profile);
 
@@ -113,13 +114,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _dayController.dispose();
     _monthController.dispose();
     _yearController.dispose();
     _dayFocusNode.dispose();
     _monthFocusNode.dispose();
     _yearFocusNode.dispose();
+    _nicknameController.dispose();
+    _residenceCountryController.dispose();
+    _residenceCityController.dispose();
+    _nationalityController.dispose();
     super.dispose();
   }
 
@@ -127,130 +131,106 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final userState = ref.watch(profileServiceProviderImpl);
     final locationState = ref.watch(locationServiceProviderImpl);
-
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+
     return SafeArea(
-        child: Scaffold(
-            backgroundColor:
-                isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              leading: IconButton(
-                  onPressed: () {
-                    Routemaster.of(context).pop();
-                  },
+      child: Scaffold(
+        backgroundColor:
+            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: _index > 1
+              ? IconButton(
+                  onPressed: () => setState(() => _index = _index - 1),
                   icon: Icon(
                     Icons.keyboard_arrow_left,
                     color: GlobalColors.secondaryColor,
+                    size: 28,
+                  ))
+              : IconButton(
+                  onPressed: () => Routemaster.of(context).pop(),
+                  icon: Icon(
+                    Icons.keyboard_arrow_left,
+                    color: GlobalColors.secondaryColor,
+                    size: 28,
                   )),
-            ),
-            body: userState.isLoading || locationState.isLoading
-                ? const LoadingScreen()
-                : SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10.0, right: 10),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (_index == 1)
-                            NicknameComponent(
-                              formKey: _nicknameFormKey,
-                              controller: _nicknameController,
-                              onContinue: () => setState(() {
-                                _index = _index + 1;
-                              }),
-                            )
-                          else if (_index == 2)
-                            DobComponent(
-                              dayController: _dayController,
-                              dayFocusNode: _dayFocusNode,
-                              monthController: _monthController,
-                              monthFocusNode: _monthFocusNode,
-                              yearController: _yearController,
-                              yearFocusNode: _yearFocusNode,
-                              formKey: _formKey,
-                              onTap: () => setState(() {
-                                _index = _index + 1;
-                              }),
-                            )
-                          else if (_index == 3)
-                            GenderComponent(
-                                key: ValueKey(chosenGender),
-                                genders: genders,
-                                chosenGender: chosenGender,
-                                changeGender: (gender) {
-                                  setState(() {
-                                    chosenGender = gender;
-                                  });
-                                },
-                                onContinue: () {
-                                  setState(() {
-                                    _index = _index + 1;
-                                  });
-                                })
-                          else if (_index == 4)
-                            SexualOrientationComponent(
-                                sexes: sexes,
-                                chosenSex: chosenSex,
-                                onContinue: () {
-                                  setState(() {
-                                    _index = _index + 1;
-                                  });
-                                },
-                                changeSex: (sex) {
-                                  setState(() {
-                                    chosenSex = sex;
-                                  });
-                                })
-                          else if (_index == 5)
-                            LocationComponent(
-                              onChangeAddress: changeAddress,
-                              onChangePosition: changePosition,
-                              location: position,
-                              homeAddress: _homeAddressController,
-                              onContinue: () {
-                                setState(() {
-                                  _index = _index + 1;
-                                });
-                              },
-                            )
-                          else if (_index == 6)
-                            ImageComponent(
-                              changeProfilePicture: changeProfilePicture,
-                              profilePicture: _profilePicture,
-                              onContinue: () {
-                                setState(() {
-                                  _index = _index + 1;
-                                });
-                              },
-                            )
-                          else if (_index == 7)
-                            MaritalStatusComponent(
-                                /*sexes: sexes,
-                          chosenSex: chosenSex,
-                          onContinue: () {
-                            setState(() {
-                              _index = _index + 1;
-                            });
+        ),
+        body: userState.isLoading || locationState.isLoading
+            ? const LoadingScreen()
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10.0, right: 10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (_index == 1)
+                        NicknameComponent(
+                          formKey: _nicknameFormKey,
+                          controller: _nicknameController,
+                          onContinue: () => setState(() => _index = _index + 1),
+                        )
+                      else if (_index == 2)
+                        DobComponent(
+                          dayController: _dayController,
+                          dayFocusNode: _dayFocusNode,
+                          monthController: _monthController,
+                          monthFocusNode: _monthFocusNode,
+                          yearController: _yearController,
+                          yearFocusNode: _yearFocusNode,
+                          formKey: _formKey,
+                          onTap: () => setState(() => _index = _index + 1),
+                        )
+                      else if (_index == 3)
+                        GenderComponent(
+                          key: ValueKey(chosenGender),
+                          genders: genders,
+                          chosenGender: chosenGender,
+                          changeGender: (gender) {
+                            setState(() => chosenGender = gender);
                           },
-                          changeSex: (sex) {
-                            setState(() {
-                              chosenSex = sex;
-                            });
-                          } */
-                                statuses: statuses,
-                                chosenStatus: chosenStatus,
-                                changeStatus: (status) {
-                                  setState(() {
-                                    chosenStatus = status;
-                                  });
-                                },
-                                onContinue: () => saveProfile(context))
-                          else if (_index == 8)
-                            const SubscriptionScreen()
-                        ],
-                      ),
-                    ),
-                  )));
+                          onContinue: () => setState(() => _index = _index + 1),
+                        )
+                      else if (_index == 4)
+                        SexualOrientationComponent(
+                          sexes: sexes,
+                          chosenSex: chosenSex,
+                          onContinue: () => setState(() => _index = _index + 1),
+                          changeSex: (sex) => setState(() => chosenSex = sex),
+                        )
+                      else if (_index == 5)
+                        LocationComponent(
+                          onChangeAddress: changeAddress,
+                          onChangePosition: changePosition,
+                          location: position,
+                          homeAddress: _residenceCityController, // kept for compat
+                          residenceCountryController: _residenceCountryController,
+                          residenceCityController: _residenceCityController,
+                          nationalityController: _nationalityController,
+                          onContinue: () => setState(() => _index = _index + 1),
+                        )
+                      else if (_index == 6)
+                        ImageComponent(
+                          changeProfilePicture: changeProfilePicture,
+                          profilePicture: _profilePicture,
+                          onContinue: () => setState(() => _index = _index + 1),
+                        )
+                      else if (_index == 7)
+                        MaritalStatusComponent(
+                          statuses: statuses,
+                          chosenStatus: chosenStatus,
+                          changeStatus: (status) {
+                            setState(() => chosenStatus = status);
+                          },
+                          onContinue: () => saveProfile(context),
+                        )
+                      else if (_index == 8)
+                        const SubscriptionScreen()
+                    ],
+                  ),
+                ),
+              ),
+      ),
+    );
   }
 }

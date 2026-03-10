@@ -39,6 +39,8 @@ class EventQueue {
         ),
       );
 
+      print(res);
+
       if (res.statusCode == 200) {
         for (final e in batch) {
           await e.delete();
