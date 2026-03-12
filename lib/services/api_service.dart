@@ -58,6 +58,8 @@ class ApiService {
 
     dynamic response;
 
+    print("Making GET request to ${isChat ? configs['CHAT_URL'] : configs['BACKEND_URL']}/$endpoint with token: $token");
+
     try {
       if (!isChat) {
         response = await http.get(

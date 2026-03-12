@@ -15,88 +15,88 @@ class ExpandablePillsComponent extends StatefulWidget {
 }
 
 class _ExpandablePillsState extends State<ExpandablePillsComponent> {
-  bool expanded = false;
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final chips = widget.items.map((name) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 6, bottom: 6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: widget.color,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              name,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final textColor = isLight ? Colors.black : Colors.white;
+
+    Widget buildChip(String label) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: widget.color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: widget.color.withOpacity(0.4), width: 1),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: widget.color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    }
+
+    Widget buildToggle(String label, VoidCallback onTap) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: textColor.withOpacity(0.2),
+              width: 1,
             ),
           ),
-        );
-      }).toList();
-
-      // EXPANDED VIEW → show all chips + View less
-      if (expanded) {
-        return Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            ...chips,
-            GestureDetector(
-              onTap: () => setState(() => expanded = false),
-              child: const Padding(
-                padding: EdgeInsets.only(left: 4, top: 6),
-                child: Text(
-                  "View less",
-                  style: TextStyle(
-                    fontSize: 12,
-                      color: Colors.white, fontWeight: FontWeight.w600),
-                ),
-              ),
-            )
-          ],
-        );
-      }
-
-      // COLLAPSED → SINGLE LINE
-      // COLLAPSED → SINGLE LINE
-      List<Widget> rowChildren = [];
-      double usedWidth = 0;
-      const double reservedForViewMore = 80;
-
-      for (var chip in chips) {
-        final width = _estimateChipWidth(chip);
-
-        if (usedWidth + width + reservedForViewMore > constraints.maxWidth) {
-          break;
-        }
-
-        rowChildren.add(chip);
-        usedWidth += width;
-      }
-
-// Determine if more items exist after the ones shown
-      bool hasHiddenItems = chips.length > rowChildren.length;
-
-// Add View More only when needed
-      if (hasHiddenItems) {
-        rowChildren.add(
-          GestureDetector(
-            onTap: () => setState(() => expanded = true),
-            child: const Text(
-              "View more",
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textColor.withOpacity(0.5),
             ),
           ),
-        );
-      }
+        ),
+      );
+    }
 
-      return Row(children: rowChildren);
-    });
+    if (_expanded) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          ...widget.items.map(
+            (name) => buildChip(name.toString()),
+          ),
+          buildToggle('Less ↑', () => setState(() => _expanded = false)),
+        ],
+      );
+    }
+
+    // Collapsed: show up to 3 chips + "N more" toggle if needed
+    const int maxVisible = 3;
+    final visible = widget.items.take(maxVisible).toList();
+    final hiddenCount = widget.items.length - maxVisible;
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        ...visible.map((name) => buildChip(name.toString())),
+        if (hiddenCount > 0)
+          buildToggle(
+            '+$hiddenCount more',
+            () => setState(() => _expanded = true),
+          ),
+      ],
+    );
   }
-
-  // A simple estimation that is accurate enough for pills
-  double _estimateChipWidth(Widget chip) => 90;
 }

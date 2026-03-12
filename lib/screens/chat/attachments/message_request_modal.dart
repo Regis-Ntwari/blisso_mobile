@@ -242,7 +242,7 @@ class _MessageRequestModalState extends ConsumerState<MessageRequestModal> {
                                       Navigator.pop(context);
 
                                       Routemaster.of(context)
-                                          .push('/chat-detail/$username');
+                                          .push('/homepage/chat-detail/$username');
                                     } else {
                                       sendContact(username);
                                       Navigator.pop(context);

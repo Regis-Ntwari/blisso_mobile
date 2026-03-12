@@ -64,7 +64,7 @@ class ProfileService {
       if (filterValue != null) 'filter_value=$filterValue',
     ].join('&');
 
-    return ApiService().getData('/profiles/?$query', accessToken);
+    return ApiService().getData('profiles/?$query', accessToken);
   }
 
   /* ---------------- OTHER METHODS (UNCHANGED) ---------------- */
