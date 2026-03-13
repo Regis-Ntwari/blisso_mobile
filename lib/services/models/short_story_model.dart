@@ -12,7 +12,7 @@ class ShortStoryModel {
   int likes;
   int shares;
   final List<dynamic> peopleLiked;
-  final bool likedThisStory;
+  bool likedThisStory;
 
   ShortStoryModel({
     required this.id,

@@ -1,42 +1,72 @@
+import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class FeedVideoControllerManager {
   final Map<int, VideoPlayerController> _controllers = {};
   final Map<int, bool> _initializing = {};
 
-  static const int maxControllers = 6;
+  // Keep more controllers alive — enough for smooth scrolling both ways
+  static const int _maxControllers = 9;
 
   VideoPlayerController? get(int index) => _controllers[index];
 
   bool has(int index) => _controllers.containsKey(index);
 
-  /// PRELOAD ONLY — never awaited from UI
+  /// Preload a video at [index]. Safe to call repeatedly — no-ops if already
+  /// initialised or currently initialising.
   void preload(int index, String url, {bool muted = true}) {
     if (_controllers.containsKey(index) || _initializing[index] == true) return;
+    if (url.isEmpty) return;
 
     _initializing[index] = true;
 
-    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    final ctrl = VideoPlayerController.networkUrl(
+      Uri.parse(url),
+      videoPlayerOptions: VideoPlayerOptions(
+        // Allows audio from multiple controllers simultaneously so we can
+        // preload neighbours without them accidentally making sound.
+        mixWithOthers: true,
+      ),
+    );
 
-    controller.initialize().then((_) {
-      controller.setLooping(true);
-      if (muted) controller.setVolume(0);
-
-      _controllers[index] = controller;
+    ctrl.initialize().then((_) {
+      ctrl.setLooping(true);
+      ctrl.setVolume(muted ? 0 : 1);
+      _controllers[index] = ctrl;
       _initializing.remove(index);
-
       _evictIfNeeded();
     }).catchError((_) {
       _initializing.remove(index);
+      ctrl.dispose();
     });
   }
 
+  /// Play the controller at [index]. If not yet initialised, attach a one-shot
+  /// listener that plays as soon as initialisation completes.
   void play(int index) {
-    final controller = _controllers[index];
-    if (controller == null || !controller.value.isInitialized) return;
+    final ctrl = _controllers[index];
+    if (ctrl == null) return;
 
-    controller.setVolume(1);
-    controller.play();
+    ctrl.setVolume(1);
+
+    if (ctrl.value.isInitialized) {
+      ctrl.play();
+    } else {
+      // Rare: controller exists but init not done yet — play on first update.
+      late VoidCallback listener;
+      listener = () {
+        if (ctrl.value.isInitialized && !ctrl.value.isPlaying) {
+          ctrl.play();
+          ctrl.removeListener(listener);
+        }
+      };
+      ctrl.addListener(listener);
+    }
+  }
+
+  void pause(int index) {
+    _controllers[index]?.pause();
+    _controllers[index]?.setVolume(0);
   }
 
   void pauseAllExcept(int active) {
@@ -48,9 +78,9 @@ class FeedVideoControllerManager {
     }
   }
 
+  /// Dispose controllers outside [min]..[max] (inclusive).
   void retainRange(int min, int max) {
-    final keys = _controllers.keys.toList();
-    for (final key in keys) {
+    for (final key in _controllers.keys.toList()) {
       if (key < min || key > max) {
         _controllers[key]?.dispose();
         _controllers.remove(key);
@@ -59,14 +89,13 @@ class FeedVideoControllerManager {
   }
 
   void _evictIfNeeded() {
-    if (_controllers.length <= maxControllers) return;
-
-    final keys = _controllers.keys.toList()..sort();
-    final excess = _controllers.length - maxControllers;
-
+    if (_controllers.length <= _maxControllers) return;
+    // Evict the lowest indices (furthest behind the current position)
+    final sorted = _controllers.keys.toList()..sort();
+    final excess = _controllers.length - _maxControllers;
     for (int i = 0; i < excess; i++) {
-      _controllers[keys[i]]?.dispose();
-      _controllers.remove(keys[i]);
+      _controllers[sorted[i]]?.dispose();
+      _controllers.remove(sorted[i]);
     }
   }
 

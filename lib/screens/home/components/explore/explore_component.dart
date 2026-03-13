@@ -20,55 +20,97 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
   int _currentIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Kick off an early preload once we have data — handled in build via
+    // _onFirstLoad(), called once when data arrives.
+  }
+
+  @override
   void dispose() {
     _manager.disposeAll();
     _pageController.dispose();
     super.dispose();
   }
 
+  List<ShortStoryModel> _mapVideos(List<dynamic> data) {
+    return data.map<ShortStoryModel>((v) {
+      return ShortStoryModel(
+        id: v['id'].toString(),
+        username: v['username'] as String? ?? '',
+        nickname: v['nickname'] as String? ?? '',
+        profilePicture: v['profile_picture_uri'] as String? ?? '',
+        videoUrl: v['post_file_url'] as String? ?? '',
+        description: v['caption'] as String? ?? '',
+        likes: (v['likes'] as num?)?.toInt() ?? 0,
+        shares: (v['shares'] as num?)?.toInt() ?? 0,
+        views: (v['views'] as num?)?.toInt() ?? 0,
+        peopleLiked: (v['people_liked'] as List?)?.cast<String>() ?? [],
+        likedThisStory: v['liked_this_story'] as bool? ?? false,
+      );
+    }).toList();
+  }
+
   void _onPageChanged(int index, List<ShortStoryModel> videos) {
     _currentIndex = index;
 
+    // Play current, silence/pause all others
     _manager.play(index);
     _manager.pauseAllExcept(index);
 
-    // Preload window
-    for (int i = index - 2; i <= index + 3; i++) {
+    // Wider preload window: 2 behind, 4 ahead
+    for (int i = index - 2; i <= index + 4; i++) {
       if (i >= 0 && i < videos.length) {
         _manager.preload(i, videos[i].videoUrl, muted: i != index);
       }
     }
 
-    _manager.retainRange(index - 4, index + 5);
+    // Keep a generous retention buffer so back-scrolling is instant too
+    _manager.retainRange(index - 3, index + 6);
 
-    if (index >= videos.length - 3) {
+    // Fetch next page earlier (when 5 from end instead of 3)
+    if (index >= videos.length - 5) {
       ref.read(paginatedVideoPostProvider.notifier).loadNextPage();
     }
   }
+
+  /// Called once when data first loads to prime the first few controllers
+  /// before the user even touches the screen.
+  void _primeFeed(List<ShortStoryModel> videos) {
+    for (int i = 0; i <= 3 && i < videos.length; i++) {
+      _manager.preload(i, videos[i].videoUrl, muted: i != 0);
+    }
+    // Auto-play index 0
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _manager.play(0);
+    });
+  }
+
+  bool _primed = false;
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(paginatedVideoPostProvider);
 
-    if (state.isLoading || state.data.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+    if (state.isLoading && state.data.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
-    final videos = state.data.map<ShortStoryModel>((v) {
-      return ShortStoryModel(
-        id: v['id'].toString(),
-        username: v['username'],
-        nickname: v['nickname'],
-        profilePicture: v['profile_picture_uri'],
-        videoUrl: v['post_file_url'],
-        description: v['caption'] ?? '',
-        likes: v['likes'] ?? 0,
-        shares: v['shares'] ?? 0,
-        views: v['views'] ?? 0,
-        peopleLiked: v['people_liked'] ?? [],
-        likedThisStory: v['liked_this_story'] ?? false,
+    if (state.data.isEmpty) {
+      return const Center(
+        child: Text('No videos yet'),
       );
-    }).toList();
+    }
+
+    final videos = _mapVideos(state.data);
+
+    // Prime controllers exactly once when data first arrives
+    if (!_primed) {
+      _primed = true;
+      _primeFeed(videos);
+    }
 
     return PageView.builder(
       controller: _pageController,
@@ -77,12 +119,13 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
       onPageChanged: (i) => _onPageChanged(i, videos),
       itemBuilder: (context, index) {
         return ShortStoryPlayer(
+          key: ValueKey(videos[index].id), // stable key prevents unnecessary rebuilds
           video: videos[index],
           videoController: _manager.get(index),
           isActive: index == _currentIndex,
-          onTimeTrack: (startTimestamp, endTimestamp) => ref
+          onTimeTrack: (start, end) => ref
               .read(watchingTimeServiceProviderImpl.notifier)
-              .watchVideo(videos[index].id, startTimestamp, endTimestamp),
+              .watchVideo(videos[index].id, start, end),
         );
       },
     );

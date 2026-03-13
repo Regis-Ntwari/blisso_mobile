@@ -111,7 +111,16 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: widget.statuses.isEmpty ? Center(
+              child: Text(
+                'No stories yet — be the first to share one!',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isLightTheme ? Colors.grey[500] : Colors.grey[500],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ) : ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: usernames.length,
                 itemBuilder: (context, index) {

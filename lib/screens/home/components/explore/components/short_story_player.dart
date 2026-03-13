@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/share_story_modal.dart';
@@ -22,7 +20,7 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
   final VideoPlayerController? videoController;
   final bool isActive;
   final bool showStory;
-  final Function(DateTime startTimestamp, DateTime endTimestamp)? onTimeTrack; // Callback for time tracking
+  final Function(DateTime startTimestamp, DateTime endTimestamp)? onTimeTrack;
 
   const ShortStoryPlayer({
     super.key,
@@ -30,7 +28,7 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
     this.videoController,
     required this.isActive,
     this.showStory = true,
-    this.onTimeTrack, // Optional callback
+    this.onTimeTrack,
   });
 
   @override
@@ -38,603 +36,436 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
 }
 
 class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
-  late VideoPlayerController _controller;
-  bool _isInitialized = false;
-  bool _isBuffering = false;
-  bool _isLoading = true;
-  bool isProfileLoading = false;
-  bool showCaption = false;
-  
-  // Time tracking variables
-  DateTime? _startTimestamp;
-  bool _isTracking = false;
-  Timer? _trackingTimer;
+  VideoPlayerController? _ctrl;
+  bool _initialized = false;
+  bool _buffering = false;
+
+  // Time tracking
+  DateTime? _trackStart;
+  bool _tracking = false;
+
+  bool _profileLoading = false;
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-
-    if (widget.videoController != null) {
-      _controller = widget.videoController!;
-      _isInitialized = _controller.value.isInitialized;
-      _isLoading = !_isInitialized;
-    } else {
-      _controller =
-          VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
-      _initializeController();
-    }
-
-    _controller.addListener(_handleVideoListener);
-
-    if (widget.isActive) {
-      _playIfReady();
-    }
-  }
-
-  Future<void> _initializeController() async {
-    try {
-      await _controller.initialize();
-      _controller.setLooping(true);
-
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Video init error: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _handleVideoListener() {
-    if (!mounted) return;
-
-    // Update buffering state
-    final isBuffering = _controller.value.isBuffering;
-    if (isBuffering != _isBuffering) {
-      setState(() => _isBuffering = isBuffering);
-    }
-
-    // Show loading if video hasn't started playing yet
-    if (!_controller.value.isPlaying &&
-        _controller.value.position == Duration.zero &&
-        !_isBuffering &&
-        _isInitialized) {
-      setState(() => _isLoading = true);
-    } else if (_controller.value.isPlaying || _isBuffering) {
-      setState(() => _isLoading = false);
-    }
-    
-    // Handle tracking when video starts/pauses
-    _handleTrackingOnVideoState();
-  }
-  
-  void _handleTrackingOnVideoState() {
-    if (!_isInitialized) return;
-    
-    if (_controller.value.isPlaying && !_isTracking) {
-      // Video started playing - start tracking
-      _startTracking();
-    } else if (!_controller.value.isPlaying && _isTracking) {
-      // Video paused - stop tracking and send data
-      _stopAndSendTracking();
-    }
-  }
-  
-  void _startTracking() {
-    if (!_isInitialized || _isTracking) return;
-    
-    _startTimestamp = DateTime.now();
-    _isTracking = true;
-    
-    // Optional: Set up a periodic timer to check if tracking should continue
-    _trackingTimer?.cancel();
-    _trackingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted || !_controller.value.isPlaying) {
-        timer.cancel();
-      }
-    });
-    
-    debugPrint('Started tracking video ${widget.video.id} at $_startTimestamp');
-  }
-  
-  void _stopAndSendTracking() {
-    if (!_isTracking || _startTimestamp == null) return;
-    
-    final endTimestamp = DateTime.now();
-    
-    // Call the callback if provided
-    if (widget.onTimeTrack != null) {
-      widget.onTimeTrack!(_startTimestamp!, endTimestamp);
-    }
-    
-    debugPrint('Stopped tracking video ${widget.video.id}: start=$_startTimestamp, end=$endTimestamp');
-    
-    // Reset tracking variables
-    _isTracking = false;
-    _startTimestamp = null;
-    
-    // Cancel any active timer
-    _trackingTimer?.cancel();
-    _trackingTimer = null;
-  }
-
-  void _handleLike() {
-    widget.video.likes = widget.video.likedThisStory
-        ? widget.video.likes - 1
-        : widget.video.likes + 1;
-    ref
-        .read(getVideoPostProviderImpl.notifier)
-        .likeVideoPost(int.parse(widget.video.id));
-    setState(() {});
-  }
-
-  Future<void> _playIfReady() async {
-    if (!_isInitialized) {
-      // Wait for initialization before playing
-      await _initializeController();
-    }
-
-    if (_isInitialized && !_controller.value.isPlaying) {
-      await _controller.play();
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _pauseIfPlaying() async {
-    if (_controller.value.isPlaying) {
-      await _controller.pause();
-    }
+    _attachController(widget.videoController);
   }
 
   @override
-  void didUpdateWidget(covariant ShortStoryPlayer oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void didUpdateWidget(covariant ShortStoryPlayer old) {
+    super.didUpdateWidget(old);
 
-    if (widget.isActive != oldWidget.isActive) {
-      widget.isActive ? _playIfReady() : _pauseIfPlaying();
+    // Controller handed from manager changed
+    if (widget.videoController != old.videoController) {
+      _detachController();
+      _attachController(widget.videoController);
     }
-  }
-  
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    
-    // Handle cases when the widget is removed from the tree (like swiping away)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted && _isTracking) {
-        _stopAndSendTracking();
-      }
-    });
+
+    // Active state changed
+    if (widget.isActive != old.isActive) {
+      widget.isActive ? _play() : _pause();
+    }
   }
 
   @override
   void dispose() {
-    // Stop tracking and send final data if still tracking
-    if (_isTracking) {
-      _stopAndSendTracking();
-    }
-    
-    // Cancel any pending timer
-    _trackingTimer?.cancel();
-    _trackingTimer = null;
-    
-    _controller.removeListener(_handleVideoListener);
-
-    if (widget.videoController == null) {
-      _controller.dispose();
-    }
-
+    _stopTracking();
+    _detachController();
     super.dispose();
   }
 
-  Widget _buildLoadingIndicator() {
-    return Stack(
+  // ── Controller management ─────────────────────────────────────────────────
+
+  void _attachController(VideoPlayerController? ctrl) {
+    if (ctrl == null) {
+      // Manager hasn't preloaded this slot yet — create our own controller.
+      final url = widget.video.videoUrl;
+      if (url.isEmpty) return;
+      final owned = VideoPlayerController.networkUrl(Uri.parse(url));
+      _ctrl = owned;
+      owned.initialize().then((_) {
+        if (!mounted) return;
+        owned.setLooping(true);
+        if (mounted) setState(() => _initialized = true);
+        if (widget.isActive) _play();
+      }).catchError((_) {
+        // Swallow — bad URL must never crash the player
+      });
+    } else {
+      _ctrl = ctrl;
+      // isInitialized may already be true if the manager finished preloading
+      _initialized = ctrl.value.isInitialized;
+    }
+
+    // Safe — _ctrl is guaranteed non-null here (unless url was empty)
+    _ctrl?.addListener(_onControllerUpdate);
+    if (widget.isActive && _initialized) _play();
+  }
+
+  void _detachController() {
+    _ctrl?.removeListener(_onControllerUpdate);
+    // Only dispose if we own the controller (no manager controller was passed)
+    if (widget.videoController == null) {
+      _ctrl?.dispose();
+    }
+    _ctrl = null;
+    _initialized = false;
+  }
+
+  // ── Playback ──────────────────────────────────────────────────────────────
+
+  void _play() {
+    if (_ctrl == null) return;
+    _ctrl!.setVolume(1);
+    if (_ctrl!.value.isInitialized) {
+      _ctrl!.play();
+    }
+    // If not yet initialised the manager's play() method handles it via listener
+  }
+
+  void _pause() {
+    _ctrl?.pause();
+    _ctrl?.setVolume(0);
+  }
+
+  // ── Controller listener ───────────────────────────────────────────────────
+
+  void _onControllerUpdate() {
+    if (!mounted || _ctrl == null) return;
+
+    final val = _ctrl!.value;
+
+    // Sync initialisation state
+    if (val.isInitialized && !_initialized) {
+      setState(() => _initialized = true);
+      if (widget.isActive) _play();
+    }
+
+    // Buffering
+    if (val.isBuffering != _buffering) {
+      setState(() => _buffering = val.isBuffering);
+    }
+
+    // Time tracking
+    if (val.isPlaying && !_tracking) {
+      _startTracking();
+    } else if (!val.isPlaying && _tracking) {
+      _stopTracking();
+    }
+  }
+
+  // ── Time tracking ─────────────────────────────────────────────────────────
+
+  void _startTracking() {
+    if (_tracking) return;
+    _trackStart = DateTime.now();
+    _tracking = true;
+  }
+
+  void _stopTracking() {
+    if (!_tracking || _trackStart == null) return;
+    final end = DateTime.now();
+    widget.onTimeTrack?.call(_trackStart!, end);
+    _tracking = false;
+    _trackStart = null;
+  }
+
+  // ── Like ──────────────────────────────────────────────────────────────────
+
+  void _handleLike() {
+    setState(() {
+      if (widget.video.likedThisStory) {
+        widget.video.likes -= 1;
+        widget.video.likedThisStory = false;
+      } else {
+        widget.video.likes += 1;
+        widget.video.likedThisStory = true;
+      }
+    });
+    ref
+        .read(getVideoPostProviderImpl.notifier)
+        .likeVideoPost(int.parse(widget.video.id));
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  String _compact(int v) {
+    if (v < 1000) return v.toString();
+    String fmt(num n, String s) {
+      final f = n.toStringAsFixed(1);
+      return '${f.endsWith('.0') ? f.substring(0, f.length - 2) : f}$s';
+    }
+    if (v < 1000000) return fmt(v / 1000, 'k');
+    if (v < 1000000000) return fmt(v / 1000000, 'M');
+    return fmt(v / 1000000000, 'B');
+  }
+
+  // ── Build helpers ─────────────────────────────────────────────────────────
+
+  Widget _shimmer(Widget child) {
+    if (_initialized) return child;
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[900]!,
+      highlightColor: Colors.grey[800]!, // 750 doesn't exist in Flutter's grey swatch
+      child: child,
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback? onTap,
+    double size = 28,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Icon(icon, color: color, size: size,
+          shadows: const [Shadow(blurRadius: 4, color: Colors.black54)]),
+    );
+  }
+
+  Widget _statLabel(String text) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        shadows: [Shadow(blurRadius: 3, color: Colors.black87)],
+      ),
+    );
+  }
+
+  // The right-side action column — all icons use the same 28 px size
+  // and are spaced with consistent SizedBox gaps so nothing misaligns.
+  Widget _buildActionColumn() {
+    const double iconSize = 28;
+    const double gap = 6;
+    const double sectionGap = 20;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Background shimmer for whole screen
-        Shimmer.fromColors(
-          baseColor: Colors.grey[900]!,
-          highlightColor: Colors.grey[800]!,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.black,
-          ),
-        ),
-        // Centered loading indicator
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: GlobalColors.primaryColor,
-                strokeWidth: 2,
+        // ── Profile avatar ──────────────────────────────────────────────
+        if (widget.showStory)
+          _shimmer(
+            GestureDetector(
+              onTap: _initialized ? _openProfile : null,
+              child: CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.grey[800],
+                child: _initialized
+                    ? CircleAvatar(
+                        radius: 21,
+                        backgroundImage: CachedNetworkImageProvider(
+                            widget.video.profilePicture),
+                        onBackgroundImageError: (_, __) {},
+                      )
+                    : null,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Loading video...',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 14,
+            ),
+          ),
+
+        if (widget.showStory) const SizedBox(height: sectionGap),
+
+        // ── Views ───────────────────────────────────────────────────────
+        _shimmer(Icon(Icons.remove_red_eye_outlined,
+            color: Colors.white, size: iconSize,
+            shadows: const [Shadow(blurRadius: 4, color: Colors.black54)])),
+        const SizedBox(height: gap),
+        _shimmer(_statLabel(_compact(widget.video.views))),
+
+        const SizedBox(height: sectionGap),
+
+        // ── Like ────────────────────────────────────────────────────────
+        _shimmer(_actionButton(
+          icon: widget.video.likedThisStory
+              ? Icons.favorite
+              : Icons.favorite_outline,
+          color: widget.video.likedThisStory
+              ? GlobalColors.primaryColor
+              : Colors.white,
+          onTap: _initialized ? _handleLike : null,
+          size: iconSize,
+        )),
+        const SizedBox(height: gap),
+        _shimmer(_statLabel(_compact(widget.video.likes))),
+
+        const SizedBox(height: sectionGap),
+
+        // ── Share ───────────────────────────────────────────────────────
+        _shimmer(_actionButton(
+          icon: Icons.reply, // cleaner than rotated send for a share action
+          color: Colors.white,
+          onTap: _initialized ? _onShare : null,
+          size: iconSize,
+        )),
+        const SizedBox(height: gap),
+        _shimmer(_statLabel(_compact(widget.video.shares))),
+
+        const SizedBox(height: sectionGap),
+
+        // ── Caption ─────────────────────────────────────────────────────
+        _shimmer(
+          GestureDetector(
+            onTap: _initialized ? _onCaption : null,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: GlobalColors.primaryColor,
+              ),
+              child: const Center(
+                child: Text(
+                  'CC',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildBufferingIndicator() {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: Center(
-        child: CircularProgressIndicator(
-          color: GlobalColors.primaryColor,
-          strokeWidth: 2,
-        ),
-      ),
-    );
-  }
+  // ── Action handlers ───────────────────────────────────────────────────────
 
-  Widget _buildVideoPlayer() {
-    return SizedBox.expand(
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: Container(
-          color: Colors.black,
-          child: SizedBox(
-            width: _controller.value.size.width,
-            height: _controller.value.size.height,
-            child: VideoPlayer(_controller),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerPlaceholder(Widget child) {
-    return !_isInitialized && _isLoading
-        ? Shimmer.fromColors(
-            baseColor: Colors.grey[900]!,
-            highlightColor: Colors.grey[800]!,
-            child: child,
-          )
-        : child;
-  }
-
-  String formatCompactNumber(int value) {
-    if (value < 1000) return value.toString();
-
-    String format(num number, String suffix) {
-      String formatted = number.toStringAsFixed(1);
-      if (formatted.endsWith('.0')) {
-        formatted = formatted.substring(0, formatted.length - 2);
-      }
-      return '$formatted$suffix';
+  Future<void> _openProfile() async {
+    if (!ref.read(permissionProviderImpl)['can_view_profile_detail']) {
+      showPopupComponent(
+          context: context,
+          icon: Icons.error,
+          message: 'Please upgrade your plan');
+      return;
     }
-
-    if (value < 1000000) {
-      return format(value / 1000, 'k');
+    setState(() => _profileLoading = true);
+    try {
+      await ref
+          .read(anyProfileServiceProviderImpl.notifier)
+          .getAnyProfile(widget.video.username);
+      if (!mounted) return;
+      final data = ref.read(anyProfileServiceProviderImpl).data;
+      ref.read(targetProfileProvider.notifier).updateTargetProfile(
+          TargetProfileModel.fromMap(data as Map<String, dynamic>));
+      Routemaster.of(context).push('/homepage/target-profile');
+    } catch (_) {
+      if (mounted) showSnackBar(context, 'Failed to load profile');
     }
-
-    if (value < 1000000000) {
-      return format(value / 1000000, 'M');
-    }
-
-    return format(value / 1000000000, 'B');
+    if (mounted) setState(() => _profileLoading = false);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Video or Loading Background
-        if (!_isInitialized || _isLoading)
-          _buildLoadingIndicator()
-        else
-          _buildVideoPlayer(),
+  void _onShare() {
+    if (ref.read(permissionProviderImpl)['can_share_video_post']) {
+      showShareVideoModal(context, widget.video);
+    } else {
+      showPopupComponent(
+          context: context, icon: Icons.error, message: 'Please upgrade your plan');
+    }
+  }
 
-        // Buffering overlay (on top of video)
-        if (_isBuffering && _isInitialized) _buildBufferingIndicator(),
-
-        // Right side action buttons
-        Positioned(
-          right: 2,
-          bottom: 100,
+  void _onCaption() {
+    if (!ref.read(permissionProviderImpl)['can_view_video_post_caption']) {
+      showPopupComponent(
+          context: context, icon: Icons.error, message: 'Please upgrade your plan');
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black.withOpacity(0.92),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile picture
-              if (widget.showStory)
-                _buildShimmerPlaceholder(
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.grey[800],
-                    child: !_isInitialized
-                        ? null
-                        : InkWell(
-                            onTap: () async {
-                              setState(() {
-                                isProfileLoading = true;
-                              });
-                              try {
-                                if (ref.read(permissionProviderImpl)[
-                                    'can_view_profile_detail']) {
-                                  final profileRef = ref.read(
-                                      anyProfileServiceProviderImpl.notifier);
-                                  await profileRef
-                                      .getAnyProfile(widget.video.username);
-
-                                  final targetProfile =
-                                      ref.read(targetProfileProvider.notifier);
-                                  final profileData =
-                                      ref.read(anyProfileServiceProviderImpl);
-
-                                  targetProfile.updateTargetProfile(
-                                      TargetProfileModel.fromMap(profileData
-                                          .data as Map<String, dynamic>));
-                                  setState(() {
-                                    isProfileLoading = false;
-                                  });
-                                  if (mounted) {
-                                    Routemaster.of(context)
-                                        .push('/homepage/target-profile');
-                                  } else {
-                                    showPopupComponent(
-                                        context: context,
-                                        icon: Icons.error,
-                                        message: 'Please upgrade your package');
-                                  }
-                                }
-                              } catch (e) {
-                                showSnackBar(context, 'Failed to load profile');
-                              } finally {
-                                if (mounted) {
-                                  setState(() {
-                                    isProfileLoading = false;
-                                  });
-                                }
-                              }
-                            },
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundImage: CachedNetworkImageProvider(
-                                widget.video.profilePicture,
-                              ),
-                              onBackgroundImageError: (_, __) {},
-                            ),
-                          ),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
-              _buildShimmerPlaceholder(
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(Icons.remove_red_eye),
-                ),
-              ),
-
-              // views count
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: _buildShimmerPlaceholder(
-                  Container(
-                    width: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      ' ${formatCompactNumber(widget.video.views)}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        shadows: _isInitialized
-                            ? [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.8),
-                                  blurRadius: 2,
-                                )
-                              ]
-                            : null,
-                      ),
-                    ),
+              // Handle
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 3,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-
-              const SizedBox(height: 14),
-
-              // Like button
-              _buildShimmerPlaceholder(
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: IconButton(
-                    onPressed: _isInitialized ? _handleLike : null,
-                    icon: Icon(
-                      widget.video.likedThisStory
-                          ? Icons.favorite
-                          : Icons.favorite_outline,
-                      color: widget.video.likedThisStory
-                          ? GlobalColors.primaryColor
-                          : Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Likes count
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: _buildShimmerPlaceholder(
-                  Container(
-                    width: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${formatCompactNumber(widget.video.likes)}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        shadows: _isInitialized
-                            ? [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.8),
-                                  blurRadius: 2,
-                                )
-                              ]
-                            : null,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Share button
-              _buildShimmerPlaceholder(
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: IconButton(
-                    onPressed: _isInitialized
-                        ? () {
-                            ref.read(permissionProviderImpl)[
-                                    'can_share_video_post']
-                                ? showShareVideoModal(context, widget.video)
-                                : showPopupComponent(
-                                    context: context,
-                                    icon: Icons.error,
-                                    message: 'Please upgrade your plan');
-                          }
-                        : null,
-                    icon: Transform.rotate(
-                      angle: 325 * (3.1415926535 / 180),
-                      child: Icon(
-                        color: Colors.white,
-                        Icons.send,
-                        size: 32,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Shares count
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: _buildShimmerPlaceholder(
-                  Container(
-                    width: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${formatCompactNumber(widget.video.shares)}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        shadows: _isInitialized
-                            ? [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.8),
-                                  blurRadius: 2,
-                                )
-                              ]
-                            : null,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Caption button
-              _buildShimmerPlaceholder(
-                InkWell(
-                  onTap: _isInitialized
-                      ? () {
-                          ref.read(permissionProviderImpl)[
-                                  'can_view_video_post_caption']
-                              ? showModalBottomSheet(
-                                  context: context,
-                                  backgroundColor:
-                                      Colors.black.withOpacity(0.6),
-                                  builder: (ctx) {
-                                    return SingleChildScrollView(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: Column(
-                                          children: [
-                                            Align(
-                                              alignment: Alignment.topRight,
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                icon: const Icon(
-                                                  Icons.close,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              widget.video.description,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                )
-                              : showPopupComponent(
-                                  context: context,
-                                  icon: Icons.error,
-                                  message: 'Please upgrade your plan');
-                        }
-                      : null,
-                  child: CircleAvatar(
-                    backgroundColor: GlobalColors.primaryColor,
-                    radius: 20,
-                    child: Text(
-                      'Caption',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+              Text(
+                widget.video.description.isEmpty
+                    ? 'No caption'
+                    : widget.video.description,
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 15, height: 1.6),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
 
-        // Profile loading indicator
-        if (isProfileLoading)
+  // ── Build ─────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // ── Video / loading ──────────────────────────────────────────────
+        Builder(builder: (context) {
+          final ctrl = _ctrl; // local for null-safe flow analysis
+          if (ctrl != null && _initialized) {
+            return Center(
+              child: AspectRatio(
+                aspectRatio: ctrl.value.aspectRatio,
+                child: VideoPlayer(ctrl),
+              ),
+            );
+          }
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[900]!,
+            highlightColor: Colors.grey[800]!,
+            child: const ColoredBox(color: Colors.black),
+          );
+        }),
+
+        // ── Buffering spinner ────────────────────────────────────────────
+        if (_buffering && _initialized)
           Container(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black45,
             child: const Center(
               child: CircularProgressIndicator(
-                color: Colors.white,
-              ),
+                  strokeWidth: 2, color: Colors.white),
+            ),
+          ),
+
+        // ── Right-side actions ───────────────────────────────────────────
+        Positioned(
+          right: 10,
+          bottom: bottomPad + 90,
+          child: _buildActionColumn(),
+        ),
+
+        // ── Profile loading overlay ──────────────────────────────────────
+        if (_profileLoading)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+              child: CircularProgressIndicator(color: Colors.white),
             ),
           ),
       ],
