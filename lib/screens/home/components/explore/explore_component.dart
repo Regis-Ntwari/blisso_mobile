@@ -13,7 +13,8 @@ class ExploreComponent extends ConsumerStatefulWidget {
   ConsumerState<ExploreComponent> createState() => _ExploreComponentState();
 }
 
-class _ExploreComponentState extends ConsumerState<ExploreComponent> {
+class _ExploreComponentState extends ConsumerState<ExploreComponent>
+    with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   final FeedVideoControllerManager _manager = FeedVideoControllerManager();
 
@@ -22,12 +23,43 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent> {
   @override
   void initState() {
     super.initState();
-    // Kick off an early preload once we have data — handled in build via
-    // _onFirstLoad(), called once when data arrives.
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// Pause all videos when app goes to background / another tab is shown.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _manager.pauseAll();
+    } else if (state == AppLifecycleState.resumed) {
+      // Only resume if this route is still on top
+      if (mounted) {
+        final route = ModalRoute.of(context);
+        if (route != null && route.isCurrent) {
+          _manager.play(_currentIndex);
+        }
+      }
+    }
+  }
+
+  /// Pause when another route is pushed on top of this one.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) {
+      _manager.pauseAll();
+    } else if (route != null && route.isCurrent && _primed) {
+      // Route came back into view — resume playback
+      _manager.play(_currentIndex);
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _manager.disposeAll();
     _pageController.dispose();
     super.dispose();

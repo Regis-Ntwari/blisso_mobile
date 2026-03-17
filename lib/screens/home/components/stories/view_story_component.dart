@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:blisso_mobile/components/expandable_text_component.dart';
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/components/snackbar_component.dart';
 import 'package:blisso_mobile/screens/home/components/stories/share_short_story_component.dart';
@@ -33,8 +32,6 @@ class ViewStoryComponent extends ConsumerStatefulWidget {
 
 class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   int _currentIndex = 0;
-
-  /// Controller pool — keeps current ± 1 alive for instant switching.
   final Map<int, VideoPlayerController> _controllers = {};
 
   List<Map<String, dynamic>> _stories = [];
@@ -47,9 +44,8 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   bool _sendingReply = false;
   bool _profileLoading = false;
 
-  // Tracking — stored as plain values, never touches `ref` after dispose
   DateTime? _trackStart;
-  int? _trackIndex; // which story index we are tracking
+  int? _trackIndex;
 
   final TextEditingController _replyCtrl = TextEditingController();
 
@@ -66,12 +62,11 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
 
   @override
   void dispose() {
-    // Flush tracking WITHOUT touching ref — ref may be invalid at this point.
-    // Tracking is best-effort; we skip the network call on dispose to avoid crashes.
     _trackStart = null;
     _trackIndex = null;
-
+    // Pause + dispose all controllers so nothing plays in background
     for (final c in _controllers.values) {
+      c.pause();
       c.dispose();
     }
     _controllers.clear();
@@ -84,12 +79,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   Future<void> _initPrefs() async {
     final nick = await SharedPreferencesService.getPreference('nickname') ?? '';
     final user = await SharedPreferencesService.getPreference('username') ?? '';
-    if (mounted) {
-      setState(() {
-        _nickname = nick;
-        _username = user;
-      });
-    }
+    if (mounted) setState(() { _nickname = nick; _username = user; });
   }
 
   // ── Data ─────────────────────────────────────────────────────────────────
@@ -98,15 +88,12 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     final params = Routemaster.of(context).currentRoute.queryParameters;
     final raw = params['data'];
     if (raw == null) return;
-
     try {
       _stories = List<Map<String, dynamic>>.from(jsonDecode(raw));
     } catch (_) {
       return;
     }
-
     if (_stories.isEmpty) return;
-
     _loaded = true;
     _preload(_currentIndex);
     _beginTracking(_currentIndex);
@@ -121,22 +108,20 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
       if (i >= 0 && i < _stories.length) keep.add(i);
     }
 
-    // Dispose controllers outside the window
     for (final k in _controllers.keys.toList()) {
       if (!keep.contains(k)) {
+        _controllers[k]?.pause();
         _controllers[k]?.dispose();
         _controllers.remove(k);
       }
     }
 
-    // Initialise missing video controllers
     for (final i in keep) {
       if (_stories[i]['post_type'] == 'VIDEO' && !_controllers.containsKey(i)) {
         _initController(i, playImmediately: i == center);
       }
     }
 
-    // Ensure current video is playing, neighbours paused
     for (final entry in _controllers.entries) {
       if (entry.key == center) {
         if (entry.value.value.isInitialized) entry.value.play();
@@ -149,38 +134,32 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   void _initController(int index, {required bool playImmediately}) {
     final url = _stories[index]['post_file_url'] as String? ?? '';
     if (url.isEmpty) return;
-
     final ctrl = VideoPlayerController.networkUrl(Uri.parse(url));
     _controllers[index] = ctrl;
-
     ctrl.initialize().then((_) {
       if (!mounted) return;
-      // Only play if this is still the active story
-      if (playImmediately && _currentIndex == index) {
-        ctrl.play();
-      }
+      if (playImmediately && _currentIndex == index) ctrl.play();
       setState(() {});
-    }).catchError((_) {
-      // Swallow — a broken URL should never freeze the screen
-    });
+    }).catchError((_) {});
   }
 
   // ── Navigation ───────────────────────────────────────────────────────────
 
-  /// The single entry point for all story navigation.
-  void _goTo(int index) {
-    _endTracking(); // flush tracking for current story
+  void _close() {
+    _endTracking();
+    // Pause the current video explicitly before popping
+    _controllers[_currentIndex]?.pause();
+    if (mounted) Navigator.of(context).pop();
+  }
 
+  void _goTo(int index) {
+    _endTracking();
     if (index < 0 || index >= _stories.length) {
+      _controllers[_currentIndex]?.pause();
       if (mounted) Navigator.of(context).pop();
       return;
     }
-
-    setState(() {
-      _currentIndex = index;
-      _liked = false; // reset per-story liked state
-    });
-
+    setState(() { _currentIndex = index; _liked = false; });
     _preload(index);
     _beginTracking(index);
   }
@@ -201,19 +180,14 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     final idx = _trackIndex!;
     _trackStart = null;
     _trackIndex = null;
-
-    // Guard: only call ref if still mounted
     if (!mounted) return;
     try {
       final storyId = _stories[idx]['id']?.toString() ?? '';
       if (storyId.isNotEmpty) {
-        ref
-            .read(watchingTimeServiceProviderImpl.notifier)
+        ref.read(watchingTimeServiceProviderImpl.notifier)
             .watchVideo(storyId, start, DateTime.now());
       }
-    } catch (_) {
-      // Best-effort — never crash on tracking
-    }
+    } catch (_) {}
   }
 
   // ── Like ─────────────────────────────────────────────────────────────────
@@ -225,17 +199,60 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     setState(() => _liked = !_liked);
   }
 
+  // ── Caption modal ─────────────────────────────────────────────────────────
+
+  void _showFullCaption(String caption) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black.withOpacity(0.92),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.4,
+        minChildSize: 0.2,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (_, scrollCtrl) => SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 3,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Text(
+                    caption,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 15, height: 1.6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Reply ────────────────────────────────────────────────────────────────
 
   String _hex12() {
-    final ts = DateTime.now()
-        .millisecondsSinceEpoch
-        .toRadixString(16)
-        .padLeft(16, '0');
+    final ts = DateTime.now().millisecondsSinceEpoch
+        .toRadixString(16).padLeft(16, '0');
     final rnd = List.generate(
-      4,
-      (_) => Random().nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ).join();
+        4, (_) => Random().nextInt(256).toRadixString(16).padLeft(2, '0')).join();
     return ts + rnd;
   }
 
@@ -243,8 +260,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     if (_sendingReply) return;
     setState(() => _sendingReply = true);
 
-    await ref
-        .read(addMessageRequestServiceProviderImpl.notifier)
+    await ref.read(addMessageRequestServiceProviderImpl.notifier)
         .sendMessageRequest(toUsername);
 
     if (!mounted) return;
@@ -259,50 +275,38 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
         if (!mounted) return;
         try {
           ref.read(webSocketNotifierProvider.notifier).sendMessage(
-                ChatMessageModel(
-                  messageId: _hex12(),
-                  parentId: _stories[_currentIndex]['id']?.toString() ?? '',
-                  parentContent: 'Story',
-                  contentFileType:
-                      _stories[_currentIndex]['id']?.toString() ?? '',
-                  sender: _username,
-                  receiver: toUsername,
-                  messageStatus: 'unseen',
-                  action: 'created',
-                  content: _replyCtrl.text,
-                  isFileIncluded: false,
-                  createdAt: DateTime.now().toUtc().toIso8601String(),
-                ),
-              );
+            ChatMessageModel(
+              messageId: _hex12(),
+              parentId: _stories[_currentIndex]['id']?.toString() ?? '',
+              parentContent: 'Story',
+              contentFileType: _stories[_currentIndex]['id']?.toString() ?? '',
+              sender: _username,
+              receiver: toUsername,
+              messageStatus: 'unseen',
+              action: 'created',
+              content: _replyCtrl.text,
+              isFileIncluded: false,
+              createdAt: DateTime.now().toUtc().toIso8601String(),
+            ),
+          );
           _replyCtrl.clear();
         } catch (_) {}
       } else if (resp.statusCode == 201) {
-        showPopupComponent(
-          context: context,
-          icon: Icons.verified,
-          iconColor: Colors.green[800],
-          message: 'Message request sent to $name!',
-        );
+        showPopupComponent(context: context, icon: Icons.verified,
+            iconColor: Colors.green[800],
+            message: 'Message request sent to $name!');
       } else {
-        showPopupComponent(
-          context: context,
-          icon: Icons.error,
-          iconColor: Colors.red,
-          message: resp.error ?? 'Something went wrong',
-        );
+        showPopupComponent(context: context, icon: Icons.error,
+            iconColor: Colors.red,
+            message: resp.error ?? 'Something went wrong');
       }
     } else {
-      showPopupComponent(
-        context: context,
-        icon: Icons.error,
-        message: resp.error ?? 'Something went wrong',
-      );
+      showPopupComponent(context: context, icon: Icons.error,
+          message: resp.error ?? 'Something went wrong');
     }
 
     if (mounted) setState(() => _sendingReply = false);
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
 
   String _compact(num v) {
     if (v < 1000) return v.toString();
@@ -322,9 +326,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     if (!_loaded || _stories.isEmpty) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(color: GlobalColors.primaryColor),
-        ),
+        body: Center(child: CircularProgressIndicator(color: GlobalColors.primaryColor)),
       );
     }
 
@@ -334,18 +336,25 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
     final videoCtrl = _controllers[_currentIndex];
     final topPad = MediaQuery.of(context).padding.top;
     final screenW = MediaQuery.of(context).size.width;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final alreadyLiked = (story['liked_this_story'] as bool? ?? false) || _liked;
 
-    final alreadyLiked =
-        (story['liked_this_story'] as bool? ?? false) || _liked;
+    final caption = story['caption'] as String?;
+    final canSeeCaption = ref.read(permissionProviderImpl)['can_view_short_story_caption'] as bool? ?? false;
+    final canReply = ref.read(permissionProviderImpl)['can_reply_short_story'] as bool? ?? false;
+
+    // Bottom bar height: used to correctly position author + caption above it
+    // own story bar ≈ 52 + bottomPad, others bar ≈ 64 + bottomPad
+    final bottomBarH = (isMyStory ? 52.0 : 64.0) + bottomPad;
 
     return Scaffold(
       backgroundColor: Colors.black,
-      // Prevent keyboard from pushing the layout
       resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Media (full screen, lowest layer) ──────────────────────────
+
+          // ── 1. Media ──────────────────────────────────────────────────────
           if (isVideo)
             videoCtrl != null && videoCtrl.value.isInitialized
                 ? Center(
@@ -354,28 +363,22 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                       child: VideoPlayer(videoCtrl),
                     ),
                   )
-                : const Center(
-                    child: CircularProgressIndicator(
-                        strokeWidth: 3, color: GlobalColors.primaryColor),
-                  )
+                : const Center(child: CircularProgressIndicator(
+                    strokeWidth: 3, color: GlobalColors.primaryColor))
           else
             CachedNetworkImage(
               imageUrl: story['post_file_url'] as String? ?? '',
               fit: BoxFit.contain,
-              placeholder: (_, __) => const Center(
-                child: CircularProgressIndicator(
-                    strokeWidth: 3, color: GlobalColors.primaryColor),
-              ),
+              placeholder: (_, __) => const Center(child: CircularProgressIndicator(
+                  strokeWidth: 3, color: GlobalColors.primaryColor)),
               errorWidget: (_, __, ___) => const Center(
-                child: Icon(Icons.broken_image, color: Colors.white38),
-              ),
+                  child: Icon(Icons.broken_image, color: Colors.white38)),
             ),
 
-          // ── 2. Left / right tap zones (explicit, not full-screen detector)
-          //       They sit above the media but BELOW all other UI elements.
+          // ── 2. Tap zones (prev / next) ────────────────────────────────────
           Positioned(
             top: 0,
-            bottom: isMyStory ? 70 : 110, // leave room for bottom bar
+            bottom: bottomBarH,
             left: 0,
             width: screenW * 0.35,
             child: GestureDetector(
@@ -386,7 +389,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
           ),
           Positioned(
             top: 0,
-            bottom: isMyStory ? 70 : 110,
+            bottom: bottomBarH,
             right: 0,
             width: screenW * 0.65,
             child: GestureDetector(
@@ -396,43 +399,38 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
             ),
           ),
 
-          // ── 3. Progress strips ─────────────────────────────────────────
+          // ── 3. Progress strips ────────────────────────────────────────────
           Positioned(
             top: topPad + 6,
             left: 10,
             right: 10,
             child: Row(
-              children: List.generate(_stories.length, (i) {
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    height: 2.5,
-                    decoration: BoxDecoration(
-                      color: i <= _currentIndex
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.38),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+              children: List.generate(_stories.length, (i) => Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  height: 2.5,
+                  decoration: BoxDecoration(
+                    color: i <= _currentIndex
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.38),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                );
-              }),
+                ),
+              )),
             ),
           ),
 
-          // ── 4. Close button ────────────────────────────────────────────
+          // ── 4. Close ──────────────────────────────────────────────────────
           Positioned(
             top: topPad + 16,
             left: 4,
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white, size: 22),
-              onPressed: () {
-                _endTracking();
-                Navigator.of(context).pop();
-              },
+              onPressed: _close,
             ),
           ),
 
-          // ── 5. More options (own story only) ───────────────────────────
+          // ── 5. More options (own story) ───────────────────────────────────
           if (isMyStory)
             Positioned(
               top: topPad + 16,
@@ -443,132 +441,151 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                 onSelected: (v) async {
                   setState(() => _profileLoading = true);
                   if (v == 'share') {
-                    if (ref.read(
-                        permissionProviderImpl)['can_share_short_story']) {
+                    if (ref.read(permissionProviderImpl)['can_share_short_story']) {
                       showShareShortStoryModal(context, story['id']);
                     } else {
-                      showPopupComponent(
-                          context: context,
-                          icon: Icons.error,
+                      showPopupComponent(context: context, icon: Icons.error,
                           message: 'Please upgrade your plan');
                     }
                   } else {
-                    await ref
-                        .read(deleteStoryProviderImpl.notifier)
-                        .deleteStory(story['id']);
-                    await ref
-                        .read(storiesServiceProviderImpl.notifier)
-                        .getStories();
+                    await ref.read(deleteStoryProviderImpl.notifier).deleteStory(story['id']);
+                    await ref.read(storiesServiceProviderImpl.notifier).getStories();
                     if (mounted) Navigator.of(context).pop();
                   }
                   if (mounted) setState(() => _profileLoading = false);
                 },
                 itemBuilder: (_) => [
-                  const PopupMenuItem(
-                    value: 'share',
-                    child: Text('Share Story',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete Story',
-                        style: TextStyle(color: Colors.redAccent)),
-                  ),
+                  const PopupMenuItem(value: 'share',
+                      child: Text('Share Story', style: TextStyle(color: Colors.white))),
+                  const PopupMenuItem(value: 'delete',
+                      child: Text('Delete Story', style: TextStyle(color: Colors.redAccent))),
                 ],
               ),
             ),
 
-          // ── 6. Caption ─────────────────────────────────────────────────
-          if (story['caption'] != null)
-            Positioned(
-              bottom: isMyStory ? 62 : 118,
-              left: 12,
-              right: 12,
-              child: IgnorePointer(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ExpandableTextComponent(
-                    text: ref.read(permissionProviderImpl)[
-                            'can_view_short_story_caption']
-                        ? story['caption'] as String
-                        : 'Upgrade to view caption',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+          // ── 6. Bottom overlay: author + caption stacked above bottom bar ──
+          //
+          //  Layout from bottom up:
+          //    [bottom bar]            ← fixed height = bottomBarH
+          //    [author chip]           ← 42px
+          //    [caption (max 3 lines)] ← variable, tap to expand
+          //
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: bottomBarH,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Caption (above author) ───────────────────────────────
+                if (caption != null && caption.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => _showFullCaption(
+                      canSeeCaption ? caption : 'Upgrade to view caption',
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              canSeeCaption ? caption : 'Upgrade to view caption',
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          // "more" hint if text likely overflows
+                          if (canSeeCaption && caption.length > 80)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 6),
+                              child: Text(
+                                'more',
+                                style: TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
 
-          // ── 7. Author chip ─────────────────────────────────────────────
-          Positioned(
-            bottom: isMyStory ? 46 : 106,
-            left: 12,
-            child: GestureDetector(
-              onTap: () async {
-                if (!ref
-                    .read(permissionProviderImpl)['can_view_profile_detail']) {
-                  showPopupComponent(
-                      context: context,
-                      icon: Icons.error,
-                      message: 'Please upgrade your plan');
-                  return;
-                }
-                setState(() => _profileLoading = true);
-                try {
-                  await ref
-                      .read(anyProfileServiceProviderImpl.notifier)
-                      .getAnyProfile(story['username'] as String);
-                  if (!mounted) return;
-                  final data = ref.read(anyProfileServiceProviderImpl).data;
-                  ref.read(targetProfileProvider.notifier).updateTargetProfile(
-                      TargetProfileModel.fromMap(
-                          data as Map<String, dynamic>));
-                  Routemaster.of(context).push('/homepage/target-profile');
-                } catch (_) {
-                  if (mounted) showSnackBar(context, 'Failed to load profile');
-                }
-                if (mounted) setState(() => _profileLoading = false);
-              },
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 17,
-                    backgroundImage: CachedNetworkImageProvider(
-                        story['profile_picture_uri'] as String? ?? ''),
-                    onBackgroundImageError: (_, __) {},
-                    child: story['profile_picture_uri'] == null
-                        ? const Icon(Icons.person, size: 16)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    isMyStory ? 'My Story' : story['nickname'] as String? ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      shadows: [
-                        Shadow(
-                            blurRadius: 4,
-                            color: Colors.black87,
-                            offset: Offset(0, 1))
+                // ── Author chip ──────────────────────────────────────────
+                GestureDetector(
+                  onTap: () async {
+                    if (!ref.read(permissionProviderImpl)['can_view_profile_detail']) {
+                      showPopupComponent(context: context, icon: Icons.error,
+                          message: 'Please upgrade your plan');
+                      return;
+                    }
+                    setState(() => _profileLoading = true);
+                    try {
+                      await ref.read(anyProfileServiceProviderImpl.notifier)
+                          .getAnyProfile(story['username'] as String);
+                      if (!mounted) return;
+                      final data = ref.read(anyProfileServiceProviderImpl).data;
+                      ref.read(targetProfileProvider.notifier).updateTargetProfile(
+                          TargetProfileModel.fromMap(data as Map<String, dynamic>));
+                      Routemaster.of(context).push('/homepage/target-profile');
+                    } catch (_) {
+                      if (mounted) showSnackBar(context, 'Failed to load profile');
+                    }
+                    if (mounted) setState(() => _profileLoading = false);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 17,
+                          backgroundImage: CachedNetworkImageProvider(
+                              story['profile_picture_uri'] as String? ?? ''),
+                          onBackgroundImageError: (_, __) {},
+                          child: story['profile_picture_uri'] == null
+                              ? const Icon(Icons.person, size: 16)
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isMyStory
+                              ? 'My Story'
+                              : story['nickname'] as String? ?? '',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            shadows: [Shadow(
+                                blurRadius: 4,
+                                color: Colors.black87,
+                                offset: Offset(0, 1))],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
-          // ── 8a. Bottom bar — others' story ─────────────────────────────
+          // ── 7a. Bottom bar — others' story ────────────────────────────────
           if (!isMyStory)
             Positioned(
               bottom: 0,
@@ -576,8 +593,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
               right: 0,
               child: Container(
                 color: Colors.black.withOpacity(0.55),
-                padding: EdgeInsets.fromLTRB(
-                    4, 6, 4, MediaQuery.of(context).padding.bottom + 10),
+                padding: EdgeInsets.fromLTRB(4, 6, 4, bottomPad + 10),
                 child: Row(
                   children: [
                     // Like
@@ -585,17 +601,14 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                       onPressed: _toggleLike,
                       icon: Icon(
                         alreadyLiked ? Icons.favorite : Icons.favorite_border,
-                        color: alreadyLiked
-                            ? GlobalColors.primaryColor
-                            : Colors.white,
+                        color: alreadyLiked ? GlobalColors.primaryColor : Colors.white,
                         size: 22,
                       ),
                     ),
 
                     // Reply field
                     Expanded(
-                      child: ref.read(
-                              permissionProviderImpl)['can_reply_short_story']
+                      child: canReply
                           ? Container(
                               height: 36,
                               decoration: BoxDecoration(
@@ -604,12 +617,10 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                               ),
                               child: TextField(
                                 controller: _replyCtrl,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 13),
+                                style: const TextStyle(color: Colors.white, fontSize: 13),
                                 decoration: const InputDecoration(
                                   hintText: 'Reply…',
-                                  hintStyle: TextStyle(
-                                      color: Colors.white38, fontSize: 13),
+                                  hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
                                   contentPadding: EdgeInsets.symmetric(
                                       vertical: 0, horizontal: 14),
                                   border: OutlineInputBorder(
@@ -622,17 +633,14 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                             )
                           : const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Text(
-                                'Upgrade to reply',
-                                style: TextStyle(
-                                    color: Colors.white38, fontSize: 12),
-                              ),
+                              child: Text('Upgrade to reply',
+                                  style: TextStyle(
+                                      color: Colors.white38, fontSize: 12)),
                             ),
                     ),
 
                     // Send
-                    if (ref.read(
-                        permissionProviderImpl)['can_reply_short_story'])
+                    if (canReply)
                       _sendingReply
                           ? const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 14),
@@ -660,7 +668,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
               ),
             ),
 
-          // ── 8b. Bottom bar — own story stats ───────────────────────────
+          // ── 7b. Bottom bar — own story stats ──────────────────────────────
           if (isMyStory)
             Positioned(
               bottom: 0,
@@ -668,38 +676,30 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
               right: 0,
               child: Container(
                 color: Colors.black.withOpacity(0.4),
-                padding: EdgeInsets.fromLTRB(
-                    0, 8, 0, MediaQuery.of(context).padding.bottom + 10),
+                padding: EdgeInsets.fromLTRB(0, 8, 0, bottomPad + 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      _compact(story['likes'] as num? ?? 0),
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                    ),
+                    Text(_compact(story['likes'] as num? ?? 0),
+                        style: const TextStyle(color: Colors.white, fontSize: 14)),
                     const SizedBox(width: 4),
-                    Icon(Icons.favorite,
-                        size: 16, color: GlobalColors.primaryColor),
+                    Icon(Icons.favorite, size: 16, color: GlobalColors.primaryColor),
                     const SizedBox(width: 18),
-                    Text(
-                      _compact(story['views'] as num? ?? 0),
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                    ),
+                    Text(_compact(story['views'] as num? ?? 0),
+                        style: const TextStyle(color: Colors.white, fontSize: 14)),
                     const SizedBox(width: 4),
-                    const Icon(Icons.remove_red_eye,
-                        size: 16, color: Colors.white60),
+                    const Icon(Icons.remove_red_eye, size: 16, color: Colors.white60),
                   ],
                 ),
               ),
             ),
 
-          // ── 9. Profile-loading overlay ─────────────────────────────────
+          // ── 8. Profile-loading overlay ────────────────────────────────────
           if (_profileLoading)
             Container(
               color: Colors.black54,
               child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
+                  child: CircularProgressIndicator(color: Colors.white)),
             ),
         ],
       ),

@@ -305,9 +305,10 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                   child: HomeComponent(
                     profiles: profilesState.data,
                     stories: fetchedStories,
+                    isLoading: profilesState.isLoading,
                   ),
                 ),
-                if (profilesState.isLoading)
+                if (profilesState.isLoading && profilesState.data.isNotEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(16),

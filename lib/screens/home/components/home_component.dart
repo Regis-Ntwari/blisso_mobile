@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 class HomeComponent extends StatelessWidget {
   final List<dynamic> profiles;
   final Map<String, List<dynamic>> stories;
+  final bool isLoading;
 
   const HomeComponent({
     super.key,
     required this.profiles,
     required this.stories,
+    this.isLoading = false,
   });
 
   @override
@@ -26,6 +28,15 @@ class HomeComponent extends StatelessWidget {
         // Posts / profiles section
         if (hasProfiles)
           ...profiles.map((profile) => PostCardComponent(profile: profile))
+        else if (isLoading)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: GlobalColors.primaryColor,
+              ),
+            ),
+          )
         else
           _EmptyPostsFeed(isLightTheme: isLightTheme),
       ],
@@ -78,24 +89,24 @@ class _EmptyPostsFeed extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () {
-              // Bubble up to HomepageScreen to switch to the Match tab (index 1)
-              // You can replace this with your navigation logic, e.g.:
-              // Routemaster.of(context).push('/homepage/matching');
-            },
-            icon: const Icon(Icons.explore_outlined),
-            label: const Text('Explore Matches'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: GlobalColors.primaryColor,
-              side: BorderSide(color: GlobalColors.primaryColor),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-          ),
+          // OutlinedButton.icon(
+          //   onPressed: () {
+          //     // Bubble up to HomepageScreen to switch to the Match tab (index 1)
+          //     // You can replace this with your navigation logic, e.g.:
+          //     // Routemaster.of(context).push('/homepage/matching');
+          //   },
+          //   icon: const Icon(Icons.explore_outlined),
+          //   label: const Text('Explore Matches'),
+          //   style: OutlinedButton.styleFrom(
+          //     foregroundColor: GlobalColors.primaryColor,
+          //     side: BorderSide(color: GlobalColors.primaryColor),
+          //     padding:
+          //         const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          //     shape: RoundedRectangleBorder(
+          //       borderRadius: BorderRadius.circular(24),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

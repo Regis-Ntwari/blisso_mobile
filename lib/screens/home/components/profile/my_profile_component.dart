@@ -672,61 +672,38 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                 color: GlobalColors.primaryColor,
                               ),
                             )
-                          : Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                // Add Snapshot Button
-                                _buildAddButton(
-                                  icon: Icons.add,
-                                  label: 'Add Snapshots',
-                                  onTap: () {
-                                    final snaps = ref.read(
-                                      addedSnapsProviderImpl.notifier,
-                                    );
-                                    snaps.reset();
-                                    for (var snap
-                                        in profileState.data['lifesnapshots']) {
-                                      snaps.addSnapshot(
-                                        snap,
-                                      );
-                                    }
-
-                                    print(ref.read(addedSnapsProviderImpl));
-                                    showSnapshotDialog(context, ref);
-                                  },
-                                ),
-                                // Snapshot Items
-                                ...profileState.data['lifesnapshots']
-                                    .map<Widget>((snapshot) {
-                                  return Chip(
-                                    backgroundColor: GlobalColors.primaryColor,
-                                    label: Text(
-                                      snapshot['name'],
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                    deleteIcon: Icon(
-                                      Icons.close,
-                                      size: 16,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                    onDeleted: () async {
-                                      await ref
-                                          .read(snapshotServiceProviderImpl
-                                              .notifier)
-                                          .deleteProfileSnapshot(
-                                              snapshot['lifesnapshot_id']);
-                                      ref
-                                          .read(myProfileServiceProviderImpl
-                                              .notifier)
-                                          .removeSnapshotById(
-                                              snapshot['lifesnapshot_id']);
-                                    },
+                          : _buildGroupedEditableSnapshots(
+                              snapshots:
+                                  profileState.data['lifesnapshots'],
+                              addButton: _buildAddButton(
+                                icon: Icons.add,
+                                label: 'Add Snapshots',
+                                onTap: () {
+                                  final snaps = ref.read(
+                                    addedSnapsProviderImpl.notifier,
                                   );
-                                }).toList(),
-                              ],
+                                  snaps.reset();
+                                  for (var snap
+                                      in profileState
+                                          .data['lifesnapshots']) {
+                                    snaps.addSnapshot(snap);
+                                  }
+                                  showSnapshotDialog(context, ref);
+                                },
                               ),
+                              onDelete: (snapshot) async {
+                                await ref
+                                    .read(snapshotServiceProviderImpl
+                                        .notifier)
+                                    .deleteProfileSnapshot(
+                                        snapshot['lifesnapshot_id']);
+                                ref
+                                    .read(myProfileServiceProviderImpl
+                                        .notifier)
+                                    .removeSnapshotById(
+                                        snapshot['lifesnapshot_id']);
+                              },
+                            ),
                     ),
 
                     const SizedBox(height: 16),
@@ -743,57 +720,39 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               expandedField == 'target' ? '' : 'target';
                         });
                       },
-                      expandedContent: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          // Add Target Button
-                          _buildAddButton(
-                            icon: Icons.add,
-                            label: 'Add Target Snapshot',
-                            onTap: () {
-                              ref
-                                  .read(addedTargetSnapsProviderImpl.notifier)
-                                  .reset();
-                              final snapTarget = ref
-                                  .read(addedTargetSnapsProviderImpl.notifier);
-                              for (var snap in profileState
-                                  .data['target_lifesnapshots']) {
-                                print(snap);
-                                snapTarget.addSnapshot(
-                                  snap,
-                                );
-                              }
-                              showTargetSnapshotDialog(context, ref);
-                            },
-                          ),
-                          // Target Snapshot Items
-                          ...profileState.data['target_lifesnapshots']
-                              .map<Widget>((snapshot) {
-                            return Chip(
-                              backgroundColor: GlobalColors.primaryColor,
-                              label: Text(
-                                '${snapshot['name']} - ${snapshot['target_scale']}/10',
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              deleteIcon: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                              onDeleted: () async {
-                                await ref
-                                    .read(snapshotServiceProviderImpl.notifier)
-                                    .deleteTargetSnapshot(
-                                        snapshot['lifesnapshot_id']);
-                                ref
-                                    .read(myProfileServiceProviderImpl.notifier)
-                                    .removeTargetSnapshot(
-                                        snapshot['lifesnapshot_id']);
-                              },
-                            );
-                          }).toList(),
-                        ],
+                      expandedContent: _buildGroupedEditableSnapshots(
+                        snapshots:
+                            profileState.data['target_lifesnapshots'],
+                        showScale: true,
+                        addButton: _buildAddButton(
+                          icon: Icons.add,
+                          label: 'Add Target Snapshot',
+                          onTap: () {
+                            ref
+                                .read(
+                                    addedTargetSnapsProviderImpl.notifier)
+                                .reset();
+                            final snapTarget = ref.read(
+                                addedTargetSnapsProviderImpl.notifier);
+                            for (var snap in profileState
+                                .data['target_lifesnapshots']) {
+                              snapTarget.addSnapshot(snap);
+                            }
+                            showTargetSnapshotDialog(context, ref);
+                          },
+                        ),
+                        onDelete: (snapshot) async {
+                          await ref
+                              .read(
+                                  snapshotServiceProviderImpl.notifier)
+                              .deleteTargetSnapshot(
+                                  snapshot['lifesnapshot_id']);
+                          ref
+                              .read(
+                                  myProfileServiceProviderImpl.notifier)
+                              .removeTargetSnapshot(
+                                  snapshot['lifesnapshot_id']);
+                        },
                       ),
                     ),
 
@@ -1013,6 +972,183 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
             ),
         ],
       ),
+    );
+  }
+
+  Map<String, Map<String, List<dynamic>>> _groupByCategoryAndSubCategory(
+      List<dynamic> snapshots) {
+    final Map<String, Map<String, List<dynamic>>> grouped = {};
+
+    for (final snap in snapshots) {
+      final category = snap['category']?.toString() ?? 'Other';
+      final subCategory = snap['sub_category']?.toString() ?? 'Other';
+      grouped.putIfAbsent(category, () => {});
+      grouped[category]!.putIfAbsent(subCategory, () => []);
+      grouped[category]![subCategory]!.add(snap);
+    }
+
+    return grouped;
+  }
+
+  Widget _buildGroupedEditableSnapshots({
+    required List<dynamic> snapshots,
+    required Widget addButton,
+    required Future<void> Function(dynamic snapshot) onDelete,
+    bool showScale = false,
+  }) {
+    final grouped = _groupByCategoryAndSubCategory(snapshots);
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        addButton,
+        const SizedBox(height: 16),
+        ...grouped.entries.map((categoryEntry) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: GlobalColors.primaryColor.withOpacity(0.15),
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: GlobalColors.primaryColor.withOpacity(0.1),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(13),
+                      topRight: Radius.circular(13),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.interests_rounded,
+                        size: 18,
+                        color: GlobalColors.primaryColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          categoryEntry.key,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: GlobalColors.primaryColor,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color:
+                              GlobalColors.primaryColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${categoryEntry.value.values.fold<int>(0, (sum, list) => sum + list.length)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: GlobalColors.primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Sub-categories
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children:
+                        categoryEntry.value.entries.map((subEntry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 3,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    color: GlobalColors.primaryColor
+                                        .withOpacity(0.5),
+                                    borderRadius:
+                                        BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  subEntry.key,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isLightTheme
+                                        ? Colors.black54
+                                        : Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 11),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: subEntry.value
+                                    .map<Widget>((snap) {
+                                  return Chip(
+                                    backgroundColor:
+                                        GlobalColors.primaryColor,
+                                    label: Text(
+                                      showScale
+                                          ? '${snap['name']} - ${snap['target_scale']}/10'
+                                          : snap['name'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    deleteIcon: Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color:
+                                          Colors.white.withOpacity(0.9),
+                                    ),
+                                    onDeleted: () => onDelete(snap),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity:
+                                        VisualDensity.compact,
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 

@@ -41,18 +41,159 @@ class _TargetProfileComponentState
     return false;
   }
 
-  Map<String, List<dynamic>> _groupBySubCategory(List<dynamic> snapshots) {
-    final Map<String, List<dynamic>> grouped = {};
+  Map<String, Map<String, List<dynamic>>> _groupByCategoryAndSubCategory(
+      List<dynamic> snapshots) {
+    final Map<String, Map<String, List<dynamic>>> grouped = {};
 
     for (final snap in snapshots) {
+      final category = snap['category']?.toString() ?? 'Other';
       final subCategory = snap['sub_category']?.toString() ?? 'Other';
-      if (!grouped.containsKey(subCategory)) {
-        grouped[subCategory] = [];
-      }
-      grouped[subCategory]!.add(snap);
+      grouped.putIfAbsent(category, () => {});
+      grouped[category]!.putIfAbsent(subCategory, () => []);
+      grouped[category]![subCategory]!.add(snap);
     }
 
     return grouped;
+  }
+
+  Widget _buildGroupedSnapshots(List<dynamic> snapshots) {
+    final grouped = _groupByCategoryAndSubCategory(snapshots);
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: grouped.entries.map((categoryEntry) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: GlobalColors.primaryColor.withOpacity(0.15),
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Category header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: GlobalColors.primaryColor.withOpacity(0.1),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(13),
+                    topRight: Radius.circular(13),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.interests_rounded,
+                      size: 18,
+                      color: GlobalColors.primaryColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        categoryEntry.key,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: GlobalColors.primaryColor,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: GlobalColors.primaryColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${categoryEntry.value.values.fold<int>(0, (sum, list) => sum + list.length)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: GlobalColors.primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Sub-categories
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: categoryEntry.value.entries.map((subEntry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 3,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color: GlobalColors.primaryColor
+                                      .withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                subEntry.key,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isLightTheme
+                                      ? Colors.black54
+                                      : Colors.white60,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 11),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children:
+                                  subEntry.value.map<Widget>((snap) {
+                                return Chip(
+                                  backgroundColor:
+                                      GlobalColors.primaryColor,
+                                  label: Text(
+                                    snap['name'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
   }
 
   Future<void> handleDMTap(BuildContext context) async {
@@ -398,67 +539,8 @@ class _TargetProfileComponentState
                         expandedField == 'interest' ? '' : 'interest';
                   });
                 },
-                expandedContent: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Group snapshots by sub_category
-                      ..._groupBySubCategory(targetProfile.lifesnapshots!)
-                          .entries
-                          .map((entry) => Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Sub-category title
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.category_rounded,
-                                            size: 18,
-                                            color: GlobalColors.primaryColor,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            entry.key,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: isLightTheme
-                                                  ? Colors.black87
-                                                  : Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // Wrap badges
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        ...entry.value.map((snap) => Chip(
-                                              backgroundColor:
-                                                  GlobalColors.primaryColor,
-                                              label: Text(
-                                                snap['name'],
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            )),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              )),
-                    ],
-                  ),
-                ),
+                expandedContent: _buildGroupedSnapshots(
+                    targetProfile.lifesnapshots!),
               ),
 
               const SizedBox(height: 16),
@@ -474,67 +556,8 @@ class _TargetProfileComponentState
                     expandedField = expandedField == 'target' ? '' : 'target';
                   });
                 },
-                expandedContent: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Group snapshots by sub_category
-                      ..._groupBySubCategory(targetProfile.targetLifesnapshots!)
-                          .entries
-                          .map((entry) => Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Sub-category title
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.category_rounded,
-                                            size: 18,
-                                            color: GlobalColors.primaryColor,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            entry.key,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: isLightTheme
-                                                  ? Colors.black87
-                                                  : Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // Wrap badges
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        ...entry.value.map((snap) => Chip(
-                                              backgroundColor:
-                                                  GlobalColors.primaryColor,
-                                              label: Text(
-                                                snap['name'],
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            )),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              )),
-                    ],
-                  ),
-                ),
+                expandedContent: _buildGroupedSnapshots(
+                    targetProfile.targetLifesnapshots!),
               ),
 
               const SizedBox(height: 24),

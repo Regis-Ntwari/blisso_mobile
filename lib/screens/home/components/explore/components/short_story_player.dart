@@ -35,7 +35,8 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
 }
 
-class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
+class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
+    with WidgetsBindingObserver {
   VideoPlayerController? _ctrl;
   bool _initialized = false;
   bool _buffering = false;
@@ -51,7 +52,34 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _attachController(widget.videoController);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _pause();
+    } else if (state == AppLifecycleState.resumed && widget.isActive) {
+      // Only resume the active item, and only if the route is on top
+      if (mounted) {
+        final route = ModalRoute.of(context);
+        if (route != null && route.isCurrent) _play();
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) {
+      _pause();
+    } else if (route != null && route.isCurrent && widget.isActive && _initialized) {
+      _play();
+    }
   }
 
   @override
@@ -72,6 +100,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _stopTracking();
     _detachController();
     super.dispose();

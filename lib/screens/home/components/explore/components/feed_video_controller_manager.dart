@@ -99,6 +99,13 @@ class FeedVideoControllerManager {
     }
   }
 
+  void pauseAll() {
+    for (final entry in _controllers.entries) {
+      entry.value.pause();
+      entry.value.setVolume(0);
+    }
+  }
+
   void disposeAll() {
     for (final c in _controllers.values) {
       c.dispose();

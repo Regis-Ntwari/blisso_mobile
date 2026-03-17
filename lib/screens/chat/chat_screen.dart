@@ -264,7 +264,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(60),
-          color: isLightTheme ? Colors.grey[100] : Colors.grey[900],
+          color: isLightTheme ? Colors.grey[100] : Color(0xFF020202),
         ),
         child: TextField(
           controller: _searchController,
