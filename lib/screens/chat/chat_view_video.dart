@@ -32,18 +32,21 @@ class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
       return const LoadingScreen();
     }
 
+    print('Video state data:');
+    print(videoState.data);
+
     final story = ShortStoryModel(
         id: videoState.data['id'].toString(),
         username: videoState.data['username'],
         nickname: videoState.data['nickname'],
         profilePicture: videoState.data['profile_picture_uri'],
         videoUrl: videoState.data['post_file_url'],
-        description: videoState.data['caption'],
-        likes: videoState.data['likes'],
-        shares: videoState.data['shares'],
-        views: videoState.data['views'],
-        peopleLiked: videoState.data['people_liked'],
-        likedThisStory: videoState.data['liked_this_story']);
+        description: videoState.data['caption'] ?? '',
+        likes: videoState.data['likes'] ?? 0,
+        shares: videoState.data['shares'] ?? 0,
+        views: videoState.data['views'] ?? 0,
+        peopleLiked: videoState.data['people_liked'] ?? [],
+        likedThisStory: videoState.data['liked_this_story'] ?? false);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.black,

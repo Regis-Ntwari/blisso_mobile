@@ -4,7 +4,7 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:country_search/country_search.dart';
+import 'package:country_picker/country_picker.dart';
 
 class MyProfileSettings extends ConsumerStatefulWidget {
   const MyProfileSettings({super.key});
@@ -39,9 +39,6 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
 
   final TextEditingController addressController = TextEditingController();
   final TextEditingController residenceCityController = TextEditingController();
-  
-  Country? _selectedNationality;
-  Country? _selectedResidenceCountry;
 
   @override
   void initState() {
@@ -287,28 +284,74 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
                     const SizedBox(height: 12),
                     
                     // Nationality
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: CountryPicker(
-                        selectedCountry: _selectedNationality,
-                        onCountrySelected: (Country country) {
-                          setState(() {
-                            _selectedNationality = country;
-                            nationality = country.getDisplayName(context).toUpperCase();
-                          });
-                        },
-                        showPhoneCodes: false,
-                        showCountryCodes: false,
-                        labelText: 'Nationality - ${_selectedNationality == null ? nationality : _selectedNationality?.getDisplayName(context).toUpperCase()}',
-                        hintText: 'Change your nationality',
-                        backgroundColor: isLightTheme ? Colors.white : Colors.black,
-                        textColor: isLightTheme ? Colors.black : Colors.white,
-                        accentColor: GlobalColors.primaryColor,
-                        itemHeight: 56,
-                        flagSize: 24,
-                        borderRadius: 8,
+                    InkWell(
+                      onTap: () {
+                        showCountryPicker(
+                          context: context,
+                          showPhoneCode: false,
+                          countryListTheme: CountryListThemeData(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
+                            ),
+                            inputDecoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              hintText: 'Search nationality',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          onSelect: (Country country) {
+                            setState(() {
+                              nationality = country.name.toUpperCase();
+                            });
+                          },
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Color(0xFF111111)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.flag_outlined,
+                              color: GlobalColors.primaryColor,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Nationality',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    nationality ?? 'Select nationality',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_drop_down_circle_outlined,
+                              color: Colors.grey.shade400,
+                              size: 18,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -321,27 +364,74 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
                 Column(
                   children: [
                     // Residence Country
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: CountryPicker(
-                        selectedCountry: _selectedResidenceCountry,
-                        onCountrySelected: (Country country) {
-                          setState(() {
-                            _selectedResidenceCountry = country;
-                          });
-                        },
-                        showPhoneCodes: false,
-                        showCountryCodes: false,
-                        labelText: 'Residence Country - ${_selectedResidenceCountry == null ? residenceCountry : _selectedResidenceCountry?.getDisplayName(context)}',
-                        hintText: 'Change your country of residence',
-                        backgroundColor: isLightTheme ? Colors.white : Colors.black,
-                        textColor: isLightTheme ? Colors.black : Colors.white,
-                        accentColor: GlobalColors.primaryColor,
-                        itemHeight: 56,
-                        flagSize: 24,
-                        borderRadius: 8,
+                    InkWell(
+                      onTap: () {
+                        showCountryPicker(
+                          context: context,
+                          showPhoneCode: false,
+                          countryListTheme: CountryListThemeData(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
+                            ),
+                            inputDecoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              hintText: 'Search country',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          onSelect: (Country country) {
+                            setState(() {
+                              residenceCountry = country.name;
+                            });
+                          },
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Color(0xFF111111)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.public_outlined,
+                              color: GlobalColors.primaryColor,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Residence Country',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    residenceCountry ?? 'Select country',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_drop_down_circle_outlined,
+                              color: Colors.grey.shade400,
+                              size: 18,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),

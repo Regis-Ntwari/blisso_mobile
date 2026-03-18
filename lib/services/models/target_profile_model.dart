@@ -200,7 +200,15 @@ class TargetProfileModel {
             ? map['login_code_enabled'] as bool
             : null,
         homeAddress:
-            map['home_address'] != null ? map['home_address'] as String : null);
+            map['home_address'] != null ? map['home_address'] as String : null,
+        nationality:
+            map['nationality'] != null ? map['nationality'] as String : null,
+        residenceCountry: map['residence_country'] != null
+            ? map['residence_country'] as String
+            : null,
+        residenceCity: map['residence_city'] != null
+            ? map['residence_city'] as String
+            : null);
   }
 
   factory TargetProfileModel.fromMapNew(Map<String, dynamic> map) {
