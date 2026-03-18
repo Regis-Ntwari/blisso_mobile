@@ -10,7 +10,7 @@ final paginatedProfilesProvider =
 );
 
 class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
-  PaginatedProfilesNotifier(this.ref) : super(PaginatedState());
+  PaginatedProfilesNotifier(this.ref) : super(PaginatedState(isLoading: true));
 
   final Ref ref;
 
