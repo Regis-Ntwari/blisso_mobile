@@ -3,7 +3,8 @@ import 'package:video_player/video_player.dart';
 
 class FeedVideoControllerManager {
   final Map<int, VideoPlayerController> _controllers = {};
-  final Map<int, bool> _initializing = {};
+  final Map<int, VideoPlayerController> _initializing = {};
+  bool _disposed = false;
 
   // Keep more controllers alive — enough for smooth scrolling both ways
   static const int _maxControllers = 9;
@@ -15,10 +16,9 @@ class FeedVideoControllerManager {
   /// Preload a video at [index]. Safe to call repeatedly — no-ops if already
   /// initialised or currently initialising.
   void preload(int index, String url, {bool muted = true}) {
-    if (_controllers.containsKey(index) || _initializing[index] == true) return;
+    if (_disposed) return;
+    if (_controllers.containsKey(index) || _initializing.containsKey(index)) return;
     if (url.isEmpty) return;
-
-    _initializing[index] = true;
 
     final ctrl = VideoPlayerController.networkUrl(
       Uri.parse(url),
@@ -29,11 +29,17 @@ class FeedVideoControllerManager {
       ),
     );
 
+    _initializing[index] = ctrl;
+
     ctrl.initialize().then((_) {
+      _initializing.remove(index);
+      if (_disposed) {
+        ctrl.dispose();
+        return;
+      }
       ctrl.setLooping(true);
       ctrl.setVolume(muted ? 0 : 1);
       _controllers[index] = ctrl;
-      _initializing.remove(index);
       _evictIfNeeded();
     }).catchError((_) {
       _initializing.remove(index);
@@ -107,10 +113,20 @@ class FeedVideoControllerManager {
   }
 
   void disposeAll() {
+    _disposed = true;
+    // Pause all immediately to stop audio before async dispose completes
+    for (final c in _controllers.values) {
+      c.pause();
+      c.setVolume(0);
+    }
     for (final c in _controllers.values) {
       c.dispose();
     }
     _controllers.clear();
+    // Dispose any controllers still initializing
+    for (final c in _initializing.values) {
+      c.dispose();
+    }
     _initializing.clear();
   }
 }

@@ -229,6 +229,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   void _handleTabChange(int newIndex) {
     if (newIndex == _selectedScreenIndex) return; 
     
+    // Immediately pause videos when leaving the Explore tab
+    ref.read(exploreTabActiveProvider.notifier).state = (newIndex == 2);
+    
     _stopAndTrackCurrentTab(newIndex);
     
     setState(() {
@@ -240,6 +243,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
 
   @override
   void dispose() {
+    ref.read(exploreTabActiveProvider.notifier).state = false;
+    
     // Track the final tab when leaving the screen
     if (_currentTabEntryTime != null) {
       final exitTime = DateTime.now();

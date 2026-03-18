@@ -6,6 +6,9 @@ import 'package:blisso_mobile/services/stories/paginated_video_post_provider.dar
 import 'package:blisso_mobile/services/models/short_story_model.dart';
 import 'package:blisso_mobile/screens/home/components/explore/components/short_story_player.dart';
 
+/// Whether the Explore (videos) tab is currently the active tab.
+final exploreTabActiveProvider = StateProvider<bool>((ref) => false);
+
 class ExploreComponent extends ConsumerStatefulWidget {
   const ExploreComponent({super.key});
 
@@ -123,6 +126,16 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(paginatedVideoPostProvider);
+
+    // Pause/resume immediately when the tab changes — fires before the widget
+    // is removed from the tree on the next frame.
+    ref.listen<bool>(exploreTabActiveProvider, (prev, next) {
+      if (!next) {
+        _manager.pauseAll();
+      } else if (next && _primed) {
+        _manager.play(_currentIndex);
+      }
+    });
 
     if (state.isLoading && state.data.isEmpty) {
       return const Center(
