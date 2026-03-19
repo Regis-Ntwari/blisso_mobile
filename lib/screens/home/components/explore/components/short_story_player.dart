@@ -99,6 +99,16 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   }
 
   @override
+  void deactivate() {
+    // Fires immediately when the element is removed from the tree (during
+    // build), before dispose(). Ensures audio stops the instant the tab
+    // switches — not at end-of-frame like dispose().
+    _pause();
+    _stopTracking();
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _stopTracking();
@@ -136,6 +146,10 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
 
   void _detachController() {
     _ctrl?.removeListener(_onControllerUpdate);
+    // Always pause before detaching — platform-side audio cleanup is async,
+    // so dispose() alone may not silence the audio instantly.
+    _ctrl?.pause();
+    _ctrl?.setVolume(0);
     // Only dispose if we own the controller (no manager controller was passed)
     if (widget.videoController == null) {
       _ctrl?.dispose();

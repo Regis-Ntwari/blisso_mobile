@@ -61,6 +61,14 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
   }
 
   @override
+  void deactivate() {
+    // Fires during build when the element is removed from the tree — earlier
+    // than dispose(). Stops audio the instant the tab switches.
+    _manager.pauseAll();
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _manager.disposeAll();
@@ -117,7 +125,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
     }
     // Auto-play index 0
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _manager.play(0);
+      if (mounted) _manager.play(0);
     });
   }
 

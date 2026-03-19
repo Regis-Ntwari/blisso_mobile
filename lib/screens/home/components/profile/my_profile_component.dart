@@ -570,6 +570,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                                         .getMyProfile();
                                                   },
                                                   onTap: () {
+                                                    print(videoPostState.data[index]['id']);
                                                     Routemaster.of(context)
                                                         .push(
                                                       '/homepage/profile/video-player?id=${Uri.encodeComponent(videoPostState.data[index]['id'].toString())}',
