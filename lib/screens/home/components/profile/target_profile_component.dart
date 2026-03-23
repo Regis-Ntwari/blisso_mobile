@@ -77,8 +77,8 @@ class _TargetProfileComponentState
               // Category header
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: GlobalColors.primaryColor.withOpacity(0.1),
                   borderRadius: const BorderRadius.only(
@@ -164,21 +164,31 @@ class _TargetProfileComponentState
                             child: Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children:
-                                  subEntry.value.map<Widget>((snap) {
-                                return Chip(
-                                  backgroundColor:
-                                      GlobalColors.primaryColor,
-                                  label: Text(
-                                    snap['name'],
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
+                              children: subEntry.value.map<Widget>((snap) {
+                                // 
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: GlobalColors.primaryColor
+                                        .withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: GlobalColors.primaryColor
+                                          .withOpacity(0.4),
+                                      width: 1,
                                     ),
                                   ),
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
+                                  child: Text(
+                                    snap['name'].toString(),
+                                    style: TextStyle(
+                                      color: GlobalColors.primaryColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 );
                               }).toList(),
                             ),
@@ -239,7 +249,8 @@ class _TargetProfileComponentState
               setState(() {
                 isLoading = false;
               });
-              Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+              Routemaster.of(context)
+                  .push('/homepage/chat-detail/$targetUsername');
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {
                 isLoading = false;
@@ -509,14 +520,16 @@ class _TargetProfileComponentState
                       ),
                       _buildInfoRow(
                         label: 'Residence Country',
-                        value:
-                            targetProfile.residenceCountry.toString().toUpperCase(),
+                        value: targetProfile.residenceCountry
+                            .toString()
+                            .toUpperCase(),
                         isLast: true,
                       ),
                       _buildInfoRow(
                         label: 'Residence City',
-                        value:
-                            targetProfile.residenceCity.toString().toUpperCase(),
+                        value: targetProfile.residenceCity
+                            .toString()
+                            .toUpperCase(),
                         isLast: true,
                       ),
                     ],
@@ -528,7 +541,7 @@ class _TargetProfileComponentState
 
               // Interests Sections
               _buildExpandableSection(
-                title: "${targetProfile.nickname}'s interests",
+                title: "About ${targetProfile.nickname}",
                 subtitle: targetProfile.lifesnapshots!
                     .map((snapshot) => snapshot['name'])
                     .join(", "),
@@ -539,14 +552,14 @@ class _TargetProfileComponentState
                         expandedField == 'interest' ? '' : 'interest';
                   });
                 },
-                expandedContent: _buildGroupedSnapshots(
-                    targetProfile.lifesnapshots!),
+                expandedContent:
+                    _buildGroupedSnapshots(targetProfile.lifesnapshots!),
               ),
 
               const SizedBox(height: 16),
 
               _buildExpandableSection(
-                title: "${targetProfile.nickname}'s interests in a person",
+                title: "What ${targetProfile.nickname} looks for in a person",
                 subtitle: targetProfile.targetLifesnapshots!
                     .map((snapshot) => snapshot['name'])
                     .join(", "),
@@ -556,8 +569,8 @@ class _TargetProfileComponentState
                     expandedField = expandedField == 'target' ? '' : 'target';
                   });
                 },
-                expandedContent: _buildGroupedSnapshots(
-                    targetProfile.targetLifesnapshots!),
+                expandedContent:
+                    _buildGroupedSnapshots(targetProfile.targetLifesnapshots!),
               ),
 
               const SizedBox(height: 24),
@@ -699,7 +712,8 @@ class _TargetProfileComponentState
                                       color: GlobalColors.primaryColor,
                                     ),
                                   )
-                                : videoState.data.isEmpty
+                                : videoState.data == null ||
+                                        videoState.data.isEmpty
                                     ? Center(
                                         child: Column(
                                           mainAxisAlignment:
@@ -734,29 +748,52 @@ class _TargetProfileComponentState
                                         ),
                                         itemCount: videoState.data.length,
                                         itemBuilder: (context, index) {
+                                          final video = videoState.data[index];
+                                          final thumbnailUrl =
+                                              video['post_video_thumbnail_url']
+                                                      ?.toString() ??
+                                                  '';
+
                                           return GestureDetector(
                                             onTap: () {
                                               Routemaster.of(context).push(
-                                                  '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
+                                                '/homepage/target-profile/video-player?id=${Uri.encodeComponent(video['id'].toString())}',
+                                              );
                                             },
                                             child: ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                               child: Stack(
+                                                fit: StackFit.expand,
                                                 children: [
-                                                  Container(
-                                                    color: isLightTheme
-                                                        ? Colors.grey.shade800
-                                                        : Colors.grey.shade900,
-                                                    child: const Center(
-                                                      child: Icon(
-                                                        Icons
-                                                            .play_arrow_rounded,
-                                                        size: 32,
-                                                        color: Colors.white,
-                                                      ),
+                                                  // Thumbnail
+                                                  Image.network(
+                                                    thumbnailUrl,
+                                                    fit: BoxFit.cover,
+                                                    cacheWidth: 300,
+                                                    gaplessPlayback: true,
+                                                    errorBuilder:
+                                                        (_, __, ___) =>
+                                                            Container(
+                                                      color: isLightTheme
+                                                          ? Colors.grey.shade800
+                                                          : Colors
+                                                              .grey.shade900,
                                                     ),
+                                                    loadingBuilder: (_, child,
+                                                        loadingProgress) {
+                                                      if (loadingProgress ==
+                                                          null) return child;
+                                                      return Container(
+                                                        color: isLightTheme
+                                                            ? Colors
+                                                                .grey.shade800
+                                                            : Colors
+                                                                .grey.shade900,
+                                                      );
+                                                    },
                                                   ),
+                                                  // Gradient overlay
                                                   Container(
                                                     decoration: BoxDecoration(
                                                       gradient: LinearGradient(
@@ -772,23 +809,24 @@ class _TargetProfileComponentState
                                                       ),
                                                     ),
                                                   ),
-                                                  // Positioned(
-                                                  //   bottom: 8,
-                                                  //   left: 8,
-                                                  //   right: 8,
-                                                  //   child: Text(
-                                                  //     'Video ${index + 1}',
-                                                  //     style: const TextStyle(
-                                                  //       color: Colors.white,
-                                                  //       fontSize: 10,
-                                                  //       fontWeight:
-                                                  //           FontWeight.w500,
-                                                  //     ),
-                                                  //     maxLines: 1,
-                                                  //     overflow:
-                                                  //         TextOverflow.ellipsis,
-                                                  //   ),
-                                                  // ),
+                                                  // Play button
+                                                  Center(
+                                                    child: Container(
+                                                      width: 36,
+                                                      height: 36,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black
+                                                            .withOpacity(0.5),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons
+                                                            .play_arrow_rounded,
+                                                        color: Colors.white,
+                                                        size: 24,
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                             ),

@@ -22,6 +22,9 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
   final FeedVideoControllerManager _manager = FeedVideoControllerManager();
 
   int _currentIndex = 0;
+  bool _primed = false;
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -29,42 +32,37 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
     WidgetsBinding.instance.addObserver(this);
   }
 
-  /// Pause all videos when app goes to background / another tab is shown.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
-      _manager.pauseAll();
+      _manager.deactivate();
     } else if (state == AppLifecycleState.resumed) {
-      // Only resume if this route is still on top
-      if (mounted) {
-        final route = ModalRoute.of(context);
-        if (route != null && route.isCurrent) {
-          _manager.play(_currentIndex);
-        }
-      }
+      _resumeIfEligible();
     }
   }
 
-  /// Pause when another route is pushed on top of this one.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
-    if (route != null && !route.isCurrent) {
-      _manager.pauseAll();
-    } else if (route != null && route.isCurrent && _primed) {
-      // Route came back into view — resume playback
-      _manager.play(_currentIndex);
+    if (route == null) return;
+
+    if (!route.isCurrent) {
+      // A new route was pushed on top — silence everything immediately.
+      _manager.deactivate();
+    } else {
+      // Route is back on top (e.g. popped back from video player).
+      _resumeIfEligible();
     }
   }
 
   @override
   void deactivate() {
-    // Fires during build when the element is removed from the tree — earlier
-    // than dispose(). Stops audio the instant the tab switches.
-    _manager.pauseAll();
+    // Fires during the build phase when the element leaves the tree (tab
+    // switch) — earlier than dispose(), stopping audio immediately.
+    _manager.deactivate();
     super.deactivate();
   }
 
@@ -74,6 +72,19 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
     _manager.disposeAll();
     _pageController.dispose();
     super.dispose();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /// Resume playback only when both the route is on top AND the tab is active.
+  void _resumeIfEligible() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    final tabActive = ref.read(exploreTabActiveProvider);
+    if (route != null && route.isCurrent && tabActive && _primed) {
+      _manager.activate();
+      _manager.play(_currentIndex);
+    }
   }
 
   List<ShortStoryModel> _mapVideos(List<dynamic> data) {
@@ -90,6 +101,7 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
         views: (v['views'] as num?)?.toInt() ?? 0,
         peopleLiked: (v['people_liked'] as List?)?.cast<String>() ?? [],
         likedThisStory: v['liked_this_story'] as bool? ?? false,
+        postThumbnailUrl: v['post_video_thumbnail_url'] as String? ?? '',
       );
     }).toList();
   }
@@ -97,69 +109,63 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
   void _onPageChanged(int index, List<ShortStoryModel> videos) {
     _currentIndex = index;
 
-    // Play current, silence/pause all others
     _manager.play(index);
     _manager.pauseAllExcept(index);
 
-    // Wider preload window: 2 behind, 4 ahead
+    // Preload: 2 behind, 4 ahead
     for (int i = index - 2; i <= index + 4; i++) {
       if (i >= 0 && i < videos.length) {
         _manager.preload(i, videos[i].videoUrl, muted: i != index);
       }
     }
 
-    // Keep a generous retention buffer so back-scrolling is instant too
     _manager.retainRange(index - 3, index + 6);
 
-    // Fetch next page earlier (when 5 from end instead of 3)
     if (index >= videos.length - 5) {
       ref.read(paginatedVideoPostProvider.notifier).loadNextPage();
     }
   }
 
-  /// Called once when data first loads to prime the first few controllers
-  /// before the user even touches the screen.
   void _primeFeed(List<ShortStoryModel> videos) {
     for (int i = 0; i <= 3 && i < videos.length; i++) {
       _manager.preload(i, videos[i].videoUrl, muted: i != 0);
     }
-    // Auto-play index 0
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _manager.play(0);
+      if (!mounted) return;
+      // Only auto-play if this tab is currently active
+      if (ref.read(exploreTabActiveProvider)) {
+        _manager.activate();
+        _manager.play(0);
+      }
     });
   }
 
-  bool _primed = false;
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(paginatedVideoPostProvider);
 
-    // Pause/resume immediately when the tab changes — fires before the widget
-    // is removed from the tree on the next frame.
-    ref.listen<bool>(exploreTabActiveProvider, (prev, next) {
-      if (!next) {
-        _manager.pauseAll();
-      } else if (next && _primed) {
-        _manager.play(_currentIndex);
+    // Tab active/inactive — this is the primary switch for the explore tab.
+    ref.listen<bool>(exploreTabActiveProvider, (prev, isActive) {
+      if (!isActive) {
+        _manager.deactivate();
+      } else if (_primed) {
+        // Tab came back into focus — only play if route is also on top.
+        _resumeIfEligible();
       }
     });
 
     if (state.isLoading && state.data.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (state.data.isEmpty) {
-      return const Center(
-        child: Text('No videos yet'),
-      );
+      return const Center(child: Text('No videos yet'));
     }
 
     final videos = _mapVideos(state.data);
 
-    // Prime controllers exactly once when data first arrives
     if (!_primed) {
       _primed = true;
       _primeFeed(videos);
@@ -172,13 +178,16 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
       onPageChanged: (i) => _onPageChanged(i, videos),
       itemBuilder: (context, index) {
         return ShortStoryPlayer(
-          key: ValueKey(videos[index].id), // stable key prevents unnecessary rebuilds
+          key: ValueKey(videos[index].id),
           video: videos[index],
           videoController: _manager.get(index),
           isActive: index == _currentIndex,
-          onTimeTrack: (start, end) => ref
-              .read(watchingTimeServiceProviderImpl.notifier)
-              .watchVideo(videos[index].id, start, end),
+          onTimeTrack: (start, end) {
+            if (!mounted) return;
+            ref
+                .read(watchingTimeServiceProviderImpl.notifier)
+                .watchVideo(videos[index].id, start, end);
+          },
         );
       },
     );

@@ -8,6 +8,7 @@ class ShortStoryModel {
   final String profilePicture;
   final String videoUrl;
   final String description;
+  final String postThumbnailUrl;
   int views;
   int likes;
   int shares;
@@ -25,7 +26,8 @@ class ShortStoryModel {
     required this.peopleLiked,
     required this.shares,
     required this.likedThisStory,
-    required this.views
+    required this.views,
+    this.postThumbnailUrl = '',
   });
 
   ShortStoryModel copyWith({
@@ -52,7 +54,9 @@ class ShortStoryModel {
         shares: shares ?? this.shares,
         views: views ?? this.views,
         peopleLiked: peopleLiked ?? this.peopleLiked,
-        likedThisStory: likedThisStory ?? this.likedThisStory);
+        likedThisStory: likedThisStory ?? this.likedThisStory,
+        postThumbnailUrl: postThumbnailUrl,
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -65,6 +69,7 @@ class ShortStoryModel {
       'description': description,
       'likes': likes,
       'peopleLiked': peopleLiked,
+      'postThumbnailUrl': postThumbnailUrl,
     };
   }
 
@@ -80,7 +85,9 @@ class ShortStoryModel {
         views: map['views'] as int,
         shares: map['shares'] as int,
         peopleLiked: map['people_liked'] as List<dynamic>,
-        likedThisStory: map['liked_this_story'] as bool);
+        likedThisStory: map['liked_this_story'] as bool,
+        postThumbnailUrl: map['post_thumbnail_url'] as String? ?? '',
+    );
   }
 
   String toJson() => json.encode(toMap());
@@ -90,7 +97,7 @@ class ShortStoryModel {
 
   @override
   String toString() {
-    return 'ShortStoryModel(id: $id, username: $username, nickname: $nickname, profilePicture: $profilePicture, videoUrl: $videoUrl, description: $description, likes: $likes, peopleLiked: $peopleLiked)';
+    return 'ShortStoryModel(id: $id, username: $username, nickname: $nickname, profilePicture: $profilePicture, videoUrl: $videoUrl, description: $description, likes: $likes, peopleLiked: $peopleLiked, postThumbnailUrl: $postThumbnailUrl)';
   }
 
   @override

@@ -32,7 +32,7 @@ class EventQueue {
 
     try {
       final res = await http.post(
-        Uri.parse("${configs['BACKEND_URL']}/blisso_administration/mobile-user-activity/"),
+        Uri.parse("${configs['BACKEND_URL']}/blisso_administration/mobile-user-activities/"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(
           batch.map((e) => e.toJson()).toList(),

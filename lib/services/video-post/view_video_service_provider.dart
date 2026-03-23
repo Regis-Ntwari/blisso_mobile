@@ -3,19 +3,18 @@ import 'package:blisso_mobile/services/video-post/video_post_service.dart';
 import 'package:blisso_mobile/utils/status_codes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class VideoPostServiceProvider extends StateNotifier<ApiState> {
+class ViewVideoServiceProvider extends StateNotifier<ApiState> {
+
   final VideoPostService videoPostService;
 
-  VideoPostServiceProvider({required this.videoPostService})
+  ViewVideoServiceProvider({required this.videoPostService})
       : super(ApiState(isLoading: true));
 
-  Future<void> getTargetVideos(String username) async{
+  Future<void> viewVideo(String id) async {
     state = ApiState(isLoading: true);
 
     try {
-      final response = await videoPostService.getTargetVideos(username);
-
-      print(response);
+      final response = await videoPostService.viewVideo(id);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(
@@ -34,7 +33,7 @@ class VideoPostServiceProvider extends StateNotifier<ApiState> {
   }
 }
 
-final videoPostServiceProviderImpl =
-    StateNotifierProvider<VideoPostServiceProvider, ApiState>((ref) {
-  return VideoPostServiceProvider(videoPostService: VideoPostService());
+final viewVideoServiceProviderImpl =
+    StateNotifierProvider<ViewVideoServiceProvider, ApiState>((ref) {
+  return ViewVideoServiceProvider(videoPostService: VideoPostService());
 });

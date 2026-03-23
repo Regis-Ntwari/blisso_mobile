@@ -4,17 +4,21 @@ import 'package:video_player/video_player.dart';
 class FeedVideoControllerManager {
   final Map<int, VideoPlayerController> _controllers = {};
   final Map<int, VideoPlayerController> _initializing = {};
+
   bool _disposed = false;
 
-  // Keep more controllers alive — enough for smooth scrolling both ways
+  /// Global pause flag — when false, play() is a no-op.
+  /// Prevents any controller from playing while the feed is hidden
+  /// (tab switch, app background, route pushed on top).
+  bool _feedActive = false;
+
   static const int _maxControllers = 9;
 
   VideoPlayerController? get(int index) => _controllers[index];
-
   bool has(int index) => _controllers.containsKey(index);
 
-  /// Preload a video at [index]. Safe to call repeatedly — no-ops if already
-  /// initialised or currently initialising.
+  // ── Preload ───────────────────────────────────────────────────────────────
+
   void preload(int index, String url, {bool muted = true}) {
     if (_disposed) return;
     if (_controllers.containsKey(index) || _initializing.containsKey(index)) return;
@@ -22,11 +26,7 @@ class FeedVideoControllerManager {
 
     final ctrl = VideoPlayerController.networkUrl(
       Uri.parse(url),
-      videoPlayerOptions: VideoPlayerOptions(
-        // Allows audio from multiple controllers simultaneously so we can
-        // preload neighbours without them accidentally making sound.
-        mixWithOthers: true,
-      ),
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
 
     _initializing[index] = ctrl;
@@ -47,9 +47,24 @@ class FeedVideoControllerManager {
     });
   }
 
-  /// Play the controller at [index]. If not yet initialised, attach a one-shot
-  /// listener that plays as soon as initialisation completes.
+  // ── Playback ──────────────────────────────────────────────────────────────
+
+  /// Activate the feed so play() calls are honoured.
+  /// Always call this before play() when bringing the feed into view.
+  void activate() {
+    _feedActive = true;
+  }
+
+  /// Deactivate the feed and immediately silence + pause every controller.
+  /// play() will be a no-op until activate() is called again.
+  void deactivate() {
+    _feedActive = false;
+    _pauseAllControllers();
+  }
+
   void play(int index) {
+    if (_disposed || !_feedActive) return;
+
     final ctrl = _controllers[index];
     if (ctrl == null) return;
 
@@ -58,9 +73,13 @@ class FeedVideoControllerManager {
     if (ctrl.value.isInitialized) {
       ctrl.play();
     } else {
-      // Rare: controller exists but init not done yet — play on first update.
+      // Rare: controller exists but not yet initialised — play on first update.
       late VoidCallback listener;
       listener = () {
+        if (_disposed || !_feedActive) {
+          ctrl.removeListener(listener);
+          return;
+        }
         if (ctrl.value.isInitialized && !ctrl.value.isPlaying) {
           ctrl.play();
           ctrl.removeListener(listener);
@@ -84,7 +103,11 @@ class FeedVideoControllerManager {
     }
   }
 
-  /// Dispose controllers outside [min]..[max] (inclusive).
+  /// Legacy alias kept so call-sites that use pauseAll() still compile.
+  void pauseAll() => deactivate();
+
+  // ── Retention ─────────────────────────────────────────────────────────────
+
   void retainRange(int min, int max) {
     for (final key in _controllers.keys.toList()) {
       if (key < min || key > max) {
@@ -94,9 +117,17 @@ class FeedVideoControllerManager {
     }
   }
 
+  // ── Internal ──────────────────────────────────────────────────────────────
+
+  void _pauseAllControllers() {
+    for (final c in _controllers.values) {
+      c.pause();
+      c.setVolume(0);
+    }
+  }
+
   void _evictIfNeeded() {
     if (_controllers.length <= _maxControllers) return;
-    // Evict the lowest indices (furthest behind the current position)
     final sorted = _controllers.keys.toList()..sort();
     final excess = _controllers.length - _maxControllers;
     for (int i = 0; i < excess; i++) {
@@ -105,25 +136,14 @@ class FeedVideoControllerManager {
     }
   }
 
-  void pauseAll() {
-    for (final entry in _controllers.entries) {
-      entry.value.pause();
-      entry.value.setVolume(0);
-    }
-  }
-
   void disposeAll() {
     _disposed = true;
-    // Pause all immediately to stop audio before async dispose completes
-    for (final c in _controllers.values) {
-      c.pause();
-      c.setVolume(0);
-    }
+    _feedActive = false;
+    _pauseAllControllers();
     for (final c in _controllers.values) {
       c.dispose();
     }
     _controllers.clear();
-    // Dispose any controllers still initializing
     for (final c in _initializing.values) {
       c.dispose();
     }

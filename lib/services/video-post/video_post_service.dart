@@ -37,4 +37,16 @@ class VideoPostService {
 
     return response;
   }
+
+  Future<ApiResponse> viewVideo(String id) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    ApiResponse response = await ApiService()
+        .postData(endpoint: 'posts/posts/$id/view/', token: accessToken, body: {});
+
+    print(response);
+
+    return response;
+  }
 }

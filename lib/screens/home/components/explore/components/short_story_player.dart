@@ -7,6 +7,7 @@ import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
+import 'package:blisso_mobile/services/video-post/view_video_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -35,8 +36,7 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
 }
 
-class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
-    with WidgetsBindingObserver {
+class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   VideoPlayerController? _ctrl;
   bool _initialized = false;
   bool _buffering = false;
@@ -45,6 +45,10 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   DateTime? _trackStart;
   bool _tracking = false;
 
+  // Ensures viewVideo() is only called once per player instance — not on
+  // every play/resume cycle.
+  bool _hasRecordedView = false;
+
   bool _profileLoading = false;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -52,47 +56,20 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _attachController(widget.videoController);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.detached) {
-      _pause();
-    } else if (state == AppLifecycleState.resumed && widget.isActive) {
-      // Only resume the active item, and only if the route is on top
-      if (mounted) {
-        final route = ModalRoute.of(context);
-        if (route != null && route.isCurrent) _play();
-      }
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = ModalRoute.of(context);
-    if (route != null && !route.isCurrent) {
-      _pause();
-    } else if (route != null && route.isCurrent && widget.isActive && _initialized) {
-      _play();
-    }
   }
 
   @override
   void didUpdateWidget(covariant ShortStoryPlayer old) {
     super.didUpdateWidget(old);
 
-    // Controller handed from manager changed
+    // Manager handed a new controller for this slot
     if (widget.videoController != old.videoController) {
       _detachController();
       _attachController(widget.videoController);
     }
 
-    // Active state changed
+    // Parent toggled active state
     if (widget.isActive != old.isActive) {
       widget.isActive ? _play() : _pause();
     }
@@ -100,9 +77,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
 
   @override
   void deactivate() {
-    // Fires immediately when the element is removed from the tree (during
-    // build), before dispose(). Ensures audio stops the instant the tab
-    // switches — not at end-of-frame like dispose().
+    // Fires immediately when the widget leaves the tree (tab switch, pop).
+    // Pause + stop tracking before dispose() runs so audio stops instantly.
     _pause();
     _stopTracking();
     super.deactivate();
@@ -110,7 +86,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _stopTracking();
     _detachController();
     super.dispose();
@@ -120,7 +95,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
 
   void _attachController(VideoPlayerController? ctrl) {
     if (ctrl == null) {
-      // Manager hasn't preloaded this slot yet — create our own controller.
+      // Manager hasn't preloaded this slot yet — own controller as fallback.
       final url = widget.video.videoUrl;
       if (url.isEmpty) return;
       final owned = VideoPlayerController.networkUrl(Uri.parse(url));
@@ -128,29 +103,25 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
       owned.initialize().then((_) {
         if (!mounted) return;
         owned.setLooping(true);
-        if (mounted) setState(() => _initialized = true);
+        setState(() => _initialized = true);
         if (widget.isActive) _play();
       }).catchError((_) {
         // Swallow — bad URL must never crash the player
       });
     } else {
       _ctrl = ctrl;
-      // isInitialized may already be true if the manager finished preloading
       _initialized = ctrl.value.isInitialized;
     }
 
-    // Safe — _ctrl is guaranteed non-null here (unless url was empty)
     _ctrl?.addListener(_onControllerUpdate);
     if (widget.isActive && _initialized) _play();
   }
 
   void _detachController() {
     _ctrl?.removeListener(_onControllerUpdate);
-    // Always pause before detaching — platform-side audio cleanup is async,
-    // so dispose() alone may not silence the audio instantly.
     _ctrl?.pause();
     _ctrl?.setVolume(0);
-    // Only dispose if we own the controller (no manager controller was passed)
+    // Only dispose if we created the controller ourselves (no manager controller)
     if (widget.videoController == null) {
       _ctrl?.dispose();
     }
@@ -161,12 +132,11 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   // ── Playback ──────────────────────────────────────────────────────────────
 
   void _play() {
-    if (_ctrl == null) return;
+    if (_ctrl == null || !mounted) return;
     _ctrl!.setVolume(1);
     if (_ctrl!.value.isInitialized) {
       _ctrl!.play();
     }
-    // If not yet initialised the manager's play() method handles it via listener
   }
 
   void _pause() {
@@ -187,7 +157,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
       if (widget.isActive) _play();
     }
 
-    // Buffering
+    // Buffering indicator
     if (val.isBuffering != _buffering) {
       setState(() => _buffering = val.isBuffering);
     }
@@ -203,22 +173,39 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   // ── Time tracking ─────────────────────────────────────────────────────────
 
   void _startTracking() {
-    if (_tracking) return;
+    if (_tracking || !mounted) return;
     _trackStart = DateTime.now();
     _tracking = true;
+
+    // Record a view exactly once per player instance.
+    if (!_hasRecordedView) {
+      _hasRecordedView = true;
+      // Guard with mounted — controller listener can fire during deactivation.
+      try {
+        ref
+            .read(viewVideoServiceProviderImpl.notifier)
+            .viewVideo(widget.video.id);
+      } catch (_) {
+        // Provider may have been disposed — silently skip.
+      }
+    }
   }
 
   void _stopTracking() {
     if (!_tracking || _trackStart == null) return;
     final end = DateTime.now();
-    widget.onTimeTrack?.call(_trackStart!, end);
+    final start = _trackStart!;
     _tracking = false;
     _trackStart = null;
+    // onTimeTrack is a parent callback; call it after clearing local state so
+    // any re-entrant code doesn't see a stale _tracking = true.
+    widget.onTimeTrack?.call(start, end);
   }
 
   // ── Like ──────────────────────────────────────────────────────────────────
 
   void _handleLike() {
+    if (!mounted) return;
     setState(() {
       if (widget.video.likedThisStory) {
         widget.video.likes -= 1;
@@ -252,7 +239,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
     if (_initialized) return child;
     return Shimmer.fromColors(
       baseColor: Colors.grey[900]!,
-      highlightColor: Colors.grey[800]!, // 750 doesn't exist in Flutter's grey swatch
+      highlightColor: Colors.grey[800]!,
       child: child,
     );
   }
@@ -265,8 +252,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Icon(icon, color: color, size: size,
-          shadows: const [Shadow(blurRadius: 4, color: Colors.black54)]),
+      child: Icon(
+        icon,
+        color: color,
+        size: size,
+        shadows: const [Shadow(blurRadius: 4, color: Colors.black54)],
+      ),
     );
   }
 
@@ -283,8 +274,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
     );
   }
 
-  // The right-side action column — all icons use the same 28 px size
-  // and are spaced with consistent SizedBox gaps so nothing misaligns.
   Widget _buildActionColumn() {
     const double iconSize = 28;
     const double gap = 6;
@@ -316,9 +305,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
         if (widget.showStory) const SizedBox(height: sectionGap),
 
         // ── Views ───────────────────────────────────────────────────────
-        _shimmer(Icon(Icons.remove_red_eye_outlined,
-            color: Colors.white, size: iconSize,
-            shadows: const [Shadow(blurRadius: 4, color: Colors.black54)])),
+        _shimmer(Icon(
+          Icons.remove_red_eye_outlined,
+          color: Colors.white,
+          size: iconSize,
+          shadows: const [Shadow(blurRadius: 4, color: Colors.black54)],
+        )),
         const SizedBox(height: gap),
         _shimmer(_statLabel(_compact(widget.video.views))),
 
@@ -342,7 +334,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
 
         // ── Share ───────────────────────────────────────────────────────
         _shimmer(_actionButton(
-          icon: Icons.reply, // cleaner than rotated send for a share action
+          icon: Icons.reply,
           color: Colors.white,
           onTap: _initialized ? _onShare : null,
           size: iconSize,
@@ -383,6 +375,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   // ── Action handlers ───────────────────────────────────────────────────────
 
   Future<void> _openProfile() async {
+    if (!mounted) return;
     if (!ref.read(permissionProviderImpl)['can_view_profile_detail']) {
       showPopupComponent(
           context: context,
@@ -407,18 +400,24 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
   }
 
   void _onShare() {
+    if (!mounted) return;
     if (ref.read(permissionProviderImpl)['can_share_video_post']) {
       showShareVideoModal(context, widget.video);
     } else {
       showPopupComponent(
-          context: context, icon: Icons.error, message: 'Please upgrade your plan');
+          context: context,
+          icon: Icons.error,
+          message: 'Please upgrade your plan');
     }
   }
 
   void _onCaption() {
+    if (!mounted) return;
     if (!ref.read(permissionProviderImpl)['can_view_video_post_caption']) {
       showPopupComponent(
-          context: context, icon: Icons.error, message: 'Please upgrade your plan');
+          context: context,
+          icon: Icons.error,
+          message: 'Please upgrade your plan');
       return;
     }
     showModalBottomSheet(
@@ -433,7 +432,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle
               Center(
                 child: Container(
                   width: 32,
@@ -468,9 +466,9 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ── Video / loading ──────────────────────────────────────────────
+        // ── Video / thumbnail / shimmer ──────────────────────────────────
         Builder(builder: (context) {
-          final ctrl = _ctrl; // local for null-safe flow analysis
+          final ctrl = _ctrl;
           if (ctrl != null && _initialized) {
             return Center(
               child: AspectRatio(
@@ -479,10 +477,23 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
               ),
             );
           }
-          return Shimmer.fromColors(
-            baseColor: Colors.grey[900]!,
-            highlightColor: Colors.grey[800]!,
-            child: const ColoredBox(color: Colors.black),
+          // Show thumbnail while the video controller initialises.
+          // Fall back to shimmer if the thumbnail URL is empty or fails.
+          return CachedNetworkImage(
+            imageUrl: widget.video.postThumbnailUrl,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            placeholder: (_, __) => Shimmer.fromColors(
+              baseColor: Colors.grey[900]!,
+              highlightColor: Colors.grey[800]!,
+              child: const ColoredBox(color: Colors.black),
+            ),
+            errorWidget: (_, __, ___) => Shimmer.fromColors(
+              baseColor: Colors.grey[900]!,
+              highlightColor: Colors.grey[800]!,
+              child: const ColoredBox(color: Colors.black),
+            ),
           );
         }),
 

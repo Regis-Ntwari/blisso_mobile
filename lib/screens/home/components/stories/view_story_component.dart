@@ -479,52 +479,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ── Caption (above author) ───────────────────────────────
-                if (caption != null && caption.isNotEmpty)
-                  GestureDetector(
-                    onTap: () => _showFullCaption(
-                      canSeeCaption ? caption : 'Upgrade to view caption',
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              canSeeCaption ? caption : 'Upgrade to view caption',
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                          // "more" hint if text likely overflows
-                          if (canSeeCaption && caption.length > 80)
-                            const Padding(
-                              padding: EdgeInsets.only(left: 6),
-                              child: Text(
-                                'more',
-                                style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
+                
 
                 // ── Author chip ──────────────────────────────────────────
                 GestureDetector(
@@ -581,6 +536,52 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                     ),
                   ),
                 ),
+                if (caption != null && caption.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => _showFullCaption(
+                      canSeeCaption ? caption : 'Upgrade to view caption',
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                      // padding: const EdgeInsets.symmetric(
+                      //     horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              canSeeCaption ? caption : 'Upgrade to view caption',
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          // "more" hint if text likely overflows
+                          if (canSeeCaption && caption.length > 80)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 6),
+                              child: Text(
+                                'more',
+                                style: TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
