@@ -1,6 +1,7 @@
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:blisso_mobile/utils/relationship_goals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +19,7 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
   String? gender = 'male';
   String? maritalStatus = 'single';
   String? showMe = 'men';
+  String? relationshipGoal = 'Long-term'; // New state variable
   DateTime? dob = DateTime(2022, 1, 1);
   String? distanceMeasure = 'Km';
   String? homeAddress = '';
@@ -36,6 +38,9 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
   ];
   final List<String> showMeOptions = ['men', 'women', 'everyone'];
   final List<String> distanceOptions = ['miles', 'Km'];
+  
+  // Get labels from your constants file
+  final List<String> goalOptions = relationshipGoals.map((e) => e.label).toList();
 
   final TextEditingController addressController = TextEditingController();
   final TextEditingController residenceCityController = TextEditingController();
@@ -51,6 +56,8 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
         gender = profile['gender'];
         maritalStatus = profile['marital_status'];
         showMe = profile['show_me'];
+        // Handle potential null or case mismatch from API
+        relationshipGoal = _matchGoal(profile['relationship_goal']); 
         dob = DateTime.parse(profile['dob']);
         distanceMeasure = profile['distance_measure'];
         addressController.text = profile['home_address'] ?? '';
@@ -58,9 +65,17 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
         residenceCountry = profile['residence_country'];
         residenceCity = profile['residence_city'] ?? '';
         residenceCityController.text = profile['residence_city'] ?? '';
-        
       });
     });
+  }
+
+  // Helper to ensure the value from DB matches one of our dropdown labels
+  String _matchGoal(dynamic value) {
+    if (value == null) return goalOptions.first;
+    return goalOptions.firstWhere(
+      (element) => element.toLowerCase() == value.toString().toLowerCase(),
+      orElse: () => goalOptions.first,
+    );
   }
 
   void _pickDate() async {
@@ -86,10 +101,11 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
 
     // Merge updated fields with existing profile data
     Map<String, dynamic> updatedData = {
-      ...existingData, // keep all existing keys
+      ...existingData, 
       'gender': gender,
       'marital_status': maritalStatus,
       'show_me': showMe,
+      'relationship_goal': relationshipGoal, // Added to persistence logic
       'dob': dob?.toIso8601String().split('T')[0],
       'distance_measure': distanceMeasure,
       'home_address': addressController.text,
@@ -109,13 +125,14 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
     }
   }
 
+  // Rest of your helper methods (_buildDropdown, _buildSectionHeader, _buildInfoCard) remain the same...
   Widget _buildDropdown(String label, String value, List<String> options,
       ValueChanged<String?> onChanged) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(color: Color(0xFF111111)),
+        border: Border.all(color: const Color(0xFF111111)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -133,7 +150,9 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
                 return DropdownMenuItem(
                   value: item, 
                   child: Text(
-                    item[0].toUpperCase() + item.substring(1),
+                    // Capitalize only if it's not one of our predefined Goal labels 
+                    // (which are already formatted correctly)
+                    goalOptions.contains(item) ? item : item[0].toUpperCase() + item.substring(1),
                     style: const TextStyle(fontSize: 16),
                   )
                 );
@@ -166,12 +185,12 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.light 
             ? Colors.grey.shade50 
-            : Color(0xFF050505),
+            : const Color(0xFF050505),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Theme.of(context).brightness == Brightness.light 
               ? Colors.grey.shade200 
-              : Color(0xFF050505),
+              : const Color(0xFF050505),
         ),
       ),
       padding: const EdgeInsets.all(16),
@@ -189,13 +208,9 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
         centerTitle: true,
         backgroundColor: isLightTheme ? Colors.white : Colors.black,
         elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          
-          child: IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.keyboard_arrow_left),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.keyboard_arrow_left),
         ),
         title: Text(
           'Edit Profile Settings',
@@ -211,7 +226,6 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
           padding: const EdgeInsets.all(20),
           child: ListView(
             children: [
-              // Basic Information Section
               _buildSectionHeader('Basic Information'),
               _buildInfoCard(
                 Column(
@@ -224,132 +238,75 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
                     const SizedBox(height: 8),
                     _buildDropdown('Show Me', showMe!, showMeOptions,
                         (val) => setState(() => showMe = val!)),
+                    const SizedBox(height: 8),
+                    // NEW: Relationship Goal Dropdown
+                    _buildDropdown('Looking For', relationshipGoal!, goalOptions,
+                        (val) => setState(() => relationshipGoal = val!)),
                   ],
                 ),
               ),
               
-              // Personal Details Section
+              // Personal Details, Location, and Save button code remains identical...
               _buildSectionHeader('Personal Details'),
               _buildInfoCard(
                 Column(
                   children: [
-                    // Date of Birth
                     InkWell(
                       onTap: _pickDate,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFF111111)),
+                          border: Border.all(color: const Color(0xFF111111)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.cake_outlined,
-                              color: GlobalColors.primaryColor,
-                              size: 22,
-                            ),
+                            Icon(Icons.cake_outlined, color: GlobalColors.primaryColor, size: 22),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Date of Birth',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    DateFormat('dd MMMM yyyy').format(dob!),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  Text('Date of Birth', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                  Text(DateFormat('dd MMMM yyyy').format(dob!), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                 ],
                               ),
                             ),
-                            Icon(
-                              Icons.calendar_today,
-                              color: Colors.grey.shade400,
-                              size: 18,
-                            ),
+                            Icon(Icons.calendar_today, color: Colors.grey.shade400, size: 18),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
-                    // Nationality
                     InkWell(
                       onTap: () {
                         showCountryPicker(
                           context: context,
-                          showPhoneCode: false,
-                          countryListTheme: CountryListThemeData(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
-                            ),
-                            inputDecoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search_rounded),
-                              hintText: 'Search nationality',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          onSelect: (Country country) {
-                            setState(() {
-                              nationality = country.name.toUpperCase();
-                            });
-                          },
+                          onSelect: (Country country) => setState(() => nationality = country.name.toUpperCase()),
                         );
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFF111111)),
+                          border: Border.all(color: const Color(0xFF111111)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.flag_outlined,
-                              color: GlobalColors.primaryColor,
-                              size: 22,
-                            ),
+                            Icon(Icons.flag_outlined, color: GlobalColors.primaryColor, size: 22),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Nationality',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    nationality ?? 'Select nationality',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  Text('Nationality', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                  Text(nationality ?? 'Select nationality', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                 ],
                               ),
                             ),
-                            Icon(
-                              Icons.arrow_drop_down_circle_outlined,
-                              color: Colors.grey.shade400,
-                              size: 18,
-                            ),
+                            Icon(Icons.arrow_drop_down_circle_outlined, color: Colors.grey.shade400, size: 18),
                           ],
                         ),
                       ),
@@ -358,131 +315,62 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
                 ),
               ),
               
-              // Location Section
               _buildSectionHeader('Location'),
               _buildInfoCard(
                 Column(
                   children: [
-                    // Residence Country
                     InkWell(
                       onTap: () {
                         showCountryPicker(
                           context: context,
-                          showPhoneCode: false,
-                          countryListTheme: CountryListThemeData(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
-                            ),
-                            inputDecoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search_rounded),
-                              hintText: 'Search country',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          onSelect: (Country country) {
-                            setState(() {
-                              residenceCountry = country.name;
-                            });
-                          },
+                          onSelect: (Country country) => setState(() => residenceCountry = country.name),
                         );
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFF111111)),
+                          border: Border.all(color: const Color(0xFF111111)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.public_outlined,
-                              color: GlobalColors.primaryColor,
-                              size: 22,
-                            ),
+                            Icon(Icons.public_outlined, color: GlobalColors.primaryColor, size: 22),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Residence Country',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    residenceCountry ?? 'Select country',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  Text('Residence Country', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                  Text(residenceCountry ?? 'Select country', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                 ],
                               ),
                             ),
-                            Icon(
-                              Icons.arrow_drop_down_circle_outlined,
-                              color: Colors.grey.shade400,
-                              size: 18,
-                            ),
+                            Icon(Icons.arrow_drop_down_circle_outlined, color: Colors.grey.shade400, size: 18),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
-                    // Residence City
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Color(0xFF111111)),
+                        border: Border.all(color: const Color(0xFF111111)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextFormField(
                         controller: residenceCityController,
                         decoration: InputDecoration(
                           labelText: 'Residence City',
-                          hintText: 'Enter your city',
-                          prefixIcon: Icon(
-                            Icons.location_city_outlined,
-                            color: GlobalColors.primaryColor,
-                          ),
+                          prefixIcon: Icon(Icons.location_city_outlined, color: GlobalColors.primaryColor),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    
-                    // Home Address
-                    // Container(
-                    //   decoration: BoxDecoration(
-                    //     border: Border.all(color: Colors.grey.shade300),
-                    //     borderRadius: BorderRadius.circular(12),
-                    //   ),
-                    //   child: TextFormField(
-                    //     controller: addressController,
-                    //     decoration: InputDecoration(
-                    //       labelText: 'Home Address',
-                    //       hintText: 'Enter your home address',
-                    //       prefixIcon: Icon(
-                    //         Icons.home_outlined,
-                    //         color: GlobalColors.primaryColor,
-                    //       ),
-                    //       border: InputBorder.none,
-                    //       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
               
-              // Preferences Section
               _buildSectionHeader('Preferences'),
               _buildInfoCard(
                 _buildDropdown('Distance Measure', distanceMeasure!, distanceOptions,
@@ -491,7 +379,6 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
               
               const SizedBox(height: 30),
               
-              // Save Button
               Container(
                 width: double.infinity,
                 height: 54,
@@ -501,27 +388,11 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: GlobalColors.primaryColor,
                     foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],

@@ -19,12 +19,11 @@ class TrackingService {
 
   void startSession() {
     _sessionId = _uuid.v4();
-    debugPrint(_sessionId);
-    track("session_start", {});
+    // track("session_start", {});
   }
 
   void endSession() {
-    track("session_end", {});
+    // track("session_end", {});
   }
 
   Future<void> track(String type, Map<String, dynamic> payload) async {

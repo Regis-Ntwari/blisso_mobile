@@ -30,6 +30,7 @@ class TargetProfileModel {
   List<dynamic>? targetLifesnapshots;
   List<dynamic>? profileImages;
   String? distanceAnnot;
+  String? lookingFor;
 
   TargetProfileModel(
       {this.user,
@@ -54,6 +55,7 @@ class TargetProfileModel {
       this.homeAddress,
       this.profilePictureUri,
       this.subscription,
+      this.lookingFor,
       this.lifesnapshots,
       this.targetLifesnapshots,
       this.distanceAnnot,
@@ -69,6 +71,7 @@ class TargetProfileModel {
       'nickname': nickname,
       'dob': dob,
       'location': location,
+      'looking_for': lookingFor,
       'latitude': latitude,
       'longitude': longitude,
       'distance_measure': distanceMeasure,
@@ -84,6 +87,7 @@ class TargetProfileModel {
       'marital_status': maritalStatus,
       'show_me': showMe,
       'nickname': nickname,
+      'looking_for': lookingFor,
       'dob': dob,
       'profile_pic': profilePic,
       'location': location,
@@ -107,6 +111,7 @@ class TargetProfileModel {
       'show_me': showMe,
       'nickname': nickname,
       'dob': dob,
+      'looking_for': lookingFor,
       'location': location,
       'latitude': latitude,
       'longitude': longitude,
@@ -128,6 +133,7 @@ class TargetProfileModel {
         id: map['id'] != null ? map['id'] as int : null,
         gender: map['gender'] != null ? map['gender'] as String : null,
         lang: map['lang'] != null ? map['lang'] as String : null,
+        lookingFor: map['looking_for'] != null ? map['looking_for'] as String : null,
         maritalStatus: map['marital_status'] != null
             ? map['marital_status'] as String
             : null,
@@ -182,6 +188,7 @@ class TargetProfileModel {
         maritalStatus: map['marital_status'] != null
             ? map['marital_status'] as String
             : null,
+        lookingFor: map['looking_for'] != null ? map['looking_for'] as String : null,
         showMe: map['show_me'] != null ? map['show_me'] as String : null,
         nickname: map['nickname'] != null ? map['nickname'] as String : null,
         dob: map['dob'] != null ? map['dob'] as String : null,

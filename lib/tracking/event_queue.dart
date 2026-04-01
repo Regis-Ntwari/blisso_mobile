@@ -31,12 +31,19 @@ class EventQueue {
     dynamic configs = await loadVariables();
 
     try {
+      final body = jsonEncode(
+          batch.map((e) {
+            print(e);
+            return e.toJson();
+          }).toList(),
+        );
+        print("Flushing ${batch.length} events");
+      print(body);
       final res = await http.post(
-        Uri.parse("${configs['BACKEND_URL']}/blisso_administration/mobile-user-activities/"),
+        Uri.parse(
+            "${configs['BACKEND_URL']}/blisso_administration/mobile-user-activities/"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode(
-          batch.map((e) => e.toJson()).toList(),
-        ),
+        body: body
       );
 
       print(res);

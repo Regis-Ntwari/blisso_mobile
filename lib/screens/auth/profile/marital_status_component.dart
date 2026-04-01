@@ -233,7 +233,7 @@ class _MaritalStatusComponentState extends State<MaritalStatusComponent>
               SizedBox(height: size.height * 0.04),
 
               _PrimaryButton(
-                text: 'Save Profile',
+                text: 'Next',
                 onTap: () {
                   if (widget.chosenStatus == '') {
                     showPopupComponent(

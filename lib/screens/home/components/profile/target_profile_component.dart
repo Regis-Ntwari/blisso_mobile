@@ -26,25 +26,26 @@ class _TargetProfileComponentState
   String expandedField = '';
   bool isLoading = false;
 
-  Future<bool> checkIfChatExists(String username) async {
-    final chatRef = ref.read(chatServiceProviderImpl);
-    if (chatRef.data == null) {
-      final chatRef = ref.read(chatServiceProviderImpl.notifier);
-      await chatRef.getMessages();
-    }
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final targetProfile = ref.watch(targetProfileProvider);
+      ref
+          .read(videoPostServiceProviderImpl.notifier)
+          .getTargetVideos(targetProfile.user!['username']);
+    });
+  }
 
-    for (var chat in chatRef.data) {
-      if (chat.containsKey(username)) {
-        return true;
-      }
-    }
-    return false;
+  // Helper to format the goal text
+  String formatGoal(String? goal) {
+    if (goal == null || goal.isEmpty) return "Still Figuring It Out";
+    return goal; // Assumes labels are already formatted in constants
   }
 
   Map<String, Map<String, List<dynamic>>> _groupByCategoryAndSubCategory(
       List<dynamic> snapshots) {
     final Map<String, Map<String, List<dynamic>>> grouped = {};
-
     for (final snap in snapshots) {
       final category = snap['category']?.toString() ?? 'Other';
       final subCategory = snap['sub_category']?.toString() ?? 'Other';
@@ -52,157 +53,395 @@ class _TargetProfileComponentState
       grouped[category]!.putIfAbsent(subCategory, () => []);
       grouped[category]![subCategory]!.add(snap);
     }
-
     return grouped;
   }
 
-  Widget _buildGroupedSnapshots(List<dynamic> snapshots) {
-    final grouped = _groupByCategoryAndSubCategory(snapshots);
-    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+  @override
+  Widget build(BuildContext context) {
+    final targetProfile = ref.watch(targetProfileProvider);
+    double width = MediaQuery.sizeOf(context).width;
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final Color cardColor =
+        isLightTheme ? Colors.grey.shade50 : const Color(0xFF050505);
+    final videoState = ref.watch(videoPostServiceProviderImpl);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: grouped.entries.map((categoryEntry) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: GlobalColors.primaryColor.withOpacity(0.15),
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
+    return Scaffold(
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      appBar: AppBar(
+        backgroundColor: isLightTheme ? Colors.white : Colors.black,
+        leading: IconButton(
+          onPressed: () => Routemaster.of(context).pop(),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: GlobalColors.primaryColor),
+        ),
+        centerTitle: true,
+        title: Text('${targetProfile.nickname}',
+            style: TextStyle(
+                fontSize: 22,
+                color: GlobalColors.primaryColor,
+                fontWeight: FontWeight.bold)),
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category header
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: GlobalColors.primaryColor.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(13),
-                    topRight: Radius.circular(13),
+              // 1. Profile Image Section
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Center(
+                  child: SizedBox(
+                    height: width * 0.85,
+                    width: width * 0.85,
+                    child: InkWell(
+                      onTap: () => Routemaster.of(context).push(
+                          '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: CachedNetworkImage(
+                          imageUrl: targetProfile.profilePictureUri ??
+                              'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d',
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(
+                                  color: GlobalColors.primaryColor)),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                child: Row(
+              ),
+
+              // 2. Name & Relationship Goal Hero Card
+              Center(
+                child: Column(
                   children: [
-                    Icon(
-                      Icons.interests_rounded,
-                      size: 18,
-                      color: GlobalColors.primaryColor,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        categoryEntry.key,
-                        style: TextStyle(
-                          fontSize: 15,
+                    const SizedBox(height: 20),
+                    Text(
+                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                      style: TextStyle(
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: GlobalColors.primaryColor,
-                        ),
-                      ),
+                          color: isLightTheme ? Colors.black : Colors.white),
                     ),
+                    const SizedBox(height: 16),
+
+                    // FANCY LOOKING FOR CARD
                     Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                          horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
-                        color: GlobalColors.primaryColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${categoryEntry.value.values.fold<int>(0, (sum, list) => sum + list.length)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: GlobalColors.primaryColor,
+                        gradient: LinearGradient(
+                          colors: [
+                            GlobalColors.primaryColor.withOpacity(0.12),
+                            GlobalColors.primaryColor.withOpacity(0.04),
+                          ],
                         ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: GlobalColors.primaryColor.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                                color: GlobalColors.primaryColor,
+                                shape: BoxShape.circle),
+                            child: const Icon(Icons.auto_awesome_outlined,
+                                color: Colors.white, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("LOOKING FOR",
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: GlobalColors.primaryColor,
+                                      letterSpacing: 1.2)),
+                              Text(
+                                formatGoal(targetProfile.lookingFor),
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isLightTheme
+                                        ? Colors.black87
+                                        : Colors.white),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              // Sub-categories
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: categoryEntry.value.entries.map((subEntry) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 3,
-                                height: 14,
-                                decoration: BoxDecoration(
-                                  color: GlobalColors.primaryColor
-                                      .withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                subEntry.key,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: isLightTheme
-                                      ? Colors.black54
-                                      : Colors.white60,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 11),
-                            child: Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: subEntry.value.map<Widget>((snap) {
-                                // 
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: GlobalColors.primaryColor
-                                        .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: GlobalColors.primaryColor
-                                          .withOpacity(0.4),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    snap['name'].toString(),
-                                    style: TextStyle(
-                                      color: GlobalColors.primaryColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+
+              const SizedBox(height: 24),
+
+              // 3. Personal Info Detail Card
+              Card(
+                color: cardColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                          label: 'Date of Birth',
+                          value: DateFormat('MMMM d, y')
+                              .format(DateTime.parse(targetProfile.dob!))),
+                      _buildInfoRow(
+                          label: 'Gender',
+                          value: targetProfile.gender.toString().toUpperCase()),
+                      _buildInfoRow(
+                          label: 'Marital Status',
+                          value: targetProfile.maritalStatus
+                              .toString()
+                              .toUpperCase()),
+                      _buildInfoRow(
+                          label: 'Nationality',
+                          value: targetProfile.nationality
+                              .toString()
+                              .toUpperCase()),
+                      _buildInfoRow(
+                          label: 'Residence',
+                          value:
+                              "${targetProfile.residenceCity}, ${targetProfile.residenceCountry}"
+                                  .toUpperCase(),
+                          isLast: true),
+                    ],
+                  ),
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              // 4. Expandable Snapshots
+              _buildExpandableSection(
+                title: "About ${targetProfile.nickname}",
+                subtitle: targetProfile.lifesnapshots!
+                    .map((s) => s['name'])
+                    .join(", "),
+                isExpanded: expandedField == 'interest',
+                onTap: () => setState(() => expandedField =
+                    expandedField == 'interest' ? '' : 'interest'),
+                expandedContent:
+                    _buildGroupedSnapshots(targetProfile.lifesnapshots!),
+              ),
+              const SizedBox(height: 12),
+              _buildExpandableSection(
+                title: "Looking for in a partner",
+                subtitle: targetProfile.targetLifesnapshots!
+                    .map((s) => s['name'])
+                    .join(", "),
+                isExpanded: expandedField == 'target',
+                onTap: () => setState(() =>
+                    expandedField = expandedField == 'target' ? '' : 'target'),
+                expandedContent:
+                    _buildGroupedSnapshots(targetProfile.targetLifesnapshots!),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 5. DM Button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ButtonComponent(
+                  text: isLoading ? 'Sending...' : 'Send Message Request',
+                  backgroundColor: GlobalColors.primaryColor,
+                  foregroundColor: Colors.white,
+                  onTap: isLoading ? () {} : () => handleDMTap(context),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 6. Media Tabs (Photos/Videos)
+              _buildMediaSection(
+                  targetProfile, videoState, cardColor, isLightTheme),
+
+              const SizedBox(height: 40),
             ],
           ),
-        );
-      }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // --- Helper Widgets ---
+
+  Widget _buildInfoRow(
+      {required String label, required String value, bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+          border: Border(
+              bottom: isLast
+                  ? BorderSide.none
+                  : BorderSide(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)))),
+      child: Row(
+        children: [
+          Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: GlobalColors.secondaryColor,
+                      fontWeight: FontWeight.w500))),
+          Expanded(
+              flex: 2,
+              child: Text(value,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.right)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableSection(
+      {required String title,
+      required String subtitle,
+      required bool isExpanded,
+      required VoidCallback onTap,
+      required Widget expandedContent}) {
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    return Card(
+      color: isLightTheme ? Colors.grey.shade50 : const Color(0xFF050505),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: onTap,
+            title: Text(title,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            subtitle:
+                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                color: GlobalColors.primaryColor),
+          ),
+          if (isExpanded)
+            Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: expandedContent),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedSnapshots(List<dynamic> snapshots) {
+    final grouped = _groupByCategoryAndSubCategory(snapshots);
+    return Column(
+      children: grouped.entries
+          .map((cat) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(cat.key,
+                      style: TextStyle(
+                          color: GlobalColors.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: cat.value.values
+                          .expand((e) => e)
+                          .map((snap) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                    color: GlobalColors.primaryColor
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20)),
+                                child: Text(snap['name'],
+                                    style: TextStyle(
+                                        color: GlobalColors.primaryColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ))
+                          .toList()),
+                  const SizedBox(height: 16),
+                ],
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildMediaSection(
+      targetProfile, videoState, cardColor, isLightTheme) {
+    return Card(
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            TabBar(
+              indicatorColor: GlobalColors.primaryColor,
+              labelColor: GlobalColors.primaryColor,
+              unselectedLabelColor: GlobalColors.secondaryColor,
+              tabs: const [Tab(text: 'Photos'), Tab(text: 'Videos')],
+            ),
+            SizedBox(
+              height: 350,
+              child: TabBarView(
+                children: [
+                  _buildPhotoGrid(targetProfile),
+                  _buildVideoGrid(videoState, isLightTheme),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoGrid(targetProfile) {
+    if (targetProfile.profileImages!.isEmpty)
+      return const Center(child: Text("No photos yet"));
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, crossAxisSpacing: 8, mainAxisSpacing: 8),
+      itemCount: targetProfile.profileImages!.length,
+      itemBuilder: (context, index) => ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: CachedNetworkImage(
+            imageUrl: targetProfile.profileImages![index]['image_url'],
+            fit: BoxFit.cover),
+      ),
+    );
+  }
+
+  Widget _buildVideoGrid(videoState, isLightTheme) {
+    if (videoState.isLoading)
+      return const Center(child: CircularProgressIndicator());
+    if (videoState.data.isEmpty)
+      return const Center(child: Text("No videos yet"));
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3, crossAxisSpacing: 6, mainAxisSpacing: 6),
+      itemCount: videoState.data.length,
+      itemBuilder: (context, index) => Container(
+          color: Colors.grey.withOpacity(0.2),
+          child: const Icon(Icons.play_circle_outline)),
     );
   }
 
@@ -303,607 +542,5 @@ class _TargetProfileComponentState
           icon: Icons.error,
           message: 'Please upgrade your plan to send message requests');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final targetProfile = ref.watch(targetProfileProvider);
-      ref
-          .read(videoPostServiceProviderImpl.notifier)
-          .getTargetVideos(targetProfile.user!['username']);
-    });
-  }
-
-  Widget _buildInfoRow({
-    required String label,
-    required String value,
-    bool isFirst = false,
-    bool isLast = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: isLast
-              ? BorderSide.none
-              : BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1),
-                ),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: GlobalColors.secondaryColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).brightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-              ),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final targetProfile = ref.watch(targetProfileProvider);
-    double width = MediaQuery.sizeOf(context).width;
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    final Color cardColor =
-        isLightTheme ? Colors.grey.shade50 : Color(0xFF050505);
-    final videoState = ref.watch(videoPostServiceProviderImpl);
-
-    return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : Colors.black,
-      appBar: AppBar(
-        backgroundColor: isLightTheme ? Colors.white : Colors.black,
-        leading: IconButton(
-          onPressed: () => Routemaster.of(context).pop(),
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 20,
-            color: GlobalColors.primaryColor,
-          ),
-        ),
-        centerTitle: true,
-        title: Text(
-          '${targetProfile.nickname}',
-          style: TextStyle(
-            fontSize: 24,
-            color: GlobalColors.primaryColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      children: [
-                        SizedBox(
-                          height: width * 0.85,
-                          width: width * 0.85,
-                          child: InkWell(
-                            onTap: () => Routemaster.of(context).push(
-                                '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: CachedNetworkImage(
-                                  imageUrl: targetProfile.profilePictureUri ==
-                                          null
-                                      ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d'
-                                      : targetProfile.profilePictureUri!,
-                                  placeholder: (context, url) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(
-                                        color: GlobalColors.primaryColor,
-                                      ),
-                                    );
-                                  },
-                                  fit: BoxFit.cover),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Name and Feeling
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    Text(
-                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: isLightTheme ? Colors.black : Colors.white,
-                      ),
-                    ),
-                    if (targetProfile.feeling != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: GlobalColors.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Feeling ${targetProfile.feeling}',
-                          style: TextStyle(
-                            color: GlobalColors.primaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Personal Info Card
-              Card(
-                color: cardColor,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      _buildInfoRow(
-                        label: 'Date of Birth',
-                        value: DateFormat('MMMM d, y').format(
-                          DateTime.parse(targetProfile.dob!),
-                        ),
-                        isFirst: true,
-                      ),
-                      _buildInfoRow(
-                        label: 'Gender',
-                        value: targetProfile.gender.toString().toUpperCase(),
-                        isFirst: true,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildInfoRow(
-                        label: 'Marital Status',
-                        value: targetProfile.maritalStatus
-                            .toString()
-                            .toUpperCase(),
-                        isFirst: true,
-                      ),
-                      _buildInfoRow(
-                        label: 'Nationality',
-                        value:
-                            targetProfile.nationality.toString().toUpperCase(),
-                        isLast: true,
-                      ),
-                      _buildInfoRow(
-                        label: 'Residence Country',
-                        value: targetProfile.residenceCountry
-                            .toString()
-                            .toUpperCase(),
-                        isLast: true,
-                      ),
-                      _buildInfoRow(
-                        label: 'Residence City',
-                        value: targetProfile.residenceCity
-                            .toString()
-                            .toUpperCase(),
-                        isLast: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Interests Sections
-              _buildExpandableSection(
-                title: "About ${targetProfile.nickname}",
-                subtitle: targetProfile.lifesnapshots!
-                    .map((snapshot) => snapshot['name'])
-                    .join(", "),
-                isExpanded: expandedField == 'interest',
-                onTap: () {
-                  setState(() {
-                    expandedField =
-                        expandedField == 'interest' ? '' : 'interest';
-                  });
-                },
-                expandedContent:
-                    _buildGroupedSnapshots(targetProfile.lifesnapshots!),
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildExpandableSection(
-                title: "What ${targetProfile.nickname} looks for in a person",
-                subtitle: targetProfile.targetLifesnapshots!
-                    .map((snapshot) => snapshot['name'])
-                    .join(", "),
-                isExpanded: expandedField == 'target',
-                onTap: () {
-                  setState(() {
-                    expandedField = expandedField == 'target' ? '' : 'target';
-                  });
-                },
-                expandedContent:
-                    _buildGroupedSnapshots(targetProfile.targetLifesnapshots!),
-              ),
-
-              const SizedBox(height: 24),
-
-              // DM Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ButtonComponent(
-                  text: isLoading ? 'Sending...' : 'DM Me',
-                  backgroundColor: GlobalColors.primaryColor,
-                  foregroundColor: Colors.white,
-                  onTap: isLoading ? () {} : () => handleDMTap(context),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Media Tabs
-              Card(
-                color: cardColor,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: DefaultTabController(
-                  length: 2,
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
-                          ),
-                          color: isLightTheme
-                              ? Colors.grey.shade100
-                              : Color(0xFF050505),
-                        ),
-                        child: TabBar(
-                          indicator: const UnderlineTabIndicator(
-                            borderSide: BorderSide(
-                              color: GlobalColors.primaryColor,
-                              width: 3,
-                            ),
-                            insets: EdgeInsets.symmetric(horizontal: 16),
-                          ),
-                          labelColor: GlobalColors.primaryColor,
-                          unselectedLabelColor: GlobalColors.secondaryColor,
-                          tabs: const [
-                            Tab(
-                              icon: Icon(Icons.photo_library),
-                              text: 'Photos',
-                            ),
-                            Tab(
-                              icon: Icon(Icons.video_library),
-                              text: 'Videos',
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 400,
-                        child: TabBarView(
-                          children: [
-                            // Photos Tab
-                            targetProfile.profileImages!.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.photo_library_outlined,
-                                          size: 64,
-                                          color: GlobalColors.secondaryColor,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'No photos yet',
-                                          style: TextStyle(
-                                            color: GlobalColors.secondaryColor,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : GridView.builder(
-                                    padding: const EdgeInsets.all(16),
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      crossAxisSpacing: 12,
-                                      mainAxisSpacing: 12,
-                                      mainAxisExtent: 160,
-                                    ),
-                                    itemCount:
-                                        targetProfile.profileImages!.length,
-                                    itemBuilder: (context, index) {
-                                      return ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: InkWell(
-                                          onTap: () => Routemaster.of(context).push(
-                                              '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
-                                          child: Stack(
-                                            children: [
-                                              CachedNetworkImage(
-                                                imageUrl: targetProfile
-                                                        .profileImages![index]
-                                                    ['image_url'],
-                                                fit: BoxFit.cover,
-                                                width: double.infinity,
-                                                height: double.infinity,
-                                              ),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin:
-                                                        Alignment.bottomCenter,
-                                                    end: Alignment.topCenter,
-                                                    colors: [
-                                                      Colors.black
-                                                          .withOpacity(0.5),
-                                                      Colors.transparent,
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                            // Videos Tab
-                            videoState.isLoading
-                                ? const Center(
-                                    child: CircularProgressIndicator(
-                                      color: GlobalColors.primaryColor,
-                                    ),
-                                  )
-                                : videoState.data == null ||
-                                        videoState.data.isEmpty
-                                    ? Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.videocam_off_outlined,
-                                              size: 64,
-                                              color:
-                                                  GlobalColors.secondaryColor,
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              'No videos yet',
-                                              style: TextStyle(
-                                                color:
-                                                    GlobalColors.secondaryColor,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    : GridView.builder(
-                                        padding: const EdgeInsets.all(16),
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 3,
-                                          crossAxisSpacing: 8,
-                                          mainAxisSpacing: 8,
-                                          mainAxisExtent: 120,
-                                        ),
-                                        itemCount: videoState.data.length,
-                                        itemBuilder: (context, index) {
-                                          final video = videoState.data[index];
-                                          final thumbnailUrl =
-                                              video['post_video_thumbnail_url']
-                                                      ?.toString() ??
-                                                  '';
-
-                                          return GestureDetector(
-                                            onTap: () {
-                                              Routemaster.of(context).push(
-                                                '/homepage/target-profile/video-player?id=${Uri.encodeComponent(video['id'].toString())}',
-                                              );
-                                            },
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Stack(
-                                                fit: StackFit.expand,
-                                                children: [
-                                                  // Thumbnail
-                                                  Image.network(
-                                                    thumbnailUrl,
-                                                    fit: BoxFit.cover,
-                                                    cacheWidth: 300,
-                                                    gaplessPlayback: true,
-                                                    errorBuilder:
-                                                        (_, __, ___) =>
-                                                            Container(
-                                                      color: isLightTheme
-                                                          ? Colors.grey.shade800
-                                                          : Colors
-                                                              .grey.shade900,
-                                                    ),
-                                                    loadingBuilder: (_, child,
-                                                        loadingProgress) {
-                                                      if (loadingProgress ==
-                                                          null) return child;
-                                                      return Container(
-                                                        color: isLightTheme
-                                                            ? Colors
-                                                                .grey.shade800
-                                                            : Colors
-                                                                .grey.shade900,
-                                                      );
-                                                    },
-                                                  ),
-                                                  // Gradient overlay
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      gradient: LinearGradient(
-                                                        begin: Alignment
-                                                            .bottomCenter,
-                                                        end:
-                                                            Alignment.topCenter,
-                                                        colors: [
-                                                          Colors.black
-                                                              .withOpacity(0.6),
-                                                          Colors.transparent,
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  // Play button
-                                                  Center(
-                                                    child: Container(
-                                                      width: 36,
-                                                      height: 36,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.black
-                                                            .withOpacity(0.5),
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      child: const Icon(
-                                                        Icons
-                                                            .play_arrow_rounded,
-                                                        color: Colors.white,
-                                                        size: 24,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpandableSection({
-    required String title,
-    required String subtitle,
-    required bool isExpanded,
-    required VoidCallback onTap,
-    required Widget expandedContent,
-  }) {
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-
-    return Card(
-      color: isLightTheme ? Colors.grey.shade50 : Color(0xFF050505),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            onTap: onTap,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 12,
-            ),
-            title: Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: isLightTheme ? Colors.black : Colors.white,
-              ),
-            ),
-            subtitle: Text(
-              subtitle,
-              style: TextStyle(
-                color: GlobalColors.secondaryColor,
-                fontSize: 14,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: Icon(
-              isExpanded
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
-              color: GlobalColors.primaryColor,
-              size: 28,
-            ),
-          ),
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: expandedContent,
-            ),
-        ],
-      ),
-    );
   }
 }

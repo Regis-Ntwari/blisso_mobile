@@ -8,8 +8,8 @@ import 'package:blisso_mobile/screens/auth/profile/image_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/location_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/marital_status_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/nickname_component.dart';
+import 'package:blisso_mobile/screens/auth/profile/relationship_goal_component.dart';
 import 'package:blisso_mobile/screens/auth/profile/sexual_orientation_component.dart';
-import 'package:blisso_mobile/screens/auth/profile/subscription/subscription_screen.dart';
 import 'package:blisso_mobile/services/location/location_service_provider.dart';
 import 'package:blisso_mobile/services/models/profile_model.dart';
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
@@ -42,6 +42,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String chosenGender = '';
   String chosenSex = '';
   String chosenStatus = '';
+  String chosenGoal = '';
 
   final FocusNode _dayFocusNode = FocusNode();
   final FocusNode _monthFocusNode = FocusNode();
@@ -88,7 +89,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void saveProfile(BuildContext context) async {
     final profile = ProfileModel(
       nickname: _nicknameController.text,
-      dob: '${_yearController.text}-${_monthController.text}-${_dayController.text}',
+      dob:
+          '${_yearController.text}-${_monthController.text}-${_dayController.text}',
       latitude: position!.latitude.toString(),
       longitude: position!.longitude.toString(),
       profilePic: _profilePicture!,
@@ -97,6 +99,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       residenceCountry: _residenceCountryController.text,
       residenceCity: _residenceCityController.text,
       nationality: _nationalityController.text,
+      lookingFor: chosenGoal.toLowerCase(),
       maritalStatus: chosenStatus.toLowerCase(),
       lang: capitalize('ENGLISH'),
     );
@@ -203,8 +206,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           onChangeAddress: changeAddress,
                           onChangePosition: changePosition,
                           location: position,
-                          homeAddress: _residenceCityController, // kept for compat
-                          residenceCountryController: _residenceCountryController,
+                          homeAddress:
+                              _residenceCityController, // kept for compat
+                          residenceCountryController:
+                              _residenceCountryController,
                           residenceCityController: _residenceCityController,
                           nationalityController: _nationalityController,
                           onContinue: () => setState(() => _index = _index + 1),
@@ -219,13 +224,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         MaritalStatusComponent(
                           statuses: statuses,
                           chosenStatus: chosenStatus,
-                          changeStatus: (status) {
-                            setState(() => chosenStatus = status);
-                          },
-                          onContinue: () => saveProfile(context),
+                          changeStatus: (status) =>
+                              setState(() => chosenStatus = status),
+                          onContinue: () =>
+                              setState(() => _index = 8), // Now goes to step 8
                         )
                       else if (_index == 8)
-                        const SubscriptionScreen()
+                        RelationshipGoalComponent(
+                          chosenGoal: chosenGoal,
+                          changeGoal: (goal) =>
+                              setState(() => chosenGoal = goal),
+                          onContinue: () =>
+                              saveProfile(context), // Final submission
+                        )
                     ],
                   ),
                 ),

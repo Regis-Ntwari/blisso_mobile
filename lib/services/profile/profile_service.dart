@@ -11,11 +11,14 @@ class ProfileService {
     final accessToken =
         await SharedPreferencesService.getPreference('accessToken');
 
+    print(profile.toMap());
+
     return ApiService().postFormDataRequest(
       endpoint: 'profiles/',
       body: profile.toMap(),
       token: accessToken,
     );
+
   }
 
   Future<ApiResponse> getAnyProfile(String username) async {

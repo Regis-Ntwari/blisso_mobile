@@ -14,6 +14,7 @@ class ProfileModel {
   String residenceCountry;
   String residenceCity;
   String nationality;
+  String lookingFor;
 
   ProfileModel(
       {required this.nickname,
@@ -27,7 +28,8 @@ class ProfileModel {
       required this.lang,
       required this.residenceCountry,
       required this.residenceCity,
-      required this.nationality});
+      required this.nationality,
+      required this.lookingFor});
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -37,6 +39,7 @@ class ProfileModel {
       'longitude': longitude,
       'profile_pic': profilePic,
       'gender': gender,
+      'looking_for': lookingFor,
       'show_me': showMe,
       'marital_status': maritalStatus,
       'lang': lang,
@@ -59,7 +62,8 @@ class ProfileModel {
         lang: map['lang'] as String,
         residenceCountry: map['residence_country'] as String,
         residenceCity: map['residence_city'] as String,
-        nationality: map['nationality'] as String);
+        nationality: map['nationality'] as String,
+        lookingFor: map['looking_for'] as String);
   }
 
   String toJson() => json.encode(toMap());

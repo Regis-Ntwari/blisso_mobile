@@ -116,6 +116,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       
       // Start tracking the initial tab (index 0 - Home)
       _startTrackingCurrentTab();
+
+      TrackingService.instance.startSession();
     });
   }
 
