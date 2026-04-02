@@ -95,9 +95,10 @@ class _RelationshipGoalComponentState extends State<RelationshipGoalComponent> w
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Icon(goal.icon, size: 20, color: isSelected ? Colors.white : GlobalColors.primaryColor),
+                          const SizedBox(height: 6),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

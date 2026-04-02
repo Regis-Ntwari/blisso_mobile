@@ -167,8 +167,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                   .toLowerCase()
                   .contains(query) ??
               false;
-        case 'Home Address':
-          return profile['home_address']
+        
+        case 'Nationality':
+          return profile['nationality']
                   ?.toString()
                   .toLowerCase()
                   .contains(query) ??
@@ -646,7 +647,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                           'Lastname',
                           'Email',
                           'Nickname',
-                          'Home Address'
+                          'Home Address',
+                          'Nationality'
                         ].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
