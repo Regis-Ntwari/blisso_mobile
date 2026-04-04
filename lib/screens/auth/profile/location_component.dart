@@ -160,7 +160,7 @@ class _LocationComponentState extends ConsumerState<LocationComponent>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: size.height * 0.06),
-              _StepIndicator(current: 5, total: 7),
+              _StepIndicator(current: 5, total: 8),
               SizedBox(height: size.height * 0.045),
               Container(
                 width: 52,

@@ -265,8 +265,8 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                                horizontal: 5,
+                                vertical: 4,
                               ),
                               decoration: BoxDecoration(
                                 color:
@@ -278,6 +278,7 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                                 style: TextStyle(
                                   color: GlobalColors.primaryColor,
                                   fontWeight: FontWeight.w500,
+                                  fontSize: 12
                                 ),
                               ),
                             ),
@@ -288,55 +289,53 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
 
                     const SizedBox(height: 12),
 
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            GlobalColors.primaryColor.withOpacity(0.12),
-                            GlobalColors.primaryColor.withOpacity(0.04),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: GlobalColors.primaryColor.withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                color: GlobalColors.primaryColor,
-                                shape: BoxShape.circle),
-                            child: const Icon(Icons.auto_awesome_outlined,
-                                color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 14),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("LOOKING FOR",
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      color: GlobalColors.primaryColor,
-                                      letterSpacing: 1.2)),
-                              Text(
-                                formatGoal(profileState.data['looking_for']),
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    overflow: TextOverflow.ellipsis,
-                                    color: isLightTheme
-                                        ? Colors.black87
-                                        : Colors.white),
-                              ),
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              GlobalColors.primaryColor.withOpacity(0.12),
+                              GlobalColors.primaryColor.withOpacity(0.04),
                             ],
                           ),
-                        ],
+                          borderRadius: BorderRadius.circular(20),
+                          // border: Border.all(
+                          //     color: GlobalColors.primaryColor.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                  color: GlobalColors.primaryColor,
+                                  shape: BoxShape.circle),
+                              child: const Icon(Icons.auto_awesome_outlined,
+                                  color: Colors.white, size: 10),
+                            ),
+                            const SizedBox(width: 14),
+                            Text("LOOKING FOR",
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: GlobalColors.primaryColor,
+                                    letterSpacing: 1.2)),
+                            const SizedBox(width: 8),
+                            Text(
+                              formatGoal(profileState.data['looking_for']),
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  overflow: TextOverflow.ellipsis,
+                                  color: isLightTheme
+                                      ? Colors.black87
+                                      : Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 

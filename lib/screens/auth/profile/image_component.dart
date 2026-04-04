@@ -156,7 +156,7 @@ class _ImageComponentState extends State<ImageComponent>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: size.height * 0.06),
-              _StepIndicator(current: 6, total: 7),
+              _StepIndicator(current: 6, total: 8),
               SizedBox(height: size.height * 0.045),
               Container(
                 width: 52,

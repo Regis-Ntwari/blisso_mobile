@@ -64,7 +64,7 @@ class _NicknameComponentState extends State<NicknameComponent>
             children: [
               SizedBox(height: size.height * 0.06),
               // Step indicator
-              _StepIndicator(current: 1, total: 7),
+              _StepIndicator(current: 1, total: 8),
               SizedBox(height: size.height * 0.045),
               // Icon accent
               Container(

@@ -88,12 +88,12 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen>
     final showLoading =
         (state.isLoading && isLoading) || state.data == null;
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: bg,
-        body: showLoading
-            ? const LoadingScreen()
-            : Column(
+    return Scaffold(
+      backgroundColor: bg,
+      body: showLoading
+          ? const LoadingScreen()
+          : SafeArea(
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── App bar ──────────────────────────────────────────────
@@ -109,7 +109,7 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen>
                   //     ),
                   //   ),
                   // ),
-
+                
                   // ── Hero text ────────────────────────────────────────────
                   FadeTransition(
                     opacity: _headerFade,
@@ -163,7 +163,7 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen>
                       ),
                     ),
                   ),
-
+                
                   // ── Component fills remaining space ──────────────────────
                   Expanded(
                     child: ProfileSnapshotsComponent(
@@ -179,7 +179,7 @@ class _SnapshotScreenState extends ConsumerState<SnapshotScreen>
                   ),
                 ],
               ),
-      ),
+          ),
     );
   }
 }

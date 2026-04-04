@@ -321,10 +321,10 @@ class _TargetProfileSnapshotsComponentState
     final progress =
         (_realSelections / kMinTargetSelections).clamp(0.0, 1.0);
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: bg,
-        body: Column(
+    return Scaffold(
+      backgroundColor: bg,
+      body: SafeArea(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── App bar ────────────────────────────────────────────────────
@@ -336,7 +336,7 @@ class _TargetProfileSnapshotsComponentState
             //         size: 18, color: textMain),
             //   ),
             // ),
-
+            
             // ── Hero header ───────────────────────────────────────────────
             FadeTransition(
               opacity: _headerFade,
@@ -389,7 +389,7 @@ class _TargetProfileSnapshotsComponentState
                 ),
               ),
             ),
-
+            
             // ── Scrollable body ───────────────────────────────────────────
             Expanded(
               child: Container(
@@ -412,7 +412,7 @@ class _TargetProfileSnapshotsComponentState
                         ),
                       ),
                     ),
-
+            
                     // ── Category progress bar ────────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
@@ -443,7 +443,7 @@ class _TargetProfileSnapshotsComponentState
                         ],
                       ),
                     ),
-
+            
                     // ── Category navigator ───────────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
@@ -487,7 +487,7 @@ class _TargetProfileSnapshotsComponentState
                         ),
                       ),
                     ),
-
+            
                     // ── Search bar ───────────────────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -517,7 +517,7 @@ class _TargetProfileSnapshotsComponentState
                         ),
                       ),
                     ),
-
+            
                     // ── Grid ─────────────────────────────────────────────
                     Expanded(
                       child: items.isEmpty
@@ -571,7 +571,7 @@ class _TargetProfileSnapshotsComponentState
                               ),
                             ),
                     ),
-
+            
                     // ── Footer: counter + submit ──────────────────────────
                     Container(
                       padding:
@@ -622,7 +622,7 @@ class _TargetProfileSnapshotsComponentState
                               ],
                             ),
                           ),
-
+            
                           // Submit button
                           AnimatedOpacity(
                             opacity: _canSubmit ? 1.0 : 0.4,
@@ -641,7 +641,7 @@ class _TargetProfileSnapshotsComponentState
                                           .notifier)
                                       .postTargetProfileSnapshots(
                                           _chosenValues);
-
+            
                                   final state = ref
                                       .read(snapshotServiceProviderImpl);
                                   if (state.error != null) {

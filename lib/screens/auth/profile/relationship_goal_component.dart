@@ -56,7 +56,7 @@ class _RelationshipGoalComponentState extends State<RelationshipGoalComponent> w
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: size.height * 0.04),
-              const _StepIndicator(current: 7, total: 8), // Updated total steps
+              const _StepIndicator(current: 8, total: 8), // Updated total steps
               SizedBox(height: size.height * 0.03),
               Container(
                 width: 52, height: 52,
@@ -98,7 +98,7 @@ class _RelationshipGoalComponentState extends State<RelationshipGoalComponent> w
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Icon(goal.icon, size: 20, color: isSelected ? Colors.white : GlobalColors.primaryColor),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 15),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

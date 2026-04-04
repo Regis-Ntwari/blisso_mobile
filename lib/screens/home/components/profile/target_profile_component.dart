@@ -39,7 +39,7 @@ class _TargetProfileComponentState
 
   // Helper to format the goal text
   String formatGoal(String? goal) {
-    if (goal == null || goal.isEmpty) return "Still Figuring It Out";
+    if (goal == null || goal.isEmpty || goal.startsWith("[")) return "Still Figuring It Out";
     return goal; // Assumes labels are already formatted in constants
   }
 
@@ -131,8 +131,8 @@ class _TargetProfileComponentState
                     if (targetProfile.feeling != null) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: 5,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: GlobalColors.primaryColor.withOpacity(0.1),
@@ -141,6 +141,7 @@ class _TargetProfileComponentState
                         child: Text(
                           'Feeling ${targetProfile.feeling!}',
                           style: TextStyle(
+                            fontSize: 12,
                             color: GlobalColors.primaryColor,
                             fontWeight: FontWeight.w500,
                           ),
@@ -152,9 +153,10 @@ class _TargetProfileComponentState
 
                     // FANCY LOOKING FOR CARD
                     Container(
+
                       margin: const EdgeInsets.symmetric(horizontal: 10),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
+                          horizontal: 5, vertical: 4),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -170,34 +172,30 @@ class _TargetProfileComponentState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
                                 color: GlobalColors.primaryColor,
                                 shape: BoxShape.circle),
                             child: const Icon(Icons.auto_awesome_outlined,
-                                color: Colors.white, size: 20),
+                                color: Colors.white, size: 10),
                           ),
                           const SizedBox(width: 14),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("LOOKING FOR",
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      color: GlobalColors.primaryColor,
-                                      letterSpacing: 1.2)),
-                              Text(
-                                formatGoal(targetProfile.lookingFor),
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    overflow: TextOverflow.ellipsis,
-                                    color: isLightTheme
-                                        ? Colors.black87
-                                        : Colors.white),
-                              ),
-                            ],
+                          Text("LOOKING FOR",
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: GlobalColors.primaryColor,
+                                  letterSpacing: 1.2)),
+                          const SizedBox(width: 8),
+                          Text(
+                            formatGoal(targetProfile.lookingFor),
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.ellipsis,
+                                color: isLightTheme
+                                    ? Colors.black87
+                                    : Colors.white),
                           ),
                         ],
                       ),

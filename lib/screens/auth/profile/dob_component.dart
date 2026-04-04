@@ -81,7 +81,7 @@ class _DobComponentState extends State<DobComponent>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: size.height * 0.06),
-                _StepIndicator(current: 2, total: 7),
+                _StepIndicator(current: 2, total: 8),
                 SizedBox(height: size.height * 0.045),
                 Container(
                   width: 52,

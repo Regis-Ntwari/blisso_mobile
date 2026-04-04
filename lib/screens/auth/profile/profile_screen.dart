@@ -136,32 +136,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final locationState = ref.watch(locationServiceProviderImpl);
     final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor:
-            isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: _index > 1
-              ? IconButton(
-                  onPressed: () => setState(() => _index = _index - 1),
-                  icon: Icon(
-                    Icons.keyboard_arrow_left,
-                    color: GlobalColors.secondaryColor,
-                    size: 28,
-                  ))
-              : IconButton(
-                  onPressed: () => Routemaster.of(context).pop(),
-                  icon: Icon(
-                    Icons.keyboard_arrow_left,
-                    color: GlobalColors.secondaryColor,
-                    size: 28,
-                  )),
-        ),
-        body: userState.isLoading || locationState.isLoading
-            ? const LoadingScreen()
-            : SingleChildScrollView(
+    return Scaffold(
+      backgroundColor:
+          isLightTheme ? GlobalColors.lightBackgroundColor : Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: _index > 1
+            ? IconButton(
+                onPressed: () => setState(() => _index = _index - 1),
+                icon: Icon(
+                  Icons.keyboard_arrow_left,
+                  color: GlobalColors.secondaryColor,
+                  size: 28,
+                ))
+            : IconButton(
+                onPressed: () => null,
+                icon: Icon(
+                  Icons.keyboard_arrow_left,
+                  color: GlobalColors.secondaryColor,
+                  size: 28,
+                )),
+      ),
+      body: userState.isLoading || locationState.isLoading
+          ? const LoadingScreen()
+          : SafeArea(
+            child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10.0, right: 10),
                   child: Column(
@@ -241,7 +241,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ),
-      ),
+          ),
     );
   }
 }
