@@ -49,12 +49,13 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   TextEditingController searchValue = TextEditingController();
   dynamic profiles;
   String? _selectedCountry;
+  String? _selectedResidenceCountry;
   String? _selectedRelationshipGoal;
 
   // Tab tracking variables
   DateTime? _currentTabEntryTime;
   
-  Map<int, String> tabs = {0: 'Home', 1: 'Matching', 2: 'Videos', 3: 'Profile'};
+  Map<int, String> tabs = {0: 'Home', 1: 'Matching', 2: 'Videos', 3: 'Chat'};
 
   @override
   bool get wantKeepAlive => true;
@@ -105,7 +106,10 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       });
 
       // Wait for profiles, stories and prefs together
-      await Future.wait([profilesFuture, storiesFuture, prefsFuture]);
+      await Future.wait(
+        [profilesFuture, storiesFuture, prefsFuture],
+        eagerError: false,
+      ).catchError((_) => <void>[]);
 
       ref.read(firstProfileProviderImpl.notifier).updateProfile();
 
@@ -301,7 +305,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         automaticallyImplyLeading: false,
         title: _buildAppBarTitle(),
         actions: _buildAppBarActions(),
-        bottom: isSearchVisible ? _buildSearchBar(isLightTheme) : null,
+        bottom: isSearchVisible && _selectedScreenIndex == 0 ? _buildSearchBar(isLightTheme) : null,
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -603,6 +607,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   Widget _buildSearchInputField(bool isLightTheme) {
     if (searchAttribute == 'Nationality') {
       return _buildCountryPickerField(isLightTheme);
+    } else if (searchAttribute == 'Residence Country') {
+      return _buildResidenceCountryPickerField(isLightTheme);
     } else if (searchAttribute == 'Relationship Goal') {
       return _buildRelationshipGoalField(isLightTheme);
     }
@@ -696,6 +702,53 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                   _selectedCountry ?? 'Select a country...',
                   style: TextStyle(
                     color: _selectedCountry != null
+                        ? (isLightTheme ? Colors.black87 : Colors.white)
+                        : (isLightTheme ? Colors.grey[500] : Colors.grey[400]),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResidenceCountryPickerField(bool isLightTheme) {
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          showCountryPicker(
+            context: context,
+            onSelect: (Country country) {
+              setState(() {
+                _selectedResidenceCountry = country.name;
+              });
+              ref.read(paginatedProfilesProvider.notifier).searchProfiles(
+                    filterOption: 'residence_country',
+                    filterValue: country.name,
+                  );
+            },
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.home_outlined,
+                color: isLightTheme ? Colors.grey[600] : Colors.grey[400],
+                size: 20,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  _selectedResidenceCountry ?? 'Select residence country...',
+                  style: TextStyle(
+                    color: _selectedResidenceCountry != null
                         ? (isLightTheme ? Colors.black87 : Colors.white)
                         : (isLightTheme ? Colors.grey[500] : Colors.grey[400]),
                     fontWeight: FontWeight.bold,
@@ -822,8 +875,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                           'Lastname',
                           'Email',
                           'Nickname',
-                          'Home Address',
                           'Nationality',
+                          'Residence Country',
                           'Relationship Goal',
                         ].map((String value) {
                           return DropdownMenuItem<String>(
@@ -845,6 +898,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                             searchAttribute = value!;
                             searchValue.clear();
                             _selectedCountry = null;
+                            _selectedResidenceCountry = null;
                             _selectedRelationshipGoal = null;
                           });
                           ref
@@ -874,6 +928,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                           isSearchVisible = false;
                           searchValue.clear();
                           _selectedCountry = null;
+                          _selectedResidenceCountry = null;
                           _selectedRelationshipGoal = null;
                         });
 

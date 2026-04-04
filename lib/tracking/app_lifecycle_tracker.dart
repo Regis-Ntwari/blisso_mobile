@@ -8,18 +8,18 @@ class AppLifecycleTracker with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         TrackingService.instance.startSession();
-        TrackingService.instance.track("app_opened", {});
-        EventQueue.instance.flushAll();
+        //TrackingService.instance.track("app_opened", {});
+        //EventQueue.instance.flushAll();
         break;
 
       case AppLifecycleState.paused:
-        TrackingService.instance.track("app_backgrounded", {});
-        TrackingService.instance.endSession();
+        // TrackingService.instance.track("app_backgrounded", {});
+        // TrackingService.instance.endSession();
         break;
 
       case AppLifecycleState.detached:
-        TrackingService.instance.track("app_terminated", {});
-        debugPrint("App detached");
+        // TrackingService.instance.track("app_terminated", {});
+        // debugPrint("App detached");
         break;
 
       default:

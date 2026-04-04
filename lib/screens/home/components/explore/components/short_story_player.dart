@@ -8,6 +8,7 @@ import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
 import 'package:blisso_mobile/services/video-post/view_video_service_provider.dart';
+import 'package:blisso_mobile/services/video-post/video_post_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +72,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
     // Parent toggled active state
     if (widget.isActive != old.isActive) {
-      widget.isActive ? _play() : _pause();
+      if (widget.isActive) {
+        _play();
+      } else {
+        _pause();
+        _stopTracking();
+      }
     }
   }
 
@@ -162,11 +168,11 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
       setState(() => _buffering = val.isBuffering);
     }
 
-    // Time tracking
+    // Time tracking — only START here; stopping is handled explicitly
+    // in deactivate/dispose/didUpdateWidget to avoid premature flushes
+    // caused by brief isPlaying=false during buffering.
     if (val.isPlaying && !_tracking) {
       _startTracking();
-    } else if (!val.isPlaying && _tracking) {
-      _stopTracking();
     }
   }
 
@@ -195,11 +201,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     if (!_tracking || _trackStart == null) return;
     final end = DateTime.now();
     final start = _trackStart!;
+    final videoId = widget.video.id;
     _tracking = false;
     _trackStart = null;
-    // onTimeTrack is a parent callback; call it after clearing local state so
-    // any re-entrant code doesn't see a stale _tracking = true.
-    widget.onTimeTrack?.call(start, end);
+    // Call the service directly instead of going through ref, because this
+    // can fire during deactivate()/dispose() when ref is no longer valid.
+    VideoPostService().updateWatchTime(start, end, videoId);
   }
 
   // ── Like ──────────────────────────────────────────────────────────────────

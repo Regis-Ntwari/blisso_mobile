@@ -128,6 +128,28 @@ class _TargetProfileComponentState
                     ),
                     const SizedBox(height: 16),
 
+                    if (targetProfile.feeling != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: GlobalColors.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Feeling ${targetProfile.feeling!}',
+                          style: TextStyle(
+                            color: GlobalColors.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 12),
+
                     // FANCY LOOKING FOR CARD
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -170,6 +192,7 @@ class _TargetProfileComponentState
                                 style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
+                                    overflow: TextOverflow.ellipsis,
                                     color: isLightTheme
                                         ? Colors.black87
                                         : Colors.white),

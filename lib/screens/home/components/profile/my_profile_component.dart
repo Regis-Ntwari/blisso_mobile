@@ -13,7 +13,6 @@ import 'package:blisso_mobile/services/profile/my_profile_service_provider.dart'
 import 'package:blisso_mobile/services/profile/profile_service_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/snapshots/snapshot_service_provider.dart';
-import 'package:blisso_mobile/services/subscriptions/subscription_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/user_video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 //import 'package:blisso_mobile/utils/subscription_design.dart';
@@ -97,6 +96,11 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
     } else {
       showSnackBar(context, profileState.error!);
     }
+  }
+
+    String formatGoal(String? goal) {
+    if (goal == null || goal.isEmpty) return "Still Figuring It Out";
+    return goal; // Assumes labels are already formatted in constants
   }
 
   @override
@@ -278,6 +282,60 @@ class _MyProfileComponentState extends ConsumerState<MyProfileComponent>
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            GlobalColors.primaryColor.withOpacity(0.12),
+                            GlobalColors.primaryColor.withOpacity(0.04),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: GlobalColors.primaryColor.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                                color: GlobalColors.primaryColor,
+                                shape: BoxShape.circle),
+                            child: const Icon(Icons.auto_awesome_outlined,
+                                color: Colors.white, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("LOOKING FOR",
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: GlobalColors.primaryColor,
+                                      letterSpacing: 1.2)),
+                              Text(
+                                formatGoal(profileState.data['looking_for']),
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    overflow: TextOverflow.ellipsis,
+                                    color: isLightTheme
+                                        ? Colors.black87
+                                        : Colors.white),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),

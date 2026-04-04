@@ -31,9 +31,14 @@ class VideoPostService {
         await SharedPreferencesService.getPreference('accessToken');
 
     ApiResponse response = await ApiService().postData(
-        endpoint: 'posts/$id/watching-time/',
+        endpoint: 'posts/posts/$id/watching-time/',
         token: accessToken,
-        body: {'start_watching': startTimestamp, 'end_watching': endTimestamp});
+        body: {
+          'start_watching': startTimestamp.toIso8601String(),
+          'end_watching': endTimestamp.toIso8601String(),
+        });
+
+    print(response);
 
     return response;
   }

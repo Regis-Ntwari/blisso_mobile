@@ -29,18 +29,17 @@ class LocationServiceProvider extends StateNotifier<ApiState> {
       return _cachedPosition!;
     }
 
-    late Position position;
     try {
       state = ApiState(isLoading: true);
-      position = await locationService.determineLocationFast();
+      final position = await locationService.determineLocationFast();
 
       _cachedPosition = position;
       state = ApiState(data: position, isLoading: false);
+      return position;
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);
+      rethrow;
     }
-
-    return position;
   }
 
   Future<String> getAddress(Position position) async {

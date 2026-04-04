@@ -117,6 +117,8 @@ class ApiService {
     try {
       dynamic configs = await loadVariables();
 
+      print("Making POST request to ${isChat ? configs['CHAT_URL'] : configs['BACKEND_URL']}/$endpoint with body: $body and token: $token");
+
       dynamic url;
       if (!isChat) {
         url = Uri.parse("${configs['BACKEND_URL']}/$endpoint");

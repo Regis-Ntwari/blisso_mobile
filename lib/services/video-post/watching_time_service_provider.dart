@@ -9,6 +9,7 @@ class WatchingTimeServiceProvider extends StateNotifier<ApiState>{
   WatchingTimeServiceProvider({required this.videoPostService}) : super(ApiState(isLoading: true));
 
   Future<void> watchVideo(String id, DateTime startTime, DateTime endTime) async{
+    print("Watching video with id: $id from $startTime to $endTime");
     try {
       await videoPostService.updateWatchTime(startTime, endTime, id);
 
