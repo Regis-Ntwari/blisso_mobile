@@ -20,7 +20,9 @@ import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/tracking/tracking_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:blisso_mobile/utils/relationship_goals.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -46,6 +48,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   String searchAttribute = 'Firstname';
   TextEditingController searchValue = TextEditingController();
   dynamic profiles;
+  String? _selectedCountry;
+  String? _selectedRelationshipGoal;
 
   // Tab tracking variables
   DateTime? _currentTabEntryTime;
@@ -76,13 +80,32 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         ref.read(feelingProviderImpl.notifier).updateState();
       }
 
-      if (!ref.read(firstProfileProviderImpl)) {
-        await ref.read(paginatedProfilesProvider.notifier).loadFirstPage();
-      }
+      // Fire off independent loads in parallel
+      final profilesFuture = !ref.read(firstProfileProviderImpl)
+          ? ref.read(paginatedProfilesProvider.notifier).loadFirstPage()
+          : Future<void>.value();
 
-      if (ref.read(storiesServiceProviderImpl).data == null) {
-        await ref.read(storiesServiceProviderImpl.notifier).getStories();
-      }
+      final storiesFuture =
+          ref.read(storiesServiceProviderImpl).data == null
+              ? ref.read(storiesServiceProviderImpl.notifier).getStories()
+              : Future<void>.value();
+
+      final prefsFuture = Future.wait([
+        SharedPreferencesService.getPreference('firstname'),
+        SharedPreferencesService.getPreference('lastname'),
+        SharedPreferencesService.getPreference('profile_picture'),
+      ]).then((results) {
+        if (mounted) {
+          setState(() {
+            firstname = results[0];
+            lastname = results[1];
+            profilePicture = results[2];
+          });
+        }
+      });
+
+      // Wait for profiles, stories and prefs together
+      await Future.wait([profilesFuture, storiesFuture, prefsFuture]);
 
       ref.read(firstProfileProviderImpl.notifier).updateProfile();
 
@@ -94,25 +117,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       }
 
       ref.read(getNumberOfMessagesProvider.notifier).getNumberOfMessages();
-
-      await SharedPreferencesService.getPreference('firstname').then((value) {
-        setState(() {
-          firstname = value;
-        });
-      });
-
-      await SharedPreferencesService.getPreference('lastname').then((value) {
-        setState(() {
-          lastname = value;
-        });
-      });
-
-      await SharedPreferencesService.getPreference('profile_picture')
-          .then((value) {
-        setState(() {
-          profilePicture = value;
-        });
-      });
       
       // Start tracking the initial tab (index 0 - Home)
       _startTrackingCurrentTab();
@@ -596,6 +600,177 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     };
   }
 
+  Widget _buildSearchInputField(bool isLightTheme) {
+    if (searchAttribute == 'Nationality') {
+      return _buildCountryPickerField(isLightTheme);
+    } else if (searchAttribute == 'Relationship Goal') {
+      return _buildRelationshipGoalField(isLightTheme);
+    }
+    // Default: text field for Firstname, Lastname, Email, Nickname, Home Address
+    return Expanded(
+      child: SizedBox(
+        height: 35,
+        child: Center(
+          child: TextField(
+            maxLines: 1,
+            controller: searchValue,
+            onChanged: (value) {
+              if (value.trim().isEmpty) {
+                ref
+                    .read(paginatedProfilesProvider.notifier)
+                    .clearSearch();
+              } else {
+                ref
+                    .read(paginatedProfilesProvider.notifier)
+                    .searchProfiles(
+                      filterOption: searchAttribute,
+                      filterValue: value,
+                    );
+              }
+            },
+            style: TextStyle(
+              color: isLightTheme ? Colors.black87 : Colors.white,
+              fontSize: 14,
+            ),
+            textAlignVertical: TextAlignVertical.center,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              hintText: 'Search by $searchAttribute...',
+              hintStyle: TextStyle(
+                color: isLightTheme ? Colors.grey[500] : Colors.grey[400],
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                height: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              border: InputBorder.none,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.search,
+                  color: isLightTheme ? Colors.grey[600] : Colors.grey[400],
+                  size: 20,
+                ),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCountryPickerField(bool isLightTheme) {
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          showCountryPicker(
+            context: context,
+            onSelect: (Country country) {
+              setState(() {
+                _selectedCountry = country.name;
+              });
+              ref.read(paginatedProfilesProvider.notifier).searchProfiles(
+                    filterOption: 'Nationality',
+                    filterValue: country.name,
+                  );
+            },
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.flag_outlined,
+                color: isLightTheme ? Colors.grey[600] : Colors.grey[400],
+                size: 20,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  _selectedCountry ?? 'Select a country...',
+                  style: TextStyle(
+                    color: _selectedCountry != null
+                        ? (isLightTheme ? Colors.black87 : Colors.white)
+                        : (isLightTheme ? Colors.grey[500] : Colors.grey[400]),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRelationshipGoalField(bool isLightTheme) {
+    return Expanded(
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedRelationshipGoal,
+          hint: Text(
+            'Select relationship goal...',
+            style: TextStyle(
+              color: isLightTheme ? Colors.grey[500] : Colors.grey[400],
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          icon: const Icon(Icons.arrow_drop_down),
+          elevation: 8,
+          isExpanded: true,
+          isDense: true,
+          dropdownColor: isLightTheme ? Colors.white : Colors.grey[900],
+          style: TextStyle(
+            color: isLightTheme ? Colors.black87 : Colors.white,
+            fontSize: 14,
+          ),
+          items: relationshipGoals.map((goal) {
+            return DropdownMenuItem<String>(
+              value: goal.label,
+              child: Row(
+                children: [
+                  Icon(goal.icon, size: 16, color: GlobalColors.primaryColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      goal.label,
+                      style: TextStyle(
+                        color: isLightTheme ? Colors.grey[700] : Colors.white,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedRelationshipGoal = value;
+            });
+            if (value != null) {
+              ref.read(paginatedProfilesProvider.notifier).searchProfiles(
+                    filterOption: 'looking_for',
+                    filterValue: value,
+                  );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   PreferredSizeWidget _buildSearchBar(bool isLightTheme) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(70),
@@ -648,7 +823,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                           'Email',
                           'Nickname',
                           'Home Address',
-                          'Nationality'
+                          'Nationality',
+                          'Relationship Goal',
                         ].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -667,73 +843,19 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                         onChanged: (value) {
                           setState(() {
                             searchAttribute = value!;
+                            searchValue.clear();
+                            _selectedCountry = null;
+                            _selectedRelationshipGoal = null;
                           });
+                          ref
+                              .read(paginatedProfilesProvider.notifier)
+                              .clearSearch();
                         },
                       ),
                     ),
                   ),
                   // Search Field
-                  Expanded(
-                    child: SizedBox(
-                      height: 35,
-                      child: Center(
-                        child: TextField(
-                          maxLines: 1,
-                          controller: searchValue,
-                          onChanged: (value) {
-                            if (value.trim().isEmpty) {
-                              ref
-                                  .read(paginatedProfilesProvider.notifier)
-                                  .clearSearch();
-                            } else {
-                              ref
-                                  .read(paginatedProfilesProvider.notifier)
-                                  .searchProfiles(
-                                    filterOption: searchAttribute,
-                                    filterValue: value,
-                                  );
-                            }
-                          },
-                          style: TextStyle(
-                            color: isLightTheme ? Colors.black87 : Colors.white,
-                            fontSize: 14,
-                          ),
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 0),
-                            hintText: 'Search by $searchAttribute...',
-                            hintStyle: TextStyle(
-                              color: isLightTheme
-                                  ? Colors.grey[500]
-                                  : Colors.grey[400],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              height: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            border: InputBorder.none,
-                            prefixIcon: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(
-                                Icons.search,
-                                color: isLightTheme
-                                    ? Colors.grey[600]
-                                    : Colors.grey[400],
-                                size: 20,
-                              ),
-                            ),
-                            prefixIconConstraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildSearchInputField(isLightTheme),
                   // Close Button
                   Container(
                     height: 35,
@@ -751,6 +873,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                         setState(() {
                           isSearchVisible = false;
                           searchValue.clear();
+                          _selectedCountry = null;
+                          _selectedRelationshipGoal = null;
                         });
 
                         await ref

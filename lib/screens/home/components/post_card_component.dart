@@ -46,7 +46,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
   // Helper to format the relationship goal text
   String _getLookingForText(dynamic profile) {
     final goal = profile['relationship_goal'];
-    if (goal == null || goal.toString().isEmpty) return "Still Figuring It Out";
+    if (goal == null || goal.toString().isEmpty) return "New Friends";
     
     // Capitalize first letter of each word
     return goal.toString().split(' ').map((str) => 
@@ -197,30 +197,30 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                   ),
                 ),
                 const Spacer(),
-                // FANCY "LOOKING FOR" TAG
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        GlobalColors.primaryColor.withOpacity(0.15),
-                        GlobalColors.primaryColor.withOpacity(0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: GlobalColors.primaryColor.withOpacity(0.3)),
-                  ),
+                  // decoration: BoxDecoration(
+                  //   gradient: LinearGradient(
+                  //     colors: [
+                  //       GlobalColors.primaryColor.withOpacity(0.15),
+                  //       GlobalColors.primaryColor.withOpacity(0.05),
+                  //     ],
+                  //   ),
+                  //   borderRadius: BorderRadius.circular(20),
+                  //   border: Border.all(color: GlobalColors.primaryColor.withOpacity(0.3)),
+                  // ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.auto_awesome, size: 14, color: GlobalColors.primaryColor),
+                      //const Icon(Icons.interests, size: 14, color: GlobalColors.primaryColor),
+                      Text('Looking for', style: TextStyle(fontSize: 12, color: GlobalColors.primaryColor, fontWeight: FontWeight.w600)),
                       const SizedBox(width: 6),
                       Text(
                         _getLookingForText(widget.profile),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: isLightTheme ? Colors.black87 : Colors.white,
+                          color: GlobalColors.primaryColor
                         ),
                       ),
                     ],
@@ -280,8 +280,8 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
                             text: 'DM Me',
                             backgroundColor: GlobalColors.primaryColor,
                             foregroundColor: Colors.white,
-                            buttonHeight: 36,
-                            buttonWidth: 100,
+                            buttonHeight: 30,
+                            buttonWidth: 50,
                             onTap: () => handleDMTap(context),
                           ),
                   ),

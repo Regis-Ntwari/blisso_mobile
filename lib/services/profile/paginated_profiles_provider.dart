@@ -27,7 +27,7 @@ class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
     try {
       final Position position = await ref
           .read(locationServiceProviderImpl.notifier)
-          .getLatitudeAndLongitude();
+          .getLatitudeAndLongitudeFast();
 
       _latitude = position.latitude;
       _longitude = position.longitude;
@@ -95,7 +95,31 @@ class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
   Future<void> clearSearch() async {
     _filterOption = null;
     _filterValue = null;
-    await loadFirstPage();
+
+    if (_latitude != null && _longitude != null) {
+      state = state.copyWith(isLoading: true, data: [], currentPage: 1);
+
+      try {
+        await ref.read(profileServiceProviderImpl.notifier).getAllProfiles(
+              page: 1,
+              latitude: _latitude,
+              longitude: _longitude,
+            );
+
+        final profilesData = ref.read(profileServiceProviderImpl);
+
+        state = PaginatedState(
+          data: profilesData.data as List,
+          currentPage: profilesData.pagination['current_page'],
+          totalPages: profilesData.pagination['total_pages'],
+          isLoading: false,
+        );
+      } catch (e) {
+        state = state.copyWith(error: e.toString(), isLoading: false);
+      }
+    } else {
+      await loadFirstPage();
+    }
   }
 
   /* ---------------- PAGINATION ---------------- */

@@ -38,6 +38,8 @@ class TrackingEvent extends HiveObject {
         //"userId": userId,
         "session_id": sessionId,
         "from": payload['from'],
+        "tab_from_departure_time": payload["tab_from_departure_time"], 
+        "tab_from_arrival_time": payload["tab_from_arrival_time"],
         "to": payload["to"]
       };
 }

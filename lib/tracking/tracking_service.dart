@@ -18,6 +18,7 @@ class TrackingService {
   }
 
   void startSession() {
+    if(_sessionId != null) return; // Session already started
     _sessionId = _uuid.v4();
     // track("session_start", {});
   }

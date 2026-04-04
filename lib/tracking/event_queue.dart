@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
@@ -33,20 +34,16 @@ class EventQueue {
     try {
       final body = jsonEncode(
           batch.map((e) {
-            print(e);
             return e.toJson();
           }).toList(),
         );
-        print("Flushing ${batch.length} events");
-      print(body);
+      String token = await SharedPreferencesService.getPreference('accessToken');
       final res = await http.post(
         Uri.parse(
             "${configs['BACKEND_URL']}/blisso_administration/mobile-user-activities/"),
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", "Authorization": "Bearer $token"},
         body: body
       );
-
-      print(res);
 
       if (res.statusCode == 200) {
         for (final e in batch) {
