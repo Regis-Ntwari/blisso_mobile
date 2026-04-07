@@ -39,7 +39,8 @@ class _TargetProfileComponentState
 
   // Helper to format the goal text
   String formatGoal(String? goal) {
-    if (goal == null || goal.isEmpty || goal.startsWith("[")) return "Still Figuring It Out";
+    if (goal == null || goal.isEmpty || goal.startsWith("["))
+      return "Still Figuring It Out";
     return goal; // Assumes labels are already formatted in constants
   }
 
@@ -153,7 +154,6 @@ class _TargetProfileComponentState
 
                     // FANCY LOOKING FOR CARD
                     Container(
-
                       margin: const EdgeInsets.symmetric(horizontal: 10),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 5, vertical: 4),
@@ -277,7 +277,7 @@ class _TargetProfileComponentState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ButtonComponent(
-                  text: isLoading ? 'Sending...' : 'Send Message Request',
+                  text: isLoading ? 'Texting...' : 'Text Me',
                   backgroundColor: GlobalColors.primaryColor,
                   foregroundColor: Colors.white,
                   onTap: isLoading ? () {} : () => handleDMTap(context),
@@ -443,9 +443,13 @@ class _TargetProfileComponentState
       itemCount: targetProfile.profileImages!.length,
       itemBuilder: (context, index) => ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: CachedNetworkImage(
-            imageUrl: targetProfile.profileImages![index]['image_url'],
-            fit: BoxFit.cover),
+        child: GestureDetector(
+          onTap: () => Routemaster.of(context).push(
+              '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
+          child: CachedNetworkImage(
+              imageUrl: targetProfile.profileImages![index]['image_url'],
+              fit: BoxFit.cover),
+        ),
       ),
     );
   }
@@ -460,9 +464,21 @@ class _TargetProfileComponentState
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3, crossAxisSpacing: 6, mainAxisSpacing: 6),
       itemCount: videoState.data.length,
-      itemBuilder: (context, index) => Container(
-          color: Colors.grey.withOpacity(0.2),
-          child: const Icon(Icons.play_circle_outline)),
+      itemBuilder: (context, index) => GestureDetector(
+        onTap: () {
+          Routemaster.of(context).push(
+            '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}',
+          );
+        },
+        child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                    image: NetworkImage(
+                        videoState.data[index]['post_video_thumbnail_url']),
+                    fit: BoxFit.cover)),
+            child: Center(child: const Icon(Icons.play_circle_outline))),
+      ),
     );
   }
 

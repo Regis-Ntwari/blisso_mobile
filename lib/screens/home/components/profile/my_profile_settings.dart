@@ -57,7 +57,7 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
         maritalStatus = profile['marital_status'];
         showMe = profile['show_me'];
         // Handle potential null or case mismatch from API
-        relationshipGoal = _matchGoal(profile['relationship_goal']); 
+        relationshipGoal = _matchGoal(profile['looking_for']); 
         dob = DateTime.parse(profile['dob']);
         distanceMeasure = profile['distance_measure'];
         addressController.text = profile['home_address'] ?? '';
@@ -105,7 +105,7 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
       'gender': gender,
       'marital_status': maritalStatus,
       'show_me': showMe,
-      'relationship_goal': relationshipGoal, // Added to persistence logic
+      'looking_for': relationshipGoal, // Added to persistence logic
       'dob': dob?.toIso8601String().split('T')[0],
       'distance_measure': distanceMeasure,
       'home_address': addressController.text,
