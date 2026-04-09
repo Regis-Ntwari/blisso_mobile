@@ -498,6 +498,8 @@ class _TargetProfileComponentState
         final messageRequestResponse =
             ref.read(addMessageRequestServiceProviderImpl);
 
+        bool test = false;
+
         if (messageRequestResponse.error == null) {
           if (context.mounted) {
             // Show success popup
@@ -518,15 +520,29 @@ class _TargetProfileComponentState
                     'full_name':
                         '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
                     'nickname': targetProfile.nickname,
-                    'messages': chat['messages']
+                    'messages': chat['messages'] ?? []
                   });
+                  test = true;
+                  break;
+
                 }
               }
               setState(() {
                 isLoading = false;
               });
-              Routemaster.of(context)
-                  .push('/homepage/chat-detail/$targetUsername');
+              if (test) {
+                Routemaster.of(context)
+                    .push('/homepage/chat-detail/$targetUsername');
+              } else {
+                ref.read(getChatDetailsProviderImpl.notifier).updateChatDetails({
+                  'username': targetUsername,
+                  'profile_picture': targetProfile.profilePictureUri,
+                  'full_name': '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                  'nickname': targetProfile.nickname,
+                  'messages': []
+                });
+                Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+              }
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {
                 isLoading = false;

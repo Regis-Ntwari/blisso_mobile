@@ -13,6 +13,7 @@ import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/stories/delete_story_provider.dart';
+import 'package:blisso_mobile/services/video-post/view_video_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/watching_time_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -170,6 +171,10 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
   // ── Tracking ─────────────────────────────────────────────────────────────
 
   void _beginTracking(int index) {
+    final storyId = _stories[index]['id']?.toString() ?? '';
+    if (storyId.isNotEmpty) {
+      ref.read(viewVideoServiceProviderImpl.notifier).viewVideo(storyId);
+    }
     _trackStart = DateTime.now();
     _trackIndex = index;
   }

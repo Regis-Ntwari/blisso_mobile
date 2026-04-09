@@ -373,8 +373,8 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       (previous, next) {
         if (previous == null || next == null) return;
 
-        final prevMessages = previous['messages'] as List<dynamic>;
-        final nextMessages = next['messages'] as List<dynamic>;
+        final prevMessages = previous['messages'] == null ? [] : previous['messages'] as List<dynamic>;
+        final nextMessages = next['messages'] == null ? [] : next['messages'] as List<dynamic>;
 
         if (nextMessages.length > prevMessages.length) {
           final lastMessage = nextMessages.last;

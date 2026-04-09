@@ -23,8 +23,12 @@ class ApiService {
         statusCode: 204,
       );
     }
+
+    print("Raw response body: ${response.reasonPhrase}");
     final Uint8List bodyBytes = response.bodyBytes;
     final String utf8DecodedBody = utf8.decode(bodyBytes);
+
+    print(  "Response from API: ${response.statusCode} - $utf8DecodedBody");
 
     final decodedData = jsonDecode(utf8DecodedBody);
 

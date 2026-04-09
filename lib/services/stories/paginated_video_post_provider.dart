@@ -39,6 +39,21 @@ class PaginatedVideoPostNotifier extends StateNotifier<PaginatedState> {
 
   
 
+  /// Update a single video's like state directly in the paginated data,
+  /// so rebuilds from this provider reflect the change immediately.
+  void toggleVideoLike(String videoId, {required bool liked, required int likes}) {
+    final idx = state.data.indexWhere(
+      (v) => v['id'].toString() == videoId,
+    );
+    if (idx == -1) return;
+
+    final updated = List<dynamic>.from(state.data);
+    updated[idx] = Map<String, dynamic>.from(updated[idx] as Map)
+      ..['liked_this_story'] = liked
+      ..['likes'] = likes;
+    state = state.copyWith(data: updated);
+  }
+
   Future<void> loadNextPage() async {
     if (state.isLoading || !state.hasMore) return;
 

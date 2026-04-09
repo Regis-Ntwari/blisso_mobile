@@ -7,6 +7,7 @@ import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/any_profile_service_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
 import 'package:blisso_mobile/services/stories/get_video_post_provider.dart';
+import 'package:blisso_mobile/services/stories/paginated_video_post_provider.dart';
 import 'package:blisso_mobile/services/video-post/view_video_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
@@ -222,6 +223,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
         widget.video.likedThisStory = true;
       }
     });
+    // Keep the paginated data in sync so the like survives tab switches.
+    ref.read(paginatedVideoPostProvider.notifier).toggleVideoLike(
+          widget.video.id,
+          liked: widget.video.likedThisStory,
+          likes: widget.video.likes,
+        );
+
     ref
         .read(getVideoPostProviderImpl.notifier)
         .likeVideoPost(int.parse(widget.video.id));

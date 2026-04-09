@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/video_post_modal.dart';
+import 'package:blisso_mobile/screens/chat/attachments/video_trimmer_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
@@ -20,6 +21,7 @@ import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/tracking/tracking_service.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:blisso_mobile/utils/video_size_helper.dart';
 import 'package:blisso_mobile/utils/relationship_goals.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:country_picker/country_picker.dart';
@@ -490,7 +492,27 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                 source: ImageSource.gallery,
               );
               if (pickedFile != null) {
-                showVideoPostModal(context, File(pickedFile.path));
+                final videoFile = File(pickedFile.path);
+                final sizeMB = getFileSizeMB(videoFile);
+                if (!isVideoWithinSizeLimit(videoFile, maxVideoPostSizeMB)) {
+                  if (context.mounted) {
+                    showVideoTooLargeError(context, sizeMB, maxVideoPostSizeMB);
+                  }
+                  return;
+                }
+                if (context.mounted) {
+                  final trimmedFile = await Navigator.of(context).push<File>(
+                    MaterialPageRoute(
+                      builder: (_) => VideoTrimmerScreen(
+                        videoFile: videoFile,
+                        title: 'Trim Video Post',
+                      ),
+                    ),
+                  );
+                  if (trimmedFile != null && context.mounted) {
+                    showVideoPostModal(context, trimmedFile);
+                  }
+                }
               }
             } else {
               showPopupComponent(

@@ -12,7 +12,7 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:open_filex/open_filex.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:routemaster/routemaster.dart';
@@ -208,10 +208,10 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   debugPrint(
                                       "File downloaded successfully at $savePath");
 
-                                  // final result = await OpenFilex.open(savePath);
+                                  final result = await OpenFilex.open(savePath);
 
-                                  // debugPrint(result.type.toString());
-                                  // debugPrint(result.message);
+                                  debugPrint(result.type.toString());
+                                  debugPrint(result.message);
                                 } else {
                                   debugPrint("File not found at $savePath");
                                 }
@@ -219,22 +219,93 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                 debugPrint("Error downloading file: $e");
                               }
                             },
-                            child: Column(
-                              children: [
-                                const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.file_open,
-                                      size: 30,
-                                    ),
-                                    Text('document')
-                                  ],
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isLightTheme
+                                    ? Colors.grey[100]
+                                    : Colors.grey[850],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isLightTheme
+                                      ? Colors.grey[300]!
+                                      : Colors.grey[700]!,
                                 ),
-                                Text(widget.message['content'])
-                              ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: GlobalColors.primaryColor
+                                          .withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.description_outlined,
+                                      color: GlobalColors.primaryColor,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          widget.message['content_file_url']
+                                                  .toString()
+                                                  .split('/')
+                                                  .last
+                                                  .split('?')
+                                                  .first,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isLightTheme
+                                                ? Colors.black87
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          widget.message['content_file_type']
+                                              .toString()
+                                              .split('/')
+                                              .last
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isLightTheme
+                                                ? Colors.grey[600]
+                                                : Colors.grey[400],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.download_rounded,
+                                    color: GlobalColors.primaryColor,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+                          if (widget.message['content'] != null &&
+                              widget.message['content'].toString().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(widget.message['content']),
+                            ),
                         ],
                       )
                     : Wrap(
@@ -269,30 +340,89 @@ class _MessageViewState extends ConsumerState<MessageView> {
                               File tempFile = File(tempFilePath);
                               await tempFile.writeAsBytes(
                                   base64Decode(widget.message['content_file']));
-                              // await OpenFilex.open(tempFilePath);
+                              await OpenFilex.open(tempFilePath);
                             },
-                            child: Column(
-                              children: [
-                                const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.file_open,
-                                      size: 30,
-                                    ),
-                                    Text('document')
-                                  ],
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isLightTheme
+                                    ? Colors.grey[100]
+                                    : Colors.grey[850],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isLightTheme
+                                      ? Colors.grey[300]!
+                                      : Colors.grey[700]!,
                                 ),
-                                widget.message['content'] == ''
-                                    ? const SizedBox.shrink()
-                                    : Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 1.0),
-                                        child: Text(widget.message['content']),
-                                      )
-                              ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: GlobalColors.primaryColor
+                                          .withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.description_outlined,
+                                      color: GlobalColors.primaryColor,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Document',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isLightTheme
+                                                ? Colors.black87
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          widget
+                                              .message['content_file_type']
+                                              .toString()
+                                              .split('/')
+                                              .last
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isLightTheme
+                                                ? Colors.grey[600]
+                                                : Colors.grey[400],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.open_in_new_rounded,
+                                    color: GlobalColors.primaryColor,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+                          if (widget.message['content'] != null &&
+                              widget.message['content'].toString().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(widget.message['content']),
+                            ),
                         ],
                       )
                 : widget.message['content_file_type']
@@ -329,26 +459,86 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   : const SizedBox.shrink(),
                               InkWell(
                                 onTap: () {
+                                  String chatUser =
+                                      username == widget.message['sender']
+                                          ? widget.message['receiver']
+                                          : widget.message['sender'];
                                   Routemaster.of(context).push(
-                                      '/homepage/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
+                                      '/homepage/chat-detail/$chatUser/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'])}&bytes=${Uri.encodeComponent(widget.message['content_file'] ?? '')}');
                                 },
                                 child: Container(
-                                  height: 300,
-                                  color: Colors.black,
-                                  child: const Align(
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Stack(
                                     alignment: Alignment.center,
-                                    child: Icon(Icons.play_arrow,
-                                        color: Colors.white, size: 30),
+                                    children: [
+                                      Center(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 40,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 8,
+                                        left: 10,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.black.withOpacity(0.6),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.videocam_rounded,
+                                                  color: Colors.white,
+                                                  size: 14),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'Video',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              Text(
-                                widget.message['content']!,
-                                textAlign: TextAlign.left,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                ),
-                              )
+                              if (widget.message['content'] != null &&
+                                  widget.message['content']
+                                      .toString()
+                                      .isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    widget.message['content'],
+                                    textAlign: TextAlign.left,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                )
                             ],
                           )
                         : Wrap(
@@ -379,29 +569,86 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   : const SizedBox.shrink(),
                               InkWell(
                                 onTap: () {
+                                  String chatUser =
+                                      username == widget.message['sender']
+                                          ? widget.message['receiver']
+                                          : widget.message['sender'];
                                   Routemaster.of(context).push(
-                                      '/homepage/chat-detail/$username/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
+                                      '/homepage/chat-detail/$chatUser/video-player?videoUrl=${Uri.encodeComponent(widget.message['content_file_url'] ?? '')}&bytes=${Uri.encodeComponent(widget.message['content_file'])}');
                                 },
                                 child: Container(
-                                  height: 300,
-                                  color: Colors.black,
-                                  child: const Align(
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Stack(
                                     alignment: Alignment.center,
-                                    child: Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 30,
-                                    ),
+                                    children: [
+                                      Center(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 40,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 8,
+                                        left: 10,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.black.withOpacity(0.6),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.videocam_rounded,
+                                                  color: Colors.white,
+                                                  size: 14),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'Video',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              Text(
-                                widget.message['content']!,
-                                textAlign: TextAlign.left,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                ),
-                              )
+                              if (widget.message['content'] != null &&
+                                  widget.message['content']
+                                      .toString()
+                                      .isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    widget.message['content'],
+                                    textAlign: TextAlign.left,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                )
                             ],
                           )
                     : widget.message['content_file_type']
@@ -444,7 +691,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                   InkWell(
                                     onTap: () {
                                       String chatUser =
-                                          username! == widget.message['sender']
+                                          username == widget.message['sender']
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
                                       Routemaster.of(context).push(
@@ -477,7 +724,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                     ),
                                   ),
                                   Text(
-                                    '${widget.message['content']!}',
+                                    '${widget.message['content'] ?? ''}',
                                     textAlign: TextAlign.left,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -506,7 +753,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                           TargetProfileModel.fromMap(
                                               profile.data));
                                       String chatUser =
-                                          username! == widget.message['sender']
+                                          username == widget.message['sender']
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
                                       setState(() {
@@ -527,7 +774,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                         'Video_post'
                                     ? ListTile(
                                         onTap: () {
-                                          String chatUser = username! ==
+                                          String chatUser = username ==
                                                   widget.message['sender']
                                               ? widget.message['receiver']
                                               : widget.message['sender'];
@@ -539,7 +786,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                           color: Colors.white,
                                         ),
                                         title: Text(
-                                            'View ${widget.message['content']}'),
+                                            'View ${widget.message['content'] ?? ''}'),
                                       )
                                     : Wrap(
                                         children: [
@@ -578,7 +825,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                                     ),
                                                     Text(
                                                       widget
-                                                          .message['content']!,
+                                                          .message['content'] ?? '',
                                                       textAlign:
                                                           TextAlign.left,
                                                       style: const TextStyle(
@@ -588,7 +835,7 @@ class _MessageViewState extends ConsumerState<MessageView> {
                                                   ],
                                                 )
                                               : Text(
-                                                  widget.message['content']!,
+                                                  widget.message['content'] ?? '',
                                                   textAlign: TextAlign.left,
                                                   style: const TextStyle(
                                                     fontSize: 14,

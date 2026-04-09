@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blisso_mobile/screens/utils/video_player.dart';
 import 'package:blisso_mobile/services/stories/stories_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:blisso_mobile/utils/video_size_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 //import 'package:routemaster/routemaster.dart';
@@ -23,6 +24,13 @@ class _ShortStoryVideoModalState extends ConsumerState<ShortStoryVideoModal> {
   TextEditingController captionController = TextEditingController();
 
   void postShortVideoStory() async {
+    final sizeMB = getFileSizeMB(widget.video);
+    if (!isVideoWithinSizeLimit(widget.video, maxStoryVideoSizeMB)) {
+      if (mounted) {
+        showVideoTooLargeError(context, sizeMB, maxStoryVideoSizeMB);
+      }
+      return;
+    }
     Navigator.of(context).pop();
     try {
       Map<String, dynamic> videoStory = {

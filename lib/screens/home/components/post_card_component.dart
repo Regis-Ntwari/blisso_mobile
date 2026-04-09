@@ -45,7 +45,7 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
 
   // Helper to format the relationship goal text
   String _getLookingForText(dynamic profile) {
-    final goal = profile['relationship_goal'];
+    final goal = profile['looking_for'];
     if (goal == null || goal.toString().isEmpty) return "New Friends";
     
     // Capitalize first letter of each word
@@ -64,6 +64,8 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
         await messageRequestRef.sendMessageRequest(targetUsername);
         final messageRequestResponse = ref.read(addMessageRequestServiceProviderImpl);
 
+        bool test = false;
+
         if (messageRequestResponse.error == null) {
           if (context.mounted) {
             if (messageRequestResponse.statusCode == 200) {
@@ -74,16 +76,30 @@ class _PostCardComponentState extends ConsumerState<PostCardComponent> {
               final chatsRef = ref.read(chatServiceProviderImpl);
               for (var chat in chatsRef.data) {
                 if (chat['username'] == targetUsername) {
+                  
                   ref.read(getChatDetailsProviderImpl.notifier).updateChatDetails({
                     'username': targetUsername,
                     'profile_picture': widget.profile['profile_picture_url'],
                     'full_name': '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
                     'nickname': widget.profile['nickname'],
-                    'messages': chat['messages']
+                    'messages': chat['messages'] ?? []
                   });
+                  test = true;
+                  break;
                 }
               }
-              Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+              if (test) {
+                Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+              } else {
+                ref.read(getChatDetailsProviderImpl.notifier).updateChatDetails({
+                  'username': targetUsername,
+                  'profile_picture': widget.profile['profile_picture_url'],
+                  'full_name': '${widget.profile['user']['first_name']} ${widget.profile['user']['last_name']}',
+                  'nickname': widget.profile['nickname'],
+                  'messages': []
+                });
+                Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+              }
             } else if (messageRequestResponse.statusCode == 201) {
               showPopupComponent(
                   context: context,

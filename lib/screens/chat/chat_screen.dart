@@ -142,13 +142,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     if (!_canChat) return;
 
     final chatDetailsNotifier = ref.read(getChatDetailsProviderImpl.notifier);
-    print(messages?.last);
     chatDetailsNotifier.updateChatDetails({
       'username': username,
       'profile_picture': profilePicture,
       'full_name': fullname,
       'nickname': nickname,
-      'messages': messages,
+      'messages': messages ?? [],
     });
     Routemaster.of(context).push('/homepage/chat-detail/$username');
   }
