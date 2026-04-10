@@ -35,7 +35,7 @@ class _MatchingRecommendationsState
 
   void _loadProfile(Map<String, dynamic> user) async {
     final username = user['username'];
-    
+
     setState(() {
       _loadingStates[username] = true;
     });
@@ -77,9 +77,11 @@ class _MatchingRecommendationsState
   @override
   Widget build(BuildContext context) {
     final matchingState = ref.watch(matchingServiceProviderImpl);
-    final canViewRecommendations = ref.watch(permissionProviderImpl.select(
-      (value) => value['can_view_matching_recommendations'] == true,
-    ));
+    final canViewRecommendations = ref.watch(
+      permissionProviderImpl.select(
+        (value) => value['can_view_matching_recommendations'] == true,
+      ),
+    );
 
     if (matchingState.error != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,34 +90,72 @@ class _MatchingRecommendationsState
     }
 
     if (matchingState.isLoading || matchingState.data == null) {
-      return const LoadingScreen();
+      return const SliverToBoxAdapter(
+        child: LoadingScreen(),
+      );
     }
 
     final data = matchingState.data!;
+
+    if (data.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.people_outline,
+                size: 72,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No recommendations yet',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Check back later — we\'re finding your best matches!',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final itemCount = _getItemCount(data, canViewRecommendations);
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: GridView.builder(
-        itemCount: itemCount,
+    return SliverPadding(
+      padding: const EdgeInsets.all(8),
+      sliver: SliverGrid(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final user = data[index];
+            final username = user['username'];
+            final isLoading = _loadingStates[username] == true;
+
+            return UserCard(
+              user: user,
+              isLoading: isLoading,
+              isPreview: !canViewRecommendations,
+              onTap: canViewRecommendations ? () => _loadProfile(user) : null,
+            );
+          },
+          childCount: itemCount,
+        ),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 0.1,
-          mainAxisSpacing: 0.1,
           childAspectRatio: 3 / 4,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
         ),
-        itemBuilder: (context, index) {
-          final user = data[index];
-          final username = user['username'];
-          final isLoading = _loadingStates[username] == true;
-          
-          return UserCard(
-            user: user,
-            isLoading: isLoading,
-            isPreview: !canViewRecommendations,
-            onTap: canViewRecommendations ? () => _loadProfile(user) : null,
-          );
-        },
       ),
     );
   }

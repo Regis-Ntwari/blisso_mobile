@@ -25,7 +25,7 @@ class TextInputComponent extends StatelessWidget {
           keyboardType: TextInputType.name,
           decoration: InputDecoration(
               filled: true,
-              fillColor: isThemeBright ? Colors.grey[50] : Colors.grey[800],
+              fillColor: isThemeBright ? Colors.grey[50] : Colors.grey[900],
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               border: InputBorder.none,

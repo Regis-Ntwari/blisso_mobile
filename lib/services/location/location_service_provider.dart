@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 
 class LocationServiceProvider extends StateNotifier<ApiState> {
   final LocationService locationService;
+  Position? _cachedPosition;
 
   LocationServiceProvider(this.locationService) : super(ApiState());
 
@@ -14,12 +15,31 @@ class LocationServiceProvider extends StateNotifier<ApiState> {
       state = ApiState(isLoading: true);
       position = await locationService.determineLocation();
 
+      _cachedPosition = position;
       state = ApiState(data: position, isLoading: false);
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);
     }
 
     return position;
+  }
+
+  Future<Position> getLatitudeAndLongitudeFast() async {
+    if (_cachedPosition != null) {
+      return _cachedPosition!;
+    }
+
+    try {
+      state = ApiState(isLoading: true);
+      final position = await locationService.determineLocationFast();
+
+      _cachedPosition = position;
+      state = ApiState(data: position, isLoading: false);
+      return position;
+    } catch (e) {
+      state = ApiState(error: e.toString(), isLoading: false);
+      rethrow;
+    }
   }
 
   Future<String> getAddress(Position position) async {

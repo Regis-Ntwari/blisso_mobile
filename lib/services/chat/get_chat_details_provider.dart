@@ -1,3 +1,4 @@
+import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/shared_preferences_service.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
@@ -42,37 +43,36 @@ class GetChatDetailsProvider extends StateNotifier<Map<String, dynamic>> {
     };
   }
 
-  markMessagesAsSeen() async{
+  markMessagesAsSeen() async {
     final socket = ref.read(webSocketNotifierProvider.notifier);
-
 
     final oldMessages = state['messages'] ?? [];
     final newMessages = List<Map<String, dynamic>>.from(oldMessages);
 
     final username = await SharedPreferencesService.getPreference('username');
 
-
     for (int i = newMessages.length - 1; i >= 0; i--) {
       final msg = newMessages[i];
 
-      if (msg['message_status'] == 'seen' && msg['sender'] == username) {
+      if (msg['sender'] == username) {
         break;
       }
 
-      if ((msg['message_status'] == 'unseen' || msg['message_status'] == "") && msg['sender'] == username) {
+      if ((msg['message_status'] == 'unseen' || msg['message_status'] == "") &&
+          msg['sender'] != username) {
+            
         final updatedMsg = {
           ...msg,
           'action': 'edited',
           'message_status': 'seen',
         };
 
-        print(updatedMsg);
-
         newMessages[i] = updatedMsg;
 
-        // Send over socket
-        //socket.sendSeenMessage(updatedMsg);
         socket.sendMessage(ChatMessageModel.fromMap(updatedMsg));
+
+        ref.read(chatServiceProviderImpl.notifier).addMessageFromListen(updatedMsg);
+        
       }
     }
 

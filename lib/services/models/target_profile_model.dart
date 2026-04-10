@@ -20,6 +20,9 @@ class TargetProfileModel {
   bool? loginCodeEnabled;
   String? homeAddress;
   String? profilePictureUri;
+  String? nationality;
+  String? residenceCountry;
+  String? residenceCity;
   String? feeling;
   File? profilePic;
   Map<String, dynamic>? subscription;
@@ -27,6 +30,7 @@ class TargetProfileModel {
   List<dynamic>? targetLifesnapshots;
   List<dynamic>? profileImages;
   String? distanceAnnot;
+  String? lookingFor;
 
   TargetProfileModel(
       {this.user,
@@ -38,6 +42,9 @@ class TargetProfileModel {
       this.showMe,
       this.nickname,
       this.dob,
+      this.nationality,
+      this.residenceCity,
+      this.residenceCountry,
       this.location,
       this.latitude,
       this.longitude,
@@ -48,6 +55,7 @@ class TargetProfileModel {
       this.homeAddress,
       this.profilePictureUri,
       this.subscription,
+      this.lookingFor,
       this.lifesnapshots,
       this.targetLifesnapshots,
       this.distanceAnnot,
@@ -63,6 +71,7 @@ class TargetProfileModel {
       'nickname': nickname,
       'dob': dob,
       'location': location,
+      'looking_for': lookingFor,
       'latitude': latitude,
       'longitude': longitude,
       'distance_measure': distanceMeasure,
@@ -78,12 +87,15 @@ class TargetProfileModel {
       'marital_status': maritalStatus,
       'show_me': showMe,
       'nickname': nickname,
+      'looking_for': lookingFor,
       'dob': dob,
       'profile_pic': profilePic,
       'location': location,
       'latitude': latitude,
       'longitude': longitude,
-      'home_address': homeAddress,
+      'nationality': nationality,
+      'residence_country': residenceCountry,
+      'residence_city': residenceCity,
       'distance_measure': distanceMeasure,
       'push_notifications': pushNotifications,
       'hide_profile': hideProfile,
@@ -99,10 +111,13 @@ class TargetProfileModel {
       'show_me': showMe,
       'nickname': nickname,
       'dob': dob,
+      'looking_for': lookingFor,
       'location': location,
       'latitude': latitude,
       'longitude': longitude,
-      'home_address': homeAddress,
+      'nationality': nationality,
+      'residence_country': residenceCountry,
+      'residence_city': residenceCity,
       'distance_measure': distanceMeasure,
       'push_notifications': pushNotifications,
       'hide_profile': hideProfile,
@@ -118,11 +133,15 @@ class TargetProfileModel {
         id: map['id'] != null ? map['id'] as int : null,
         gender: map['gender'] != null ? map['gender'] as String : null,
         lang: map['lang'] != null ? map['lang'] as String : null,
+        lookingFor: map['looking_for'] != null ? map['looking_for'] as String : null,
         maritalStatus: map['marital_status'] != null
             ? map['marital_status'] as String
             : null,
         showMe: map['show_me'] != null ? map['show_me'] as String : null,
         nickname: map['nickname'] != null ? map['nickname'] as String : null,
+        nationality: map['nationality'] != null ? map['nationality'] as String : null,
+        residenceCity: map['residence_city'] != null ? map['residence_city'] as String : null,
+        residenceCountry: map['residence_country'] != null ? map['residence_country'] as String : null,
         dob: map['dob'] != null ? map['dob'] as String : null,
         location: map['location'] != null ? map['location'] as String : null,
         latitude: map['latitude'] != null ? map['latitude'] as String : null,
@@ -169,6 +188,7 @@ class TargetProfileModel {
         maritalStatus: map['marital_status'] != null
             ? map['marital_status'] as String
             : null,
+        lookingFor: map['looking_for'] != null ? map['looking_for'] as String : null,
         showMe: map['show_me'] != null ? map['show_me'] as String : null,
         nickname: map['nickname'] != null ? map['nickname'] as String : null,
         dob: map['dob'] != null ? map['dob'] as String : null,
@@ -187,7 +207,15 @@ class TargetProfileModel {
             ? map['login_code_enabled'] as bool
             : null,
         homeAddress:
-            map['home_address'] != null ? map['home_address'] as String : null);
+            map['home_address'] != null ? map['home_address'] as String : null,
+        nationality:
+            map['nationality'] != null ? map['nationality'] as String : null,
+        residenceCountry: map['residence_country'] != null
+            ? map['residence_country'] as String
+            : null,
+        residenceCity: map['residence_city'] != null
+            ? map['residence_city'] as String
+            : null);
   }
 
   factory TargetProfileModel.fromMapNew(Map<String, dynamic> map) {

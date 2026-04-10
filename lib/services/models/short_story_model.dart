@@ -8,10 +8,12 @@ class ShortStoryModel {
   final String profilePicture;
   final String videoUrl;
   final String description;
+  final String postThumbnailUrl;
+  int views;
   int likes;
   int shares;
   final List<dynamic> peopleLiked;
-  final bool likedThisStory;
+  bool likedThisStory;
 
   ShortStoryModel({
     required this.id,
@@ -24,6 +26,8 @@ class ShortStoryModel {
     required this.peopleLiked,
     required this.shares,
     required this.likedThisStory,
+    required this.views,
+    this.postThumbnailUrl = '',
   });
 
   ShortStoryModel copyWith({
@@ -37,6 +41,7 @@ class ShortStoryModel {
     int? shares,
     List<dynamic>? peopleLiked,
     bool? likedThisStory,
+    int? views
   }) {
     return ShortStoryModel(
         id: id ?? this.id,
@@ -47,8 +52,11 @@ class ShortStoryModel {
         description: description ?? this.description,
         likes: likes ?? this.likes,
         shares: shares ?? this.shares,
+        views: views ?? this.views,
         peopleLiked: peopleLiked ?? this.peopleLiked,
-        likedThisStory: likedThisStory ?? this.likedThisStory);
+        likedThisStory: likedThisStory ?? this.likedThisStory,
+        postThumbnailUrl: postThumbnailUrl,
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -61,6 +69,7 @@ class ShortStoryModel {
       'description': description,
       'likes': likes,
       'peopleLiked': peopleLiked,
+      'postThumbnailUrl': postThumbnailUrl,
     };
   }
 
@@ -72,10 +81,13 @@ class ShortStoryModel {
         profilePicture: map['profile_picture'] as String,
         videoUrl: map['post_file_url'] as String,
         description: map['description'] as String,
-        likes: map['likes'] as int? ?? 0,
-        shares: map['shares'] as int? ?? 0,
+        likes: map['likes'] as int,
+        views: map['views'] as int,
+        shares: map['shares'] as int,
         peopleLiked: map['people_liked'] as List<dynamic>,
-        likedThisStory: map['liked_this_story'] as bool);
+        likedThisStory: map['liked_this_story'] as bool,
+        postThumbnailUrl: map['post_thumbnail_url'] as String? ?? '',
+    );
   }
 
   String toJson() => json.encode(toMap());
@@ -85,7 +97,7 @@ class ShortStoryModel {
 
   @override
   String toString() {
-    return 'ShortStoryModel(id: $id, username: $username, nickname: $nickname, profilePicture: $profilePicture, videoUrl: $videoUrl, description: $description, likes: $likes, peopleLiked: $peopleLiked)';
+    return 'ShortStoryModel(id: $id, username: $username, nickname: $nickname, profilePicture: $profilePicture, videoUrl: $videoUrl, description: $description, likes: $likes, peopleLiked: $peopleLiked, postThumbnailUrl: $postThumbnailUrl)';
   }
 
   @override

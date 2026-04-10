@@ -10,7 +10,7 @@ class GetOneStoryProvider extends StateNotifier<ApiState> {
 
   Future<void> getOneStory(int id) async {
     state = ApiState(isLoading: true);
-
+ 
     try {
       final response = await storiesService.getOneStory(id);
 

@@ -14,6 +14,8 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     required this.profileService,
   }) : super(ApiState());
 
+  /* ---------------- CREATE PROFILE ---------------- */
+
   Future<void> createProfile(ProfileModel profile) async {
     state = ApiState(isLoading: true);
 
@@ -32,6 +34,8 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
+  /* ---------------- GET ANY PROFILE ---------------- */
+
   Future<void> getAnyProfile(String username) async {
     state = ApiState(isLoading: true);
 
@@ -47,6 +51,8 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
       state = ApiState(error: e.toString(), isLoading: false);
     }
   }
+
+  /* ---------------- GET MY PROFILE ---------------- */
 
   Future<void> getMyProfile() async {
     state = ApiState(isLoading: true);
@@ -64,44 +70,61 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  Future<void> likeProfile(int id) async {
-    //state = ApiState(isLoading: true);
+  /* ---------------- LIKE PROFILE ---------------- */
 
+  Future<void> likeProfile(int id) async {
     try {
       final response = await profileService.likeProfile(id);
 
-      print(response);
-
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        //state = ApiState(error: response.errorMessage, isLoading: false);
-      } else {
-        //state = ApiState(data: response.result, isLoading: false);
+        // Optional: handle error
       }
-    } catch (e) {
-      //state = ApiState(error: e.toString(), isLoading: false);
-    }
+    } catch (_) {}
   }
 
-  Future<void> getAllProfiles() async {
+  /* ---------------- GET ALL PROFILES (UPDATED) ---------------- */
+
+  Future<void> getAllProfiles({
+    int page = 1,
+    double? latitude,
+    double? longitude,
+    String? filterOption,
+    String? filterValue,
+  }) async {
     state = ApiState(isLoading: true);
 
     try {
-      final response = await profileService.getAllProfiles();
+      final response = await profileService.getAllProfiles(
+        page: page,
+        latitude: latitude,
+        longitude: longitude,
+        filterOption: filterOption,
+        filterValue: filterValue,
+      );
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
-        state = ApiState(error: response.errorMessage, isLoading: false);
+        state = ApiState(
+          error: response.errorMessage,
+          isLoading: false,
+          pagination: response.pagination,
+        );
       } else {
-        state = ApiState(data: response.result, isLoading: false);
+        state = ApiState(
+          data: response.result,
+          isLoading: false,
+          pagination: response.pagination,
+        );
       }
     } catch (e) {
       state = ApiState(error: e.toString(), isLoading: false);
     }
   }
 
+  /* ---------------- HELPERS ---------------- */
+
   String? getFullName(String username) {
-    if (state.data == null) {
-      return 'Unknown User';
-    }
+    if (state.data == null) return 'Unknown User';
+
     for (var profile in state.data) {
       if (profile['user']['username'] == username) {
         return profile['user']['first_name'] +
@@ -116,11 +139,13 @@ class ProfileServiceProvider extends StateNotifier<ApiState> {
     if (state.data == null) {
       return 'https://images.unsplash.com/photo-1711560707076-d50fbf8a3a26?q=80&w=1512';
     }
+
     for (var profile in state.data) {
       if (profile['user']['username'] == username) {
         return profile['profile_picture_uri'];
       }
     }
+
     return 'https://images.unsplash.com/photo-1711560707076-d50fbf8a3a26?q=80&w=1512';
   }
 }

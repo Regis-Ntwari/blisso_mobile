@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:blisso_mobile/screens/chat/attachments/short_story_image_modal.dart';
 import 'package:blisso_mobile/screens/chat/attachments/short_story_video_modal.dart';
+import 'package:blisso_mobile/utils/video_size_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 
 class ChooseStoryComponent extends StatefulWidget {
   const ChooseStoryComponent({super.key});
@@ -43,6 +45,13 @@ class _ChooseStoryComponentState extends State<ChooseStoryComponent> {
                       setState(() {
                         pickedImage = File(pickedFile.path);
                       });
+                      final sizeMB = getFileSizeMB(pickedImage!);
+                      if (!isFileWithinSizeLimit(pickedImage!, maxFileSizeMB)) {
+                        if (context.mounted) {
+                          showFileTooLargeError(context, sizeMB, maxFileSizeMB);
+                        }
+                        return;
+                      }
                       Navigator.of(context).pop();
                       showShortStoryImageWithCaption(context, pickedImage!);
                     }
@@ -67,6 +76,13 @@ class _ChooseStoryComponentState extends State<ChooseStoryComponent> {
                       setState(() {
                         pickedVideo = File(pickedFile.path);
                       });
+                      final sizeMB = getFileSizeMB(pickedVideo!);
+                      if (!isVideoWithinSizeLimit(pickedVideo!, maxStoryVideoSizeMB)) {
+                        if (context.mounted) {
+                          showVideoTooLargeError(context, sizeMB, maxStoryVideoSizeMB);
+                        }
+                        return;
+                      }
                       Navigator.of(context).pop();
                       showShortStoryVideoWithCaption(
                         context,

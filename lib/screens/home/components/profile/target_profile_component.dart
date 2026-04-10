@@ -26,33 +26,460 @@ class _TargetProfileComponentState
   String expandedField = '';
   bool isLoading = false;
 
-  Future<bool> checkIfChatExists(String username) async {
-    final chatRef = ref.read(chatServiceProviderImpl);
-    if (chatRef.data == null) {
-      final chatRef = ref.read(chatServiceProviderImpl.notifier);
-      await chatRef.getMessages();
-    }
-
-    for (var chat in chatRef.data) {
-      if (chat.containsKey(username)) {
-        return true;
-      }
-    }
-    return false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final targetProfile = ref.watch(targetProfileProvider);
+      ref
+          .read(videoPostServiceProviderImpl.notifier)
+          .getTargetVideos(targetProfile.user!['username']);
+    });
   }
 
-  Map<String, List<dynamic>> _groupBySubCategory(List<dynamic> snapshots) {
-    final Map<String, List<dynamic>> grouped = {};
+  // Helper to format the goal text
+  String formatGoal(String? goal) {
+    if (goal == null || goal.isEmpty || goal.startsWith("["))
+      return "Still Figuring It Out";
+    return goal; // Assumes labels are already formatted in constants
+  }
 
+  Map<String, Map<String, List<dynamic>>> _groupByCategoryAndSubCategory(
+      List<dynamic> snapshots) {
+    final Map<String, Map<String, List<dynamic>>> grouped = {};
     for (final snap in snapshots) {
+      final category = snap['category']?.toString() ?? 'Other';
       final subCategory = snap['sub_category']?.toString() ?? 'Other';
-      if (!grouped.containsKey(subCategory)) {
-        grouped[subCategory] = [];
-      }
-      grouped[subCategory]!.add(snap);
+      grouped.putIfAbsent(category, () => {});
+      grouped[category]!.putIfAbsent(subCategory, () => []);
+      grouped[category]![subCategory]!.add(snap);
     }
-
     return grouped;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final targetProfile = ref.watch(targetProfileProvider);
+    double width = MediaQuery.sizeOf(context).width;
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final Color cardColor =
+        isLightTheme ? Colors.grey.shade50 : const Color(0xFF050505);
+    final videoState = ref.watch(videoPostServiceProviderImpl);
+
+    return Scaffold(
+      backgroundColor: isLightTheme ? Colors.white : Colors.black,
+      appBar: AppBar(
+        backgroundColor: isLightTheme ? Colors.white : Colors.black,
+        leading: IconButton(
+          onPressed: () => Routemaster.of(context).pop(),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: GlobalColors.primaryColor),
+        ),
+        centerTitle: true,
+        title: Text('${targetProfile.nickname}',
+            style: TextStyle(
+                fontSize: 22,
+                color: GlobalColors.primaryColor,
+                fontWeight: FontWeight.bold)),
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Profile Image Section
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Center(
+                  child: SizedBox(
+                    height: width * 0.85,
+                    width: width * 0.85,
+                    child: InkWell(
+                      onTap: () => Routemaster.of(context).push(
+                          '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: CachedNetworkImage(
+                          imageUrl: targetProfile.profilePictureUri ??
+                              'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d',
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(
+                                  color: GlobalColors.primaryColor)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 2. Name & Relationship Goal Hero Card
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: isLightTheme ? Colors.black : Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (targetProfile.feeling != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: GlobalColors.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Feeling ${targetProfile.feeling!}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: GlobalColors.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 12),
+
+                    // FANCY LOOKING FOR CARD
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            GlobalColors.primaryColor.withOpacity(0.12),
+                            GlobalColors.primaryColor.withOpacity(0.04),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: GlobalColors.primaryColor.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                                color: GlobalColors.primaryColor,
+                                shape: BoxShape.circle),
+                            child: const Icon(Icons.auto_awesome_outlined,
+                                color: Colors.white, size: 10),
+                          ),
+                          const SizedBox(width: 14),
+                          Text("LOOKING FOR",
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: GlobalColors.primaryColor,
+                                  letterSpacing: 1.2)),
+                          const SizedBox(width: 8),
+                          Text(
+                            formatGoal(targetProfile.lookingFor),
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.ellipsis,
+                                color: isLightTheme
+                                    ? Colors.black87
+                                    : Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 3. Personal Info Detail Card
+              Card(
+                color: cardColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                          label: 'Date of Birth',
+                          value: DateFormat('MMMM d, y')
+                              .format(DateTime.parse(targetProfile.dob!))),
+                      _buildInfoRow(
+                          label: 'Gender',
+                          value: targetProfile.gender.toString().toUpperCase()),
+                      _buildInfoRow(
+                          label: 'Marital Status',
+                          value: targetProfile.maritalStatus
+                              .toString()
+                              .toUpperCase()),
+                      _buildInfoRow(
+                          label: 'Nationality',
+                          value: targetProfile.nationality
+                              .toString()
+                              .toUpperCase()),
+                      _buildInfoRow(
+                          label: 'Residence',
+                          value:
+                              "${targetProfile.residenceCity}, ${targetProfile.residenceCountry}"
+                                  .toUpperCase(),
+                          isLast: true),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 4. Expandable Snapshots
+              _buildExpandableSection(
+                title: "About ${targetProfile.nickname}",
+                subtitle: targetProfile.lifesnapshots!
+                    .map((s) => s['name'])
+                    .join(", "),
+                isExpanded: expandedField == 'interest',
+                onTap: () => setState(() => expandedField =
+                    expandedField == 'interest' ? '' : 'interest'),
+                expandedContent:
+                    _buildGroupedSnapshots(targetProfile.lifesnapshots!),
+              ),
+              const SizedBox(height: 12),
+              _buildExpandableSection(
+                title: "Looking for in a partner",
+                subtitle: targetProfile.targetLifesnapshots!
+                    .map((s) => s['name'])
+                    .join(", "),
+                isExpanded: expandedField == 'target',
+                onTap: () => setState(() =>
+                    expandedField = expandedField == 'target' ? '' : 'target'),
+                expandedContent:
+                    _buildGroupedSnapshots(targetProfile.targetLifesnapshots!),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 5. DM Button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ButtonComponent(
+                  text: isLoading ? 'Texting...' : 'Text Me',
+                  backgroundColor: GlobalColors.primaryColor,
+                  foregroundColor: Colors.white,
+                  onTap: isLoading ? () {} : () => handleDMTap(context),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 6. Media Tabs (Photos/Videos)
+              _buildMediaSection(
+                  targetProfile, videoState, cardColor, isLightTheme),
+
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Helper Widgets ---
+
+  Widget _buildInfoRow(
+      {required String label, required String value, bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+          border: Border(
+              bottom: isLast
+                  ? BorderSide.none
+                  : BorderSide(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)))),
+      child: Row(
+        children: [
+          Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: GlobalColors.secondaryColor,
+                      fontWeight: FontWeight.w500))),
+          Expanded(
+              flex: 2,
+              child: Text(value,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.right)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableSection(
+      {required String title,
+      required String subtitle,
+      required bool isExpanded,
+      required VoidCallback onTap,
+      required Widget expandedContent}) {
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+    return Card(
+      color: isLightTheme ? Colors.grey.shade50 : const Color(0xFF050505),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: onTap,
+            title: Text(title,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            subtitle:
+                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                color: GlobalColors.primaryColor),
+          ),
+          if (isExpanded)
+            Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: expandedContent),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedSnapshots(List<dynamic> snapshots) {
+    final grouped = _groupByCategoryAndSubCategory(snapshots);
+    return Column(
+      children: grouped.entries
+          .map((cat) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(cat.key,
+                      style: TextStyle(
+                          color: GlobalColors.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: cat.value.values
+                          .expand((e) => e)
+                          .map((snap) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                    color: GlobalColors.primaryColor
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20)),
+                                child: Text(snap['name'],
+                                    style: TextStyle(
+                                        color: GlobalColors.primaryColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ))
+                          .toList()),
+                  const SizedBox(height: 16),
+                ],
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildMediaSection(
+      targetProfile, videoState, cardColor, isLightTheme) {
+    return Card(
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            TabBar(
+              indicatorColor: GlobalColors.primaryColor,
+              labelColor: GlobalColors.primaryColor,
+              unselectedLabelColor: GlobalColors.secondaryColor,
+              tabs: const [Tab(text: 'Photos'), Tab(text: 'Videos')],
+            ),
+            SizedBox(
+              height: 350,
+              child: TabBarView(
+                children: [
+                  _buildPhotoGrid(targetProfile),
+                  _buildVideoGrid(videoState, isLightTheme),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoGrid(targetProfile) {
+    if (targetProfile.profileImages!.isEmpty)
+      return const Center(child: Text("No photos yet"));
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, crossAxisSpacing: 8, mainAxisSpacing: 8),
+      itemCount: targetProfile.profileImages!.length,
+      itemBuilder: (context, index) => ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: GestureDetector(
+          onTap: () => Routemaster.of(context).push(
+              '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
+          child: CachedNetworkImage(
+              imageUrl: targetProfile.profileImages![index]['image_url'],
+              fit: BoxFit.cover),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoGrid(videoState, isLightTheme) {
+    if (videoState.isLoading)
+      return const Center(child: CircularProgressIndicator());
+    if (videoState.data.isEmpty)
+      return const Center(child: Text("No videos yet"));
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3, crossAxisSpacing: 6, mainAxisSpacing: 6),
+      itemCount: videoState.data.length,
+      itemBuilder: (context, index) => GestureDetector(
+        onTap: () {
+          Routemaster.of(context).push(
+            '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}',
+          );
+        },
+        child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                    image: NetworkImage(
+                        videoState.data[index]['post_video_thumbnail_url']),
+                    fit: BoxFit.cover)),
+            child: Center(child: const Icon(Icons.play_circle_outline))),
+      ),
+    );
   }
 
   Future<void> handleDMTap(BuildContext context) async {
@@ -63,11 +490,6 @@ class _TargetProfileComponentState
         isLoading = true;
       });
 
-      // if (await checkIfChatExists(targetUsername)) {
-      //   if (context.mounted) {
-      //     Routemaster.of(context).push('/chat-detail/$targetUsername');
-      //   }
-      // }
       try {
         final messageRequestRef =
             ref.read(addMessageRequestServiceProviderImpl.notifier);
@@ -75,6 +497,8 @@ class _TargetProfileComponentState
 
         final messageRequestResponse =
             ref.read(addMessageRequestServiceProviderImpl);
+
+        bool test = false;
 
         if (messageRequestResponse.error == null) {
           if (context.mounted) {
@@ -96,14 +520,29 @@ class _TargetProfileComponentState
                     'full_name':
                         '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
                     'nickname': targetProfile.nickname,
-                    'messages': chat['messages']
+                    'messages': chat['messages'] ?? []
                   });
+                  test = true;
+                  break;
+
                 }
               }
               setState(() {
                 isLoading = false;
               });
-              Routemaster.of(context).push('/chat-detail/$targetUsername');
+              if (test) {
+                Routemaster.of(context)
+                    .push('/homepage/chat-detail/$targetUsername');
+              } else {
+                ref.read(getChatDetailsProviderImpl.notifier).updateChatDetails({
+                  'username': targetUsername,
+                  'profile_picture': targetProfile.profilePictureUri,
+                  'full_name': '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                  'nickname': targetProfile.nickname,
+                  'messages': []
+                });
+                Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+              }
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {
                 isLoading = false;
@@ -121,7 +560,7 @@ class _TargetProfileComponentState
               showPopupComponent(
                 context: context,
                 icon: Icons.error,
-                iconColor: Colors.red,
+                iconColor: GlobalColors.primaryColor,
                 message: messageRequestResponse.error!,
               );
             }
@@ -133,6 +572,7 @@ class _TargetProfileComponentState
           showPopupComponent(
               context: context,
               icon: Icons.error,
+              iconColor: GlobalColors.primaryColor,
               message: messageRequestResponse.error!);
         }
       } catch (e) {
@@ -155,705 +595,5 @@ class _TargetProfileComponentState
           icon: Icons.error,
           message: 'Please upgrade your plan to send message requests');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final targetProfile = ref.watch(targetProfileProvider);
-      ref
-          .read(videoPostServiceProviderImpl.notifier)
-          .getTargetVideos(targetProfile.user!['username']);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    TextScaler scaler = MediaQuery.textScalerOf(context);
-    final targetProfile = ref.watch(targetProfileProvider);
-    double width = MediaQuery.sizeOf(context).width;
-    double height = MediaQuery.sizeOf(context).height;
-    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-    final videoState = ref.watch(videoPostServiceProviderImpl);
-    return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : Colors.black,
-      appBar: AppBar(
-        backgroundColor: isLightTheme ? Colors.white : Colors.black,
-        leading: InkWell(
-          //onTap: () => Routemaster.of(context).push('/homepage'),
-          onTap: () => Routemaster.of(context).pop(),
-          child: const Icon(Icons.keyboard_arrow_left),
-        ),
-        centerTitle: true,
-        title: Text(
-          '${targetProfile.nickname}',
-          style: TextStyle(
-              color: GlobalColors.primaryColor, fontSize: scaler.scale(24)),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 10.0, left: 5),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: width * 0.85,
-                            width: width * 0.85,
-                            child: InkWell(
-                              onTap: () => Routemaster.of(context).push(
-                                  '/homepage/target-profile/image-viewer?url=${targetProfile.profilePictureUri!}&isMe=false&isProfilePic=false'),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: CachedNetworkImage(
-                                    imageUrl: targetProfile.profilePictureUri!,
-                                    placeholder: (context, url) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(
-                                          color: GlobalColors.primaryColor,
-                                        ),
-                                      );
-                                    },
-                                    fit: BoxFit.cover),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: height * 0.09,
-                            width: width * 0.85,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 10.0),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${targetProfile.user!['first_name'].toString().toUpperCase()} ${targetProfile.user!['last_name'].toString().toUpperCase()}',
-                                      style: TextStyle(
-                                        fontSize: scaler.scale(24),
-                                      ),
-                                    ),
-                                    targetProfile.feeling == null
-                                        ? const SizedBox.shrink()
-                                        : Text(
-                                            'Feeling ${targetProfile.feeling!}',
-                                            style: TextStyle(
-                                                color: GlobalColors
-                                                    .secondaryColor),
-                                          )
-                                  ]),
-                            ),
-                          ),
-                          SizedBox(
-                            height: height * 0.15,
-                            width: width * 0.85,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Date of Birth',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(DateFormat('MMMM d, y').format(
-                                            DateTime.parse(targetProfile.dob!)))
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Gender',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(
-                                            targetProfile.gender!.toUpperCase())
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Marital Status',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(targetProfile.maritalStatus!
-                                            .toUpperCase())
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Home Address',
-                                          style: TextStyle(
-                                              color:
-                                                  GlobalColors.secondaryColor),
-                                        ),
-                                        Text(targetProfile.homeAddress!
-                                            .toUpperCase())
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                // Row(
-                                //   mainAxisAlignment:
-                                //       MainAxisAlignment.spaceEvenly,
-                                //   children: [
-                                //     Wrap(
-                                //       children: [
-                                //         const Icon(Icons.join_right_rounded),
-                                //         Text('${targetProfile.maritalStatus}')
-                                //       ],
-                                //     ),
-                                //     Wrap(
-                                //       children: [
-                                //         const Icon(Icons.language),
-                                //         Text('${targetProfile.lang}')
-                                //       ],
-                                //     )
-                                //   ],
-                                // ),
-                                // Row(
-                                //   mainAxisAlignment:
-                                //       MainAxisAlignment.spaceEvenly,
-                                //   children: [
-                                //     Wrap(children: [
-                                //       const Icon(Icons.home),
-                                //       targetProfile.homeAddress == '' ||
-                                //               targetProfile.homeAddress == null
-                                //           ? const Text('Not Said')
-                                //           : Text('${targetProfile.homeAddress}')
-                                //     ]),
-                                //     Wrap(children: [
-                                //       const Icon(Icons.check_circle),
-                                //       Text('${targetProfile.showMe}')
-                                //     ]),
-                                //   ],
-                                // )
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  if (expandedField == 'interest') {
-                    setState(() {
-                      expandedField = '';
-                    });
-                  } else {
-                    setState(() {
-                      expandedField = 'interest';
-                    });
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: ListTile(
-                    title: Text(
-                      "${targetProfile.nickname}'s interests",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(targetProfile.lifesnapshots!
-                        .map((snapshot) => snapshot['name'])
-                        .join(", ")),
-                    trailing: expandedField == 'interest'
-                        ? const Icon(Icons.keyboard_arrow_down)
-                        : const Icon(Icons.keyboard_arrow_right),
-                  ),
-                ),
-              ),
-              if (expandedField == 'interest')
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 20.0),
-                //   child: Wrap(
-                //     children:
-                //         targetProfile.lifesnapshots!.map<Widget>((snapshot) {
-                //       return IntrinsicWidth(
-                //         child: Container(
-                //           margin: const EdgeInsets.only(right: 2),
-                //           decoration: BoxDecoration(
-                //               color: GlobalColors.primaryColor,
-                //               borderRadius: BorderRadius.circular(10)),
-                //           padding: const EdgeInsets.symmetric(
-                //               vertical: 3, horizontal: 5),
-                //           child: Text(
-                //             snapshot['name'],
-                //             style: const TextStyle(
-                //                 color: Colors.white, fontSize: 12),
-                //             textAlign: TextAlign.start,
-                //           ),
-                //         ),
-                //       );
-                //     }).toList(),
-                //   ),
-                // ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Group snapshots by sub_category
-                          ..._groupBySubCategory(
-                                  targetProfile.lifesnapshots!)
-                              .entries
-                              .map((entry) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Sub-category title
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 8),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.label),
-                                              SizedBox(
-                                                width: 5,
-                                              ),
-                                              Text(
-                                                entry.key,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: isLightTheme ? Colors.black87 : Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Horizontal scrollable badges
-                                        SizedBox(
-                                          height: 40,
-                                          child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                              children: [
-                                                ...entry.value.map((snap) =>
-                                                    Container(
-                                                      margin:
-                                                          const EdgeInsets.only(
-                                                              right: 8),
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [
-                                                            GlobalColors
-                                                                .primaryColor,
-                                                            GlobalColors
-                                                                .primaryColor
-                                                                .withOpacity(0.8),
-                                                          ],
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                20),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(0.1),
-                                                            blurRadius: 4,
-                                                            offset: const Offset(
-                                                                0, 2),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 8,
-                                                      ),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            snap['name'],
-                                                            style:
-                                                                const TextStyle(
-                                                              color: Colors.white,
-                                                              fontSize: 14,
-                                                              fontWeight:
-                                                                  FontWeight.w500,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    )),
-                                                const SizedBox(
-                                                    width:
-                                                        4), // Add some end padding
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )),
-                        ],
-                      ),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10.0),
-                child: InkWell(
-                  onTap: () {
-                    if (expandedField == 'target') {
-                      setState(() {
-                        expandedField = '';
-                      });
-                    } else {
-                      setState(() {
-                        expandedField = 'target';
-                      });
-                    }
-                  },
-                  child: ListTile(
-                    title: Text(
-                        "${targetProfile.nickname}'s interests in a person",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(targetProfile.targetLifesnapshots!
-                        .map((snapshot) => snapshot['name'])
-                        .join(", ")),
-                    trailing: expandedField == 'target'
-                        ? const Icon(Icons.keyboard_arrow_down)
-                        : const Icon(Icons.keyboard_arrow_right),
-                  ),
-                ),
-              ),
-              if (expandedField == 'target')
-              //   Padding(
-              //     padding: const EdgeInsets.only(left: 20.0),
-              //     child: Wrap(
-              //       alignment: WrapAlignment.start,
-              //       children: targetProfile.targetLifesnapshots!
-              //           .map<Widget>((snapshot) {
-              //         return IntrinsicWidth(
-              //           child: Container(
-              //             margin: const EdgeInsets.only(right: 2),
-              //             decoration: BoxDecoration(
-              //                 color: GlobalColors.primaryColor,
-              //                 borderRadius: BorderRadius.circular(10)),
-              //             padding: const EdgeInsets.symmetric(
-              //                 vertical: 3, horizontal: 5),
-              //             child: Text(
-              //               snapshot['name'],
-              //               style: const TextStyle(
-              //                   color: Colors.white, fontSize: 12),
-              //               textAlign: TextAlign.start,
-              //             ),
-              //           ),
-              //         );
-              //       }).toList(),
-              //     ),
-              //   ),
-              // if (targetProfile.distanceAnnot != null)
-              //   Padding(
-              //     padding: const EdgeInsets.only(top: 10),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Text(
-              //             '${targetProfile.nickname} is located at ${targetProfile.distanceAnnot}'),
-              //       ],
-              //     ),
-              //   ),
-              Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Group snapshots by sub_category
-                          ..._groupBySubCategory(
-                                  targetProfile.targetLifesnapshots!)
-                              .entries
-                              .map((entry) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Sub-category title
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 8),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.label),
-                                              SizedBox(
-                                                width: 5,
-                                              ),
-                                              Text(
-                                                entry.key,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: isLightTheme ? Colors.black87 : Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Horizontal scrollable badges
-                                        SizedBox(
-                                          height: 40,
-                                          child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                              children: [
-                                                ...entry.value.map((snap) =>
-                                                    Container(
-                                                      margin:
-                                                          const EdgeInsets.only(
-                                                              right: 8),
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [
-                                                            GlobalColors
-                                                                .primaryColor,
-                                                            GlobalColors
-                                                                .primaryColor
-                                                                .withOpacity(0.8),
-                                                          ],
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                20),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(0.1),
-                                                            blurRadius: 4,
-                                                            offset: const Offset(
-                                                                0, 2),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 8,
-                                                      ),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            snap['name'],
-                                                            style:
-                                                                const TextStyle(
-                                                              color: Colors.white,
-                                                              fontSize: 14,
-                                                              fontWeight:
-                                                                  FontWeight.w500,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    )),
-                                                const SizedBox(
-                                                    width:
-                                                        4), // Add some end padding
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )),
-                        ],
-                      ),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: SizedBox(
-                  height: 50,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: ButtonComponent(
-                        text: isLoading ? 'Loading...' : 'DM Me',
-                        backgroundColor: GlobalColors.primaryColor,
-                        foregroundColor: GlobalColors.lightBackgroundColor,
-                        onTap: isLoading ? () {} : () => handleDMTap(context)),
-                  ),
-                ),
-              ),
-              SizedBox(
-                child: Column(
-                  children: [
-                    Container(
-                        height: 300,
-                        padding: const EdgeInsets.only(
-                          bottom: 2,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 2.0),
-                          child: SizedBox(
-                            height: 250,
-                            child: DefaultTabController(
-                              length: 2,
-                              child: Column(
-                                children: [
-                                  TabBar(
-                                    tabs: const [
-                                      Tab(text: 'Profile Pictures'),
-                                      Tab(text: 'Video Posts'),
-                                    ],
-                                    labelColor: GlobalColors.primaryColor,
-                                    unselectedLabelColor:
-                                        GlobalColors.secondaryColor,
-                                  ),
-                                  SizedBox(
-                                    height: 240,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(left: 10.0),
-                                      child: TabBarView(
-                                        children: [
-                                          // Pictures Tab
-                                          GridView.builder(
-                                            gridDelegate:
-                                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 3,
-                                              crossAxisSpacing: 4,
-                                              mainAxisSpacing: 4,
-                                            ),
-                                            itemCount: targetProfile
-                                                .profileImages!.length,
-                                            itemBuilder: (context, index) {
-                                              return InkWell(
-                                                onTap: () => Routemaster.of(
-                                                        context)
-                                                    .push(
-                                                        '/homepage/target-profile/image-viewer?url=${targetProfile.profileImages![index]['image_url']}&isMe=false&isProfilePic=false'),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: targetProfile
-                                                          .profileImages![index]
-                                                      ['image_url'],
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          // Videos Tab
-                                          videoState.isLoading
-                                              ? const Center(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    color: GlobalColors
-                                                        .primaryColor,
-                                                  ),
-                                                )
-                                              : videoState.data.isEmpty
-                                                  ? Center(
-                                                      child: Text(
-                                                        'No videos yet',
-                                                        style: TextStyle(
-                                                          color: GlobalColors
-                                                              .secondaryColor,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : GridView.builder(
-                                                      gridDelegate:
-                                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                                        crossAxisCount: 3,
-                                                        crossAxisSpacing: 4,
-                                                        mainAxisSpacing: 4,
-                                                      ),
-                                                      itemCount: videoState
-                                                          .data.length,
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                        return InkWell(
-                                                          onTap: () {
-                                                            Routemaster.of(
-                                                                    context)
-                                                                .push(
-                                                                    '/homepage/target-profile/video-player?id=${Uri.encodeComponent(videoState.data[index]['id'].toString())}');
-                                                          },
-                                                          child: Container(
-                                                            color: isLightTheme
-                                                                ? Colors.black
-                                                                : Colors
-                                                                    .grey[800],
-                                                            height: 50,
-                                                            width: 50,
-                                                            child: const Center(
-                                                              child: Icon(
-                                                                Icons
-                                                                    .play_arrow,
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

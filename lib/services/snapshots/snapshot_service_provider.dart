@@ -52,6 +52,8 @@ class SnapshotServiceProvider extends StateNotifier<ApiState> {
 
       final response = await snapshotService.editSnapshots(snaps);
 
+      print(response);
+
       if (!StatusCodes.codes.contains(response.statusCode)) {
         //state = ApiState(error: response.errorMessage, isLoading: false);
         state = ApiState(isLoading: false, data: state.data, statusCode: 200);

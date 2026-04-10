@@ -11,7 +11,10 @@ class ProfileModel {
   String showMe;
   String maritalStatus;
   String lang;
-  String homeAddress;
+  String residenceCountry;
+  String residenceCity;
+  String nationality;
+  String lookingFor;
 
   ProfileModel(
       {required this.nickname,
@@ -23,7 +26,10 @@ class ProfileModel {
       required this.showMe,
       required this.maritalStatus,
       required this.lang,
-      required this.homeAddress});
+      required this.residenceCountry,
+      required this.residenceCity,
+      required this.nationality,
+      required this.lookingFor});
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -33,10 +39,13 @@ class ProfileModel {
       'longitude': longitude,
       'profile_pic': profilePic,
       'gender': gender,
+      'looking_for': lookingFor,
       'show_me': showMe,
       'marital_status': maritalStatus,
       'lang': lang,
-      'home_address': homeAddress
+      'residence_country': residenceCountry,
+      'residence_city': residenceCity,
+      'nationality': nationality
     };
   }
 
@@ -44,14 +53,17 @@ class ProfileModel {
     return ProfileModel(
         nickname: map['nickname'] as String,
         dob: map['dob'] as String,
-        latitude: map['latitude'] as String,
+        latitude: map['latitude'] as String,  
         longitude: map['longitude'] as String,
         profilePic: map['profile_pic'] as File,
         gender: map['gender'] as String,
         showMe: map['show_me'] as String,
         maritalStatus: map['marital_status'] as String,
         lang: map['lang'] as String,
-        homeAddress: map['home_address'] as String);
+        residenceCountry: map['residence_country'] as String,
+        residenceCity: map['residence_city'] as String,
+        nationality: map['nationality'] as String,
+        lookingFor: map['looking_for'] as String);
   }
 
   String toJson() => json.encode(toMap());

@@ -23,8 +23,12 @@ class ApiService {
         statusCode: 204,
       );
     }
+
+    print("Raw response body: ${response.reasonPhrase}");
     final Uint8List bodyBytes = response.bodyBytes;
     final String utf8DecodedBody = utf8.decode(bodyBytes);
+
+    print(  "Response from API: ${response.statusCode} - $utf8DecodedBody");
 
     final decodedData = jsonDecode(utf8DecodedBody);
 
@@ -32,17 +36,18 @@ class ApiService {
       if (StatusCodes.codes.contains(decodedData['status_code'])) {
         return ApiResponse.success(
           result: decodedData['data'],
-          statusCode: decodedData['status_code'],
+          pagination: decodedData['pagination'],
+          statusCode: int.parse(decodedData['status_code'].toString()) ,
         );
       } else {
         return ApiResponse.failure(
             errorMessage: decodedData['message'],
-            statusCode: decodedData['status_code']);
+            statusCode: int.parse(decodedData['status_code'].toString()));
       }
     } catch (e) {
       return ApiResponse.failure(
           errorMessage: decodedData['message'],
-          statusCode: decodedData['status_code']);
+          statusCode: int.parse(decodedData['status_code'].toString()));
     }
   }
 
@@ -56,6 +61,8 @@ class ApiService {
     dynamic configs = await loadVariables();
 
     dynamic response;
+
+    print("Making GET request to ${isChat ? configs['CHAT_URL'] : configs['BACKEND_URL']}/$endpoint with token: $token");
 
     try {
       if (!isChat) {
@@ -113,6 +120,8 @@ class ApiService {
       bool isChat = false}) async {
     try {
       dynamic configs = await loadVariables();
+
+      print("Making POST request to ${isChat ? configs['CHAT_URL'] : configs['BACKEND_URL']}/$endpoint with body: $body and token: $token");
 
       dynamic url;
       if (!isChat) {

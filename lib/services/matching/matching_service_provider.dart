@@ -8,11 +8,11 @@ class MatchingServiceProvider extends StateNotifier<ApiState> {
 
   MatchingServiceProvider({required this.matchingService}) : super(ApiState());
 
-  Future<void> getMatchingScores() async {
+  Future<void> getMatchingScores({int page = 1}) async {
     state = ApiState(isLoading: true);
 
     try {
-      final response = await matchingService.getMatchingRecommendations();
+      final response = await matchingService.getMatchingRecommendations(page: page);
 
       if (!StatusCodes.codes.contains(response.statusCode)) {
         state = ApiState(

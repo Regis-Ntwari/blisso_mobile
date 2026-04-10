@@ -33,6 +33,39 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high);
   }
 
+  Future<Position> determineLocationFast() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled');
+    }
+
+    permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied');
+    }
+
+    final Position? cached = await Geolocator.getLastKnownPosition();
+    if (cached != null) {
+      return cached;
+    }
+
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium);
+  }
+
   Future<String> getAddress(Position position) async {
     final configData = await rootBundle.loadString('assets/config/config.json');
 

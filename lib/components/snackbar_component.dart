@@ -19,7 +19,9 @@ void showSnackBar(BuildContext context, String message) {
           child: Padding(
             padding: const EdgeInsets.only(top: 20.0),
             child: Text(
-              message,
+              message.toLowerCase().contains('Connection'.toLowerCase())
+                  ? 'Check your internet connection and reload'
+                  : message,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 12),
             ),

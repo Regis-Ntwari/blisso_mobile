@@ -41,7 +41,9 @@ class UserCard extends StatelessWidget {
           // Background image
           Positioned.fill(
             child: CachedNetworkImage(
-              imageUrl: user['profile_picture_url']!,
+              imageUrl: user['profile_picture_url'] == null
+                  ? 'https://plus.unsplash.com/premium_vector-1719858611039-66c134efa74d'
+                  : user['profile_picture_url'],
               placeholder: (context, url) => Container(
                 color: Colors.grey[300],
                 child: const Center(
@@ -155,7 +157,7 @@ class UserCard extends StatelessWidget {
         ),
       ),
     );
-    
+
     // Alternative with reduced blur (if you really need blur):
     /*
     return Positioned.fill(

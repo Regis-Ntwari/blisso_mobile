@@ -7,6 +7,7 @@ import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:blisso_mobile/utils/video_size_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 //import 'package:routemaster/routemaster.dart';
@@ -41,6 +42,13 @@ class _VideoModalState extends ConsumerState<VideoModal> {
   }
 
   void sendMessage() async {
+    final sizeMB = getFileSizeMB(widget.video);
+    if (!isVideoWithinSizeLimit(widget.video, maxChatVideoSizeMB)) {
+      if (mounted) {
+        showVideoTooLargeError(context, sizeMB, maxChatVideoSizeMB);
+      }
+      return;
+    }
     String extension = widget.video.path.split('.').last;
     try {
       List<int> bytes = widget.video.readAsBytesSync();
@@ -49,6 +57,7 @@ class _VideoModalState extends ConsumerState<VideoModal> {
           messageId: generate12ByteHexFromTimestamp(DateTime.now()),
           contentFileType: 'video/$extension',
           parentId: '000000000000000000000000',
+          messageStatus: 'unseen',
           contentFile: base64Bytes,
           sender: widget.sender,
           receiver: widget.receiver,

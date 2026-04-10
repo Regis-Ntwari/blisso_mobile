@@ -50,10 +50,12 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
   @override
   Widget build(BuildContext context) {
     List<String> usernames = widget.statuses.keys.toList();
+    bool isLightTheme = Theme.of(context).brightness == Brightness.light;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       height: 120,
+      color: isLightTheme ? Colors.white : Colors.black,
       child: Row(
         children: [
           InkWell(
@@ -81,7 +83,7 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                              color: isLightTheme ? Colors.black.withOpacity(0.5) : Colors.black.withOpacity(0.3),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -109,7 +111,16 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: widget.statuses.isEmpty ? Center(
+              child: Text(
+                'No stories yet — be the first to share one!',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isLightTheme ? Colors.grey[500] : Colors.grey[500],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ) : ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: usernames.length,
                 itemBuilder: (context, index) {

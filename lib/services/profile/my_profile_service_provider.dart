@@ -64,17 +64,17 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
     }
   }
 
-  void addSnapshot(Map<String, dynamic> snap) {
+  void addSnapshot(List<dynamic> snap) {
     state = ApiState(data: {
       ...state.data,
-      'lifesnapshots': [...state.data['lifesnapshots'], snap]
+      'lifesnapshots': snap
     }, isLoading: false);
   }
 
   void removeSnapshotById(int id) {
     final current =
         List<Map<String, dynamic>>.from(state.data['lifesnapshots'] ?? []);
-    final updated = current.where((s) => s['id'] != id).toList();
+    final updated = current.where((s) => s['lifesnapshot_id'] != id).toList();
 
     state = ApiState(
       data: {
@@ -85,17 +85,17 @@ class MyProfileServiceProvider extends StateNotifier<ApiState> {
     );
   }
 
-  void addTargetSnapshot(Map<String, dynamic> target) {
+  void addTargetSnapshot(List<dynamic> target) {
     state = ApiState(data: {
       ...state.data,
-      'target_lifesnapshots': [...state.data['target_lifesnapshots'], target]
+      'target_lifesnapshots': target
     }, isLoading: false);
   }
 
   void removeTargetSnapshot(int id) {
     final current =
         List<Map<String, dynamic>>.from(state.data['target_lifesnapshots'] ?? []);
-    final updated = current.where((s) => s['id'] != id).toList();
+    final updated = current.where((s) => s['lifesnapshot_id'] != id).toList();
 
     state = ApiState(
       data: {

@@ -6,6 +6,7 @@ class LoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isLightTheme = Theme.brightnessOf(context) == Brightness.light;
     return Stack(
       children: [
         Container(
@@ -17,7 +18,7 @@ class LoadingScreen extends StatelessWidget {
             height: 100,
             width: 100,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: isLightTheme ?Colors.white : Colors.black,
               shape: BoxShape.circle,
             ),
             child: const Align(

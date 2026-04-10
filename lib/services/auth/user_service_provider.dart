@@ -94,8 +94,9 @@ class UserServiceProvider extends StateNotifier<ApiState> {
             .read(permissionProviderImpl.notifier)
             .updatePermissions(response.result['permissions']);
       }
-    } catch (e) {
+    } catch (e, stacktrace) {
       state = ApiState(error: e.toString(), isLoading: false);
+      print(stacktrace);
     }
   }
 

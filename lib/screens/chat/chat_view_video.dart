@@ -32,15 +32,8 @@ class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
       return const LoadingScreen();
     }
 
-    /**id: video['id'].toString(),
-          username: video['username'],
-          nickname: video['nickname'],
-          profilePicture: video['profile_picture_uri'],
-          videoUrl: video['post_file_url'],
-          description: video['caption'] ?? '',
-          likes: video['likes'] ?? 0,
-          peopleLiked: video['people_liked'] ?? [],
-          likedThisStory: video['liked_this_story']); */
+    print('Video state data:');
+    print(videoState.data);
 
     final story = ShortStoryModel(
         id: videoState.data['id'].toString(),
@@ -48,11 +41,12 @@ class _ChatViewVideoState extends ConsumerState<ChatViewVideo> {
         nickname: videoState.data['nickname'],
         profilePicture: videoState.data['profile_picture_uri'],
         videoUrl: videoState.data['post_file_url'],
-        description: videoState.data['caption'],
-        likes: videoState.data['likes'],
-        shares: videoState.data['shares'],
-        peopleLiked: videoState.data['people_liked'],
-        likedThisStory: videoState.data['liked_this_story']);
+        description: videoState.data['caption'] ?? '',
+        likes: videoState.data['likes'] ?? 0,
+        shares: videoState.data['shares'] ?? 0,
+        views: videoState.data['views'] ?? 0,
+        peopleLiked: videoState.data['people_liked'] ?? [],
+        likedThisStory: videoState.data['liked_this_story'] ?? false);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.black,

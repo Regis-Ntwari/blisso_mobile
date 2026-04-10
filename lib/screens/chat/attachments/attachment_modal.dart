@@ -10,6 +10,7 @@ import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/websocket/websocket_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
+import 'package:blisso_mobile/utils/video_size_helper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,8 +94,16 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                         final pickedFile =
                             await picker.pickImage(source: ImageSource.gallery);
                         if (pickedFile != null) {
+                          final imageFile = File(pickedFile.path);
+                          final sizeMB = getFileSizeMB(imageFile);
+                          if (!isFileWithinSizeLimit(imageFile, maxFileSizeMB)) {
+                            if (context.mounted) {
+                              showFileTooLargeError(context, sizeMB, maxFileSizeMB);
+                            }
+                            return;
+                          }
                           setState(() {
-                            pickedImage = File(pickedFile.path);
+                            pickedImage = imageFile;
                           });
                           showImageWithCaption(context, pickedImage!,
                               widget.sender, widget.receiver, null);
@@ -115,15 +124,15 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                         final pickedFile =
                             await picker.pickVideo(source: ImageSource.gallery);
                         if (pickedFile != null) {
-                          // setState(() {
-                          //   pickedImage = File(pickedFile.path);
-                          // });
-                          // showImageWithCaption(context, File(pickedFile.path),
-                          //     widget.sender, widget.receiver);
-
-                          //sendMessage(File(pickedFile.path));
-
-                          ShowVideoWithCaption(context, File(pickedFile.path),
+                          final videoFile = File(pickedFile.path);
+                          final sizeMB = getFileSizeMB(videoFile);
+                          if (!isVideoWithinSizeLimit(videoFile, maxChatVideoSizeMB)) {
+                            if (context.mounted) {
+                              showVideoTooLargeError(context, sizeMB, maxChatVideoSizeMB);
+                            }
+                            return;
+                          }
+                          ShowVideoWithCaption(context, videoFile,
                               widget.sender, widget.receiver);
                         }
                       },
@@ -151,8 +160,15 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
 
                         if (result != null) {
                           PlatformFile file = result.files.first;
-
-                          ShowAudioWithCaption(context, File(file.path!),
+                          final audioFile = File(file.path!);
+                          final sizeMB = getFileSizeMB(audioFile);
+                          if (!isFileWithinSizeLimit(audioFile, maxFileSizeMB)) {
+                            if (context.mounted) {
+                              showFileTooLargeError(context, sizeMB, maxFileSizeMB);
+                            }
+                            return;
+                          }
+                          ShowAudioWithCaption(context, audioFile,
                               widget.sender, widget.receiver);
                         } else {
                           // User canceled the picker
@@ -193,7 +209,13 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
 
                         if (result != null) {
                           PlatformFile file = result.files.first;
-
+                          if (file.size > maxFileSizeMB * 1024 * 1024) {
+                            final sizeMB = file.size / (1024 * 1024);
+                            if (context.mounted) {
+                              showFileTooLargeError(context, sizeMB, maxFileSizeMB);
+                            }
+                            return;
+                          }
                           showFileModal(
                               context, widget.sender, widget.receiver, file);
                         } else {
@@ -216,8 +238,16 @@ class _AttachmentModalState extends ConsumerState<AttachmentModal> {
                         final pickedFile =
                             await picker.pickImage(source: ImageSource.camera);
                         if (pickedFile != null) {
+                          final cameraFile = File(pickedFile.path);
+                          final sizeMB = getFileSizeMB(cameraFile);
+                          if (!isFileWithinSizeLimit(cameraFile, maxFileSizeMB)) {
+                            if (context.mounted) {
+                              showFileTooLargeError(context, sizeMB, maxFileSizeMB);
+                            }
+                            return;
+                          }
                           setState(() {
-                            takenPicture = File(pickedFile.path);
+                            takenPicture = cameraFile;
                           });
                           showImageWithCaption(context, takenPicture!,
                               widget.sender, widget.receiver, null);

@@ -3,18 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class NewSnap extends StateNotifier<List<Map<String, dynamic>>> {
   NewSnap() : super([]);
 
-  addSnapshot(dynamic snap) {
-    int check = 0;
-    for (var s in state) {
-      if (s['id'] == snap['id']) {
-        state.remove(s);
-        check = 1;
-        break;
-      }
-    }
+  void addSnapshot(Map<String, dynamic> snap) {
+    final exists = state.any((s) => s['id'] == snap['id']);
 
-    if (check == 0) {
-      state = [...state, snap];
+    if (exists) {
+      state = state
+          .where((s) => s['id'] != snap['id'])
+          .toList(); 
+    } else {
+      state = [...state, snap]; 
     }
   }
 }

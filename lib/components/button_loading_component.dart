@@ -27,7 +27,7 @@ class ButtonLoadingComponent extends StatelessWidget {
         width: buttonWidth ?? width * 0.90,
         height: buttonHeight ?? height * 0.06,
         padding:
-            const EdgeInsets.only(top: 10, bottom: 10, right: 20, left: 20),
+            const EdgeInsets.only(top: 5, bottom: 5, right: 10, left: 10),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(5),
             color: GlobalColors.primaryColor),
