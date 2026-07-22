@@ -36,8 +36,18 @@ class _DobComponentState extends State<DobComponent>
   late Animation<Offset> _slideAnim;
 
   final List<String> _monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
   ];
 
   int? _selectedMonth;
@@ -47,8 +57,7 @@ class _DobComponentState extends State<DobComponent>
     super.initState();
     _animController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 700));
-    _fadeAnim =
-        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.18),
       end: Offset.zero,
@@ -280,13 +289,40 @@ class _DobComponentState extends State<DobComponent>
 
                 SizedBox(height: size.height * 0.05),
                 _PrimaryButton(
-                  text: AppLocalizations.of(context)!.continuei,
-                  onTap: () {
-                    if (widget.formKey.currentState!.validate()) {
-                      widget.onTap();
-                    }
-                  },
-                ),
+                    text: AppLocalizations.of(context)!.continuei,
+                    onTap: () {
+                      if (widget.formKey.currentState!.validate()) {
+                        final day = int.tryParse(widget.dayController.text);
+                        final month = int.tryParse(widget.monthController.text);
+                        final year = int.tryParse(widget.yearController.text);
+
+                        if (day != null && month != null && year != null) {
+                          final dob = DateTime(year, month, day);
+                          final today = DateTime.now();
+
+                          int age = today.year - dob.year;
+
+                          // Adjust if birthday hasn't occurred yet this year
+                          if (today.month < dob.month ||
+                              (today.month == dob.month &&
+                                  today.day < dob.day)) {
+                            age--;
+                          }
+
+                          if (age < 18) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text('You must be at least 18 years old'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          widget.onTap(); // proceed only if valid
+                        }
+                      }
+                    }),
               ],
             ),
           ),
@@ -360,9 +396,8 @@ class _DateFieldState extends State<_DateField> {
                       : Colors.white24,
               width: _isFocused ? 2 : 1.5,
             ),
-            color: widget.isLight
-                ? Colors.white
-                : Colors.white.withOpacity(0.05),
+            color:
+                widget.isLight ? Colors.white : Colors.white.withOpacity(0.05),
             boxShadow: _isFocused
                 ? [
                     BoxShadow(

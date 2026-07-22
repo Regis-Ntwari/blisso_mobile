@@ -1,4 +1,6 @@
 import 'package:blisso_mobile/screens/home/components/explore/components/feed_video_controller_manager.dart';
+import 'package:blisso_mobile/screens/home/components/explore/components/video_feed_state_provider.dart';
+import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/watching_time_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +32,13 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Mark this tab as active
+      if (ref.read(paginatedVideoPostProvider).data.isEmpty) {
+        ref.read(paginatedVideoPostProvider.notifier).loadFirstPage();
+      }
+    });
   }
 
   @override
@@ -153,6 +162,16 @@ class _ExploreComponentState extends ConsumerState<ExploreComponent>
       } else if (_primed) {
         // Tab came back into focus — only play if route is also on top.
         _resumeIfEligible();
+      }
+    });
+
+    // inside build(), after the existing ref.listen for exploreTabActiveProvider
+
+    ref.listen<bool>(videoFeedSuppressedProvider, (_, suppressed) {
+      if (suppressed) {
+        _manager.deactivate();
+      } else if (_primed) {
+        _resumeIfEligible(); // resumes only if tab + route are also active
       }
     });
 

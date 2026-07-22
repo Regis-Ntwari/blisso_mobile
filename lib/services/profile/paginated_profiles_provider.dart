@@ -32,11 +32,14 @@ class PaginatedProfilesNotifier extends StateNotifier<PaginatedState> {
       _latitude = position.latitude;
       _longitude = position.longitude;
 
+      print("Latitude: $_latitude, Longitude: $_longitude");
+
       await ref.read(profileServiceProviderImpl.notifier).getAllProfiles(
             page: 1,
             latitude: _latitude,
             longitude: _longitude,
           );
+      print("Profiles fetched successfully for page 1 with location.");
 
       final profilesData = ref.read(profileServiceProviderImpl);
 

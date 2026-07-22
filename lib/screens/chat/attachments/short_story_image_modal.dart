@@ -60,7 +60,11 @@ class _ShortStoryImageModalState extends ConsumerState<ShortStoryImageModal> {
               const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.55, // Adjust the max height as needed
+                  ),
+
                   child: Image.file(
                     widget.image,
                     width: double.infinity,

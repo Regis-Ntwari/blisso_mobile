@@ -11,6 +11,7 @@ import 'package:blisso_mobile/services/chat/chat_service_provider.dart';
 import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/chat/number_messages_provider.dart';
 import 'package:blisso_mobile/services/chat/typing_message_provider.dart';
+import 'package:blisso_mobile/services/message_requests/disconnect_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/models/chat_message_model.dart';
 import 'package:blisso_mobile/services/models/target_profile_model.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
@@ -373,8 +374,11 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
       (previous, next) {
         if (previous == null || next == null) return;
 
-        final prevMessages = previous['messages'] == null ? [] : previous['messages'] as List<dynamic>;
-        final nextMessages = next['messages'] == null ? [] : next['messages'] as List<dynamic>;
+        final prevMessages = previous['messages'] == null
+            ? []
+            : previous['messages'] as List<dynamic>;
+        final nextMessages =
+            next['messages'] == null ? [] : next['messages'] as List<dynamic>;
 
         if (nextMessages.length > prevMessages.length) {
           final lastMessage = nextMessages.last;
@@ -446,6 +450,55 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
 
   bool isProfileLoading = false;
 
+  void _showUnmatchDialog(
+    BuildContext context, WidgetRef ref, String username) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Unmatch User'),
+        content: const Text(
+          'Are you sure you want to unmatch this user? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: GlobalColors.primaryColor,
+            ),
+            onPressed: () async {
+              Navigator.pop(context); // close dialog first
+
+              try {
+                await ref
+                    .read(disconnectMessageRequestServiceProviderImpl.notifier)
+                    .sendDisconnectMessageRequest(username);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('User unmatched')),
+                );
+
+                // Optional: navigate back after unmatching
+                Routemaster.of(context).replace('/homepage');
+
+                ref.read(chatServiceProviderImpl.notifier).getMessages();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to unmatch user')),
+                );
+              }
+            },
+            child: const Text('Unmatch'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     bool isLightTheme = Theme.of(context).brightness == Brightness.light;
@@ -497,7 +550,7 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
               });
 
               Routemaster.of(context)
-                  .push('/chat-detail/${widget.username}/profile');
+                  .push('/homepage/chat-detail/${widget.username}/profile');
             } else {
               showPopupComponent(
                   context: context,
@@ -523,6 +576,22 @@ class _ChatViewScreenState extends ConsumerState<ChatViewScreen> {
             ],
           ),
         ),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'unmatch') {
+                _showUnmatchDialog(context, ref, widget.username);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'unmatch',
+                child: Text('Unmatch'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: isProfileLoading
           ? Center(

@@ -45,7 +45,7 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(getMessageRequestServiceProviderImpl.notifier)
           .getMessageRequests();
@@ -250,12 +250,10 @@ class _ChatMessageRequestState extends ConsumerState<ChatMessageRequest> {
           child: Column(
             children: [
               ListTile(
-                title: Flexible(
-                  child: Text(
-                    request['requester_profile_name'] == null
-                        ? ''
-                        : 'You have received a message request from ${request['requester_profile_name']}',
-                  ),
+                title: Text(
+                  request['requester_profile_name'] == null
+                      ? ''
+                      : 'You have received a message request from ${request['requester_profile_name']}',
                 ),
               ),
               Row(

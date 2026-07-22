@@ -34,6 +34,21 @@ class MessageRequestService {
     return response;
   }
 
+  Future<ApiResponse> sendDisconnectionRequest(String targetUsername) async {
+    String accessToken =
+        await SharedPreferencesService.getPreference('accessToken');
+
+    String username = await SharedPreferencesService.getPreference('username');
+
+    ApiResponse response = await ApiService()
+        .postData(endpoint: '/matching/message-requests/DISCONNECTION/', token: accessToken, body: {
+          'requester_profile_email': username,
+          'target_profile_email': targetUsername
+        });
+
+    return response;
+  }
+
   Future<ApiResponse> getMessageRequests() async {
     String username = await SharedPreferencesService.getPreference('username');
 

@@ -1,11 +1,11 @@
-import 'dart:async'; // Add this import
+import 'dart:async';
 import 'dart:io';
 
 import 'package:blisso_mobile/components/popup_component.dart';
 import 'package:blisso_mobile/screens/chat/attachments/video_post_modal.dart';
-import 'package:blisso_mobile/screens/chat/attachments/video_trimmer_screen.dart';
 import 'package:blisso_mobile/screens/chat/chat_screen.dart';
 import 'package:blisso_mobile/screens/explore/matching_recommendations.dart';
+import 'package:blisso_mobile/screens/home/components/explore/components/video_feed_state_provider.dart';
 import 'package:blisso_mobile/screens/home/components/explore/explore_component.dart';
 import 'package:blisso_mobile/screens/home/components/home_component.dart';
 import 'package:blisso_mobile/screens/home/feeling_popup_component.dart';
@@ -26,6 +26,7 @@ import 'package:blisso_mobile/utils/relationship_goals.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:routemaster/routemaster.dart';
@@ -54,10 +55,11 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   String? _selectedResidenceCountry;
   String? _selectedRelationshipGoal;
 
-  // Tab tracking variables
   DateTime? _currentTabEntryTime;
-  
+
   Map<int, String> tabs = {0: 'Home', 1: 'Matching', 2: 'Videos', 3: 'Chat'};
+
+  bool get _isExploreTab => _selectedScreenIndex == 2;
 
   @override
   bool get wantKeepAlive => true;
@@ -70,7 +72,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(webSocketNotifierProvider.notifier).connect();
-
       ref.read(webSocketNotifierProvider.notifier).listenToMessages();
 
       if (ref.read(feelingProviderImpl)) {
@@ -83,15 +84,13 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         ref.read(feelingProviderImpl.notifier).updateState();
       }
 
-      // Fire off independent loads in parallel
       final profilesFuture = !ref.read(firstProfileProviderImpl)
           ? ref.read(paginatedProfilesProvider.notifier).loadFirstPage()
           : Future<void>.value();
 
-      final storiesFuture =
-          ref.read(storiesServiceProviderImpl).data == null
-              ? ref.read(storiesServiceProviderImpl.notifier).getStories()
-              : Future<void>.value();
+      final storiesFuture = ref.read(storiesServiceProviderImpl).data == null
+          ? ref.read(storiesServiceProviderImpl.notifier).getStories()
+          : Future<void>.value();
 
       final prefsFuture = Future.wait([
         SharedPreferencesService.getPreference('firstname'),
@@ -107,26 +106,24 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         }
       });
 
-      // Wait for profiles, stories and prefs together
       await Future.wait(
         [profilesFuture, storiesFuture, prefsFuture],
         eagerError: false,
       ).catchError((_) => <void>[]);
+
+      if (ref.read(paginatedProfilesProvider).data.isEmpty) {
+        ref.read(paginatedMatchingServiceProvider.notifier).loadFirstPage();
+      }
 
       ref.read(firstProfileProviderImpl.notifier).updateProfile();
 
       if (ref.read(paginatedVideoPostProvider).data.isEmpty) {
         ref.read(paginatedVideoPostProvider.notifier).loadFirstPage();
       }
-      if (ref.read(paginatedProfilesProvider).data.isEmpty) {
-        ref.read(paginatedMatchingServiceProvider.notifier).loadFirstPage();
-      }
 
       ref.read(getNumberOfMessagesProvider.notifier).getNumberOfMessages();
-      
-      // Start tracking the initial tab (index 0 - Home)
-      _startTrackingCurrentTab();
 
+      _startTrackingCurrentTab();
       TrackingService.instance.startSession();
     });
   }
@@ -151,14 +148,12 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   void _onSearchChange() {
     final state = ref.watch(paginatedProfilesProvider);
     final query = searchValue.text.trim().toLowerCase();
-    // If the query is empty, reset profiles to the full dataset
     if (query.isEmpty) {
       setState(() {
         profiles = state.data;
       });
       return;
     }
-    // Filter data
     final filteredData = state.data.where((profile) {
       final user = profile['user'] as Map<String, dynamic>? ?? {};
       switch (searchAttribute) {
@@ -177,7 +172,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                   .toLowerCase()
                   .contains(query) ??
               false;
-        
         case 'Nationality':
           return profile['nationality']
                   ?.toString()
@@ -194,21 +188,16 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   }
 
   void _startTrackingCurrentTab() {
-    // Record the entry time for the current tab
     _currentTabEntryTime = DateTime.now();
-    debugPrint('Started tracking tab: ${tabs[_selectedScreenIndex]} at $_currentTabEntryTime');
   }
-  
+
   void _stopAndTrackCurrentTab(int nextTabIndex) {
     final entryTime = _currentTabEntryTime;
-    
     if (entryTime != null) {
       final exitTime = DateTime.now();
       final duration = exitTime.difference(entryTime).inMilliseconds;
-      
       final fromTab = tabs[_selectedScreenIndex]!;
       final toTab = tabs[nextTabIndex]!;
-      
       _sendTabTrackingData(
         from: fromTab,
         to: toTab,
@@ -216,11 +205,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         endTime: exitTime,
         durationMs: duration,
       );
-      
-      debugPrint('Left tab: $fromTab after ${duration}ms, going to: $toTab');
     }
   }
-  
+
   void _sendTabTrackingData({
     required String from,
     required String to,
@@ -235,34 +222,28 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       "tab_from_arrival_time": endTime.toIso8601String(),
       "activity_happened_at": DateTime.now().toIso8601String()
     });
-    
-    
   }
 
   void _handleTabChange(int newIndex) {
-    if (newIndex == _selectedScreenIndex) return; 
-    
-    // Immediately pause videos when leaving the Explore tab
+    if (newIndex == _selectedScreenIndex) return;
+
     ref.read(exploreTabActiveProvider.notifier).state = (newIndex == 2);
-    
+
     _stopAndTrackCurrentTab(newIndex);
-    
+
     setState(() {
       _selectedScreenIndex = newIndex;
     });
-    
+
     _startTrackingCurrentTab();
   }
 
   @override
   void dispose() {
     ref.read(exploreTabActiveProvider.notifier).state = false;
-    
-    // Track the final tab when leaving the screen
+
     if (_currentTabEntryTime != null) {
       final exitTime = DateTime.now();
-      final duration = exitTime.difference(_currentTabEntryTime!).inMilliseconds;
-      
       TrackingService.instance.track("tab_changed", {
         "from": tabs[_selectedScreenIndex]!,
         "to": null,
@@ -270,10 +251,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         "tab_from_arrival_time": exitTime.toIso8601String(),
         "activity_happened_at": DateTime.now().toIso8601String()
       });
-      
-      debugPrint('Exited app from tab: ${tabs[_selectedScreenIndex]} after ${duration}ms');
     }
-    
+
     _scrollController.dispose();
     super.dispose();
   }
@@ -287,7 +266,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     final storiesState = ref.watch(storiesServiceProviderImpl);
 
     final Map<String, List<dynamic>> fetchedStories = {};
-
     if (!storiesState.isLoading && storiesState.data != null) {
       final myStories = storiesState.data['my_stories'];
       if (myStories['stories'].isNotEmpty) {
@@ -298,75 +276,75 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       }
     }
 
-    return Scaffold(
-      backgroundColor: isLightTheme ? Colors.white : Colors.black,
-      appBar: AppBar(
-        backgroundColor: isLightTheme
-            ? (_selectedScreenIndex == 2 ? Colors.black : Colors.white)
-            : Colors.black,
-        automaticallyImplyLeading: false,
-        title: _buildAppBarTitle(),
-        actions: _buildAppBarActions(),
-        bottom: isSearchVisible && _selectedScreenIndex == 0 ? _buildSearchBar(isLightTheme) : null,
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            await ref.read(paginatedProfilesProvider.notifier).loadFirstPage();
-            await ref.read(storiesServiceProviderImpl.notifier).getStories();
-          },
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              if (_selectedScreenIndex == 0) ...[
-                SliverToBoxAdapter(
-                  child: HomeComponent(
-                    profiles: profilesState.data,
-                    stories: fetchedStories,
-                    isLoading: profilesState.isLoading,
-                  ),
-                ),
-                if (profilesState.isLoading && profilesState.data.isNotEmpty)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: GlobalColors.primaryColor,
-                        ),
-                      ),
-                    ),
-                  ),
-              ] else if (_selectedScreenIndex == 1)
-                MatchingRecommendations()
-              else if (_selectedScreenIndex == 2)
-                const SliverFillRemaining(
-                  child: ExploreComponent(),
-                )
-              else
-                const SliverFillRemaining(
-                  child: ChatScreen(),
-                ),
-            ],
-          ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _isExploreTab
+          ? SystemUiOverlayStyle.light
+          : (isLightTheme
+              ? SystemUiOverlayStyle.dark
+              : SystemUiOverlayStyle.light),
+      child: Scaffold(
+        extendBodyBehindAppBar: _isExploreTab,
+        backgroundColor: _isExploreTab
+            ? Colors.black
+            : (isLightTheme ? Colors.white : Colors.black),
+        appBar: AppBar(
+          backgroundColor: _isExploreTab
+              ? Colors.transparent
+              : (isLightTheme ? Colors.white : Colors.black),
+          elevation: _isExploreTab ? 0 : null,
+          shadowColor: _isExploreTab ? Colors.transparent : null,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          title: _buildAppBarTitle(),
+          actions: _buildAppBarActions(),
+          bottom: isSearchVisible && _selectedScreenIndex == 0
+              ? _buildSearchBar(isLightTheme)
+              : null,
         ),
+        body: _isExploreTab
+            ? const ExploreComponent()
+            : SafeArea(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await ref
+                        .read(paginatedProfilesProvider.notifier)
+                        .loadFirstPage();
+                    await ref
+                        .read(storiesServiceProviderImpl.notifier)
+                        .getStories();
+                  },
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      if (_selectedScreenIndex == 0) ...[
+                        SliverToBoxAdapter(
+                          child: HomeComponent(
+                            profiles: profilesState.data,
+                            stories: fetchedStories,
+                            isLoading: profilesState.isLoading,
+                          ),
+                        ),
+                      ] else if (_selectedScreenIndex == 1)
+                        MatchingRecommendations()
+                      else
+                        const SliverFillRemaining(
+                          child: ChatScreen(),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+        bottomNavigationBar: _buildBottomNav(isLightTheme, context),
       ),
-      bottomNavigationBar: _buildBottomNav(isLightTheme, context),
     );
   }
 
   BottomNavigationBar _buildBottomNav(bool isLightTheme, BuildContext context) {
-    // Determine if we're on the Explore tab (index 2)
-    final isExploreTab = _selectedScreenIndex == 2;
-
-    // Determine colors based on current tab
     final backgroundColor = isLightTheme
-        ? (isExploreTab ? Colors.black : Colors.white)
+        ? (_isExploreTab ? Colors.black : Colors.white)
         : Colors.black;
-
     final unselectedColor =
-        isExploreTab ? Colors.white : GlobalColors.secondaryColor;
-
+        _isExploreTab ? Colors.white : GlobalColors.secondaryColor;
     final selectedColor = GlobalColors.primaryColor;
 
     return BottomNavigationBar(
@@ -379,15 +357,15 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       showSelectedLabels: true,
       showUnselectedLabels: true,
       items: [
-        BottomNavigationBarItem(
+        const BottomNavigationBarItem(
           icon: Icon(Icons.home),
           label: 'Home',
         ),
-        BottomNavigationBarItem(
+        const BottomNavigationBarItem(
           icon: Icon(Icons.compare),
           label: 'Match',
         ),
-        BottomNavigationBarItem(
+        const BottomNavigationBarItem(
           icon: Icon(Icons.category),
           label: 'Explore',
         ),
@@ -395,7 +373,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
           icon: Stack(
             clipBehavior: Clip.none,
             children: [
-              Icon(Icons.chat),
+              const Icon(Icons.chat),
               ref.watch(getNumberOfMessagesProvider)
                   ? Positioned(
                       top: 0,
@@ -419,6 +397,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
   }
 
   Widget _buildAppBarTitle() {
+    final titleColor = _isExploreTab ? Colors.white : GlobalColors.primaryColor;
+
     if (_selectedScreenIndex == 1) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -427,7 +407,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
             'Blisso',
             style: TextStyle(
               fontSize: 24,
-              color: GlobalColors.primaryColor,
+              color: titleColor,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -449,7 +429,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
         Text(
           _selectedScreenIndex == 1 ? 'Matching Recommendations' : 'Blisso',
           style: TextStyle(
-            color: GlobalColors.primaryColor,
+            color: titleColor,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -485,47 +465,73 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
               Text('New Post', style: TextStyle(color: Colors.white)),
             ],
           ),
-          onPressed: () async {
-            if (ref.read(permissionProviderImpl)['can_create_video_post']) {
-              final picker = ImagePicker();
-              final pickedFile = await picker.pickVideo(
-                source: ImageSource.gallery,
-              );
-              if (pickedFile != null) {
-                final videoFile = File(pickedFile.path);
-                final sizeMB = getFileSizeMB(videoFile);
-                if (!isVideoWithinSizeLimit(videoFile, maxVideoPostSizeMB)) {
-                  if (context.mounted) {
-                    showVideoTooLargeError(context, sizeMB, maxVideoPostSizeMB);
-                  }
-                  return;
-                }
-                if (context.mounted) {
-                  final trimmedFile = await Navigator.of(context).push<File>(
-                    MaterialPageRoute(
-                      builder: (_) => VideoTrimmerScreen(
-                        videoFile: videoFile,
-                        title: 'Trim Video Post',
-                      ),
-                    ),
-                  );
-                  if (trimmedFile != null && context.mounted) {
-                    showVideoPostModal(context, trimmedFile);
-                  }
-                }
-              }
-            } else {
-              showPopupComponent(
-                context: context,
-                icon: Icons.error,
-                message: 'Please Upgrade your plan',
-              );
-            }
-          },
+          onPressed: _onNewPostPressed,
         ),
       ];
     }
     return [];
+  }
+
+  /// Handles the full "New Post" flow:
+  /// 1. Silence the feed immediately (both providers + microtask flush).
+  /// 2. Pick video from gallery.
+  /// 3. Validate size.
+  /// 4. Show post modal and await dismissal.
+  /// 5. Restore feed in finally — always runs, even on cancellation/error.
+  Future<void> _onNewPostPressed() async {
+    if (!ref.read(permissionProviderImpl)['can_create_video_post']) {
+      showPopupComponent(
+        context: context,
+        icon: Icons.error,
+        message: 'Please Upgrade your plan',
+      );
+      return;
+    }
+
+    // ── STEP 1: Silence feed ───────────────────────────────────────────────
+    // Set BOTH providers synchronously so ExploreComponent's two ref.listen
+    // callbacks are both scheduled before any async gap.
+    ref.read(exploreTabActiveProvider.notifier).state = false;
+    ref.read(videoFeedSuppressedProvider.notifier).state = true;
+
+    // Flush the microtask queue so Riverpod notifies all listeners and
+    // FeedVideoControllerManager.deactivate() runs BEFORE the picker opens.
+    // Without this await the picker opens on the same frame the providers
+    // change, and audio plays for one more frame.
+    await Future<void>.microtask(() {});
+
+    if (!mounted) return;
+
+    try {
+      // ── STEP 2: Pick video ───────────────────────────────────────────────
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickVideo(source: ImageSource.gallery);
+
+      if (pickedFile == null) return; // user cancelled — finally restores feed
+      if (!mounted) return;
+
+      // ── STEP 3: Size check ───────────────────────────────────────────────
+      final videoFile = File(pickedFile.path);
+      final sizeMB = getFileSizeMB(videoFile);
+      if (!isVideoWithinSizeLimit(videoFile, maxVideoPostSizeMB)) {
+        if (context.mounted) {
+          showVideoTooLargeError(context, sizeMB, maxVideoPostSizeMB);
+        }
+        return; // finally restores feed
+      }
+
+      if (!context.mounted) return;
+
+      // ── STEP 4: Post modal — await full dismissal ────────────────────────
+      await showVideoPostModal(context, videoFile);
+
+    } finally {
+      // ── STEP 5: Always restore feed ──────────────────────────────────────
+      if (mounted) {
+        ref.read(videoFeedSuppressedProvider.notifier).state = false;
+        ref.read(exploreTabActiveProvider.notifier).state = true;
+      }
+    }
   }
 
   Widget _buildChatButtonWithBadge() {
@@ -534,14 +540,12 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
       child: FutureBuilder<Map<String, String?>>(
         future: getInitials(),
         builder: (context, snapshot) {
-          // Use local variables from snapshot or from state
           final profilePic =
               profilePicture ?? snapshot.data?['profile_picture'];
           final firstName = firstname ?? snapshot.data?['firstname'];
           final lastName = lastname ?? snapshot.data?['lastname'];
 
           if (profilePic != null && profilePic.isNotEmpty) {
-            // Show circular profile picture
             return InkWell(
               onTap: () => Routemaster.of(context).push('/homepage/profile'),
               child: Container(
@@ -564,7 +568,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                       child: Text(
                         '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
                         '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 10,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -577,7 +581,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                       child: Text(
                         '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
                         '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 10,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -589,7 +593,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
               ),
             );
           } else {
-            // Show initials as fallback
             return InkWell(
               onTap: () => Routemaster.of(context).push('/homepage/profile'),
               child: CircleAvatar(
@@ -598,7 +601,7 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                 child: Text(
                   '${firstName?.isNotEmpty == true ? firstName![0] : 'U'}'
                   '${lastName?.isNotEmpty == true ? lastName![0] : 'U'}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -618,7 +621,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     String? firstname =
         await SharedPreferencesService.getPreference('firstname');
     String? lastname = await SharedPreferencesService.getPreference('lastname');
-
     return {
       'profile_picture': profilePicture,
       'firstname': firstname,
@@ -634,7 +636,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
     } else if (searchAttribute == 'Relationship Goal') {
       return _buildRelationshipGoalField(isLightTheme);
     }
-    // Default: text field for Firstname, Lastname, Email, Nickname, Home Address
     return Expanded(
       child: SizedBox(
         height: 35,
@@ -644,13 +645,9 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
             controller: searchValue,
             onChanged: (value) {
               if (value.trim().isEmpty) {
-                ref
-                    .read(paginatedProfilesProvider.notifier)
-                    .clearSearch();
+                ref.read(paginatedProfilesProvider.notifier).clearSearch();
               } else {
-                ref
-                    .read(paginatedProfilesProvider.notifier)
-                    .searchProfiles(
+                ref.read(paginatedProfilesProvider.notifier).searchProfiles(
                       filterOption: searchAttribute,
                       filterValue: value,
                     );
@@ -868,7 +865,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
               ),
               child: Row(
                 children: [
-                  // Dropdown
                   Container(
                     height: 35,
                     constraints: const BoxConstraints(
@@ -930,10 +926,8 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                       ),
                     ),
                   ),
-                  // Search Field
                   _buildSearchInputField(isLightTheme),
-                  // Close Button
-                  Container(
+                  SizedBox(
                     height: 35,
                     width: 40,
                     child: IconButton(
@@ -953,7 +947,6 @@ class _HomepageScreenState extends ConsumerState<HomepageScreen>
                           _selectedResidenceCountry = null;
                           _selectedRelationshipGoal = null;
                         });
-
                         await ref
                             .read(paginatedProfilesProvider.notifier)
                             .clearSearch();

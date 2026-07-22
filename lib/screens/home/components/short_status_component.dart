@@ -30,8 +30,6 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
 
     String nick = await SharedPreferencesService.getPreference('nickname');
 
-    print(nick);
-
     setState(() {
       profilePicture = picture;
       nickname = nick;
@@ -172,7 +170,7 @@ class _ShortStatusComponentState extends ConsumerState<ShortStatusComponent> {
                         const SizedBox(height: 5),
                         Text(
                           username == nickname
-                              ? 'My Story'
+                              ? 'My Day'
                               : username.length > 10
                                   ? '${username.substring(0, 10).trim()}...'
                                   : username,

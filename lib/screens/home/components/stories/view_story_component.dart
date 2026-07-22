@@ -525,7 +525,7 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
                         const SizedBox(width: 8),
                         Text(
                           isMyStory
-                              ? 'My Story'
+                              ? 'My Day'
                               : story['nickname'] as String? ?? '',
                           style: const TextStyle(
                             fontSize: 14,
@@ -592,87 +592,96 @@ class _ViewStoryPageState extends ConsumerState<ViewStoryComponent> {
           ),
 
           // ── 7a. Bottom bar — others' story ────────────────────────────────
-          if (!isMyStory)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: Colors.black.withOpacity(0.55),
-                padding: EdgeInsets.fromLTRB(4, 6, 4, bottomPad + 10),
-                child: Row(
-                  children: [
-                    // Like
-                    IconButton(
-                      onPressed: _toggleLike,
-                      icon: Icon(
-                        alreadyLiked ? Icons.favorite : Icons.favorite_border,
-                        color: alreadyLiked ? GlobalColors.primaryColor : Colors.white,
-                        size: 22,
-                      ),
-                    ),
-
-                    // Reply field
-                    Expanded(
-                      child: canReply
-                          ? Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1A1A1A),
-                                borderRadius: BorderRadius.circular(60),
-                              ),
-                              child: TextField(
-                                controller: _replyCtrl,
-                                style: const TextStyle(color: Colors.white, fontSize: 13),
-                                decoration: const InputDecoration(
-                                  hintText: 'Reply…',
-                                  hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      vertical: 0, horizontal: 14),
-                                  border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(60)),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Text('Upgrade to reply',
-                                  style: TextStyle(
-                                      color: Colors.white38, fontSize: 12)),
-                            ),
-                    ),
-
-                    // Send
-                    if (canReply)
-                      _sendingReply
-                          ? const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 14),
-                              child: SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
-                              ),
-                            )
-                          : IconButton(
-                              icon: const Icon(Icons.send,
-                                  color: Colors.white, size: 18),
-                              onPressed: () {
-                                if (_replyCtrl.text.trim().isNotEmpty) {
-                                  _sendReply(
-                                    story['username'] as String? ?? '',
-                                    story['name'] as String? ?? '',
-                                  );
-                                }
-                              },
-                            ),
-                  ],
-                ),
+          // ── 7a. Bottom bar — others' story ────────────────────────────────
+if (!isMyStory)
+  Positioned(
+    bottom: 0,
+    left: 0,
+    right: 0,
+    child: Padding(
+      // This line is the fix: It adds padding equal to the keyboard height
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        color: Colors.black.withOpacity(0.55),
+        padding: EdgeInsets.fromLTRB(4, 6, 4, bottomPad + 10),
+        child: Row(
+          children: [
+            // Like
+            IconButton(
+              onPressed: _toggleLike,
+              icon: Icon(
+                alreadyLiked ? Icons.favorite : Icons.favorite_border,
+                color: alreadyLiked ? GlobalColors.primaryColor : Colors.white,
+                size: 22,
               ),
             ),
+
+            // Reply field
+            Expanded(
+              child: canReply
+                  ? Container(
+                      height: 38, // Slightly increased height for better visibility
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: TextField(
+                        controller: _replyCtrl,
+                        // Ensure focus doesn't cause issues
+                        autofocus: false, 
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        decoration: const InputDecoration(
+                          hintText: 'Reply…',
+                          hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 14),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(60)),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('Upgrade to reply',
+                          style: TextStyle(
+                              color: Colors.white38, fontSize: 12)),
+                    ),
+            ),
+
+            // Send
+            if (canReply)
+              _sendingReply
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      ),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.send,
+                          color: Colors.white, size: 18),
+                      onPressed: () {
+                        if (_replyCtrl.text.trim().isNotEmpty) {
+                          _sendReply(
+                            story['username'] as String? ?? '',
+                            story['name'] as String? ?? '',
+                          );
+                          // Unfocus keyboard after sending
+                          FocusScope.of(context).unfocus();
+                        }
+                      },
+                    ),
+          ],
+        ),
+      ),
+    ),
+  ),
 
           // ── 7b. Bottom bar — own story stats ──────────────────────────────
           if (isMyStory)

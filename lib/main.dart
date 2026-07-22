@@ -27,6 +27,7 @@ void main() async {
       child: ProviderScope(
         child: OverlaySupport.global(
           child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,

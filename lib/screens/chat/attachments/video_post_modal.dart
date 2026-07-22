@@ -6,7 +6,6 @@ import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:blisso_mobile/utils/video_size_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-//import 'package:routemaster/routemaster.dart';
 
 class VideoPostModal extends ConsumerStatefulWidget {
   final File video;
@@ -21,6 +20,12 @@ class VideoPostModal extends ConsumerStatefulWidget {
 
 class _VideoPostModalState extends ConsumerState<VideoPostModal> {
   TextEditingController captionController = TextEditingController();
+
+  @override
+  void dispose() {
+    captionController.dispose();
+    super.dispose();
+  }
 
   void postShortVideoStory() async {
     final sizeMB = getFileSizeMB(widget.video);
@@ -41,7 +46,9 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
 
       await addvideoPostRef.addVideoPost(videoStory);
 
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -71,10 +78,15 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
                 ],
               ),
               const Divider(height: 1),
-              VideoPlayer(videoFile: widget.video),
+              // Key on the video file path ensures the VideoPlayer widget
+              // fully reinitialises whenever a new file is passed in.
+              VideoPlayer(
+                key: ValueKey(widget.video.path),
+                videoFile: widget.video,
+              ),
               const SizedBox(height: 10),
               Padding(
-                padding: const EdgeInsets.only(left: 10),
+                padding: const EdgeInsets.only(left: 10, bottom: 16),
                 child: Row(
                   children: [
                     Expanded(
@@ -93,7 +105,9 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
                       ),
                     ),
                     IconButton(
-                        onPressed: () => postShortVideoStory(),
+                        onPressed: addVideoRef.isLoading
+                            ? null
+                            : () => postShortVideoStory(),
                         icon: addVideoRef.isLoading
                             ? const CircularProgressIndicator(
                                 color: GlobalColors.primaryColor,
@@ -113,11 +127,13 @@ class _VideoPostModalState extends ConsumerState<VideoPostModal> {
   }
 }
 
-void showVideoPostModal(
+/// Shows the video post bottom sheet and returns a [Future] that completes
+/// when the sheet is dismissed, so callers can await the full flow.
+Future<void> showVideoPostModal(
   BuildContext context,
   File video,
 ) {
-  showModalBottomSheet(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

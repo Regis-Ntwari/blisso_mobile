@@ -1,13 +1,17 @@
 flutter_native_splash:
   color: "#FFFFFF"
-  image: assets/images/blisso.png
+  image: assets/images/blisso_splash.png
   color_dark: "#000000"
-  image_dark: assets/images/blisso.png
+  image_dark: assets/images/blisso_splash.png
+
+  fullscreen: false
+
+  android_gravity: center        
 
   android_12:
     color: '#FFFFFF'
     color_dark: '#000000'
-    image: assets/images/blisso.png
-    image_dark: assets/images/blisso.png
+    image: assets/images/blisso_splash.png
+    image_dark: assets/images/blisso_splash.png
 
   web: false

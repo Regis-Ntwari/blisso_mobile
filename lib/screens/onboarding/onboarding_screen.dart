@@ -45,18 +45,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingItem(
       image: 'assets/images/hold.png',
-      title: 'Connect',
+      title: 'Connections',
       description: 'Chat, share moments, and stay in touch effortlessly.',
     ),
     OnboardingItem(
       image: 'assets/images/foster.png',
-      title: 'Started',
-      description: 'Create your profile and begin your journey today.',
+      title: 'Relationships',
+      description: 'Foster relationships and create lasting memories together.',
     ),
     OnboardingItem(
       image: 'assets/images/heart.png',
-      title: 'Peace',
-      description: 'Create your profile and begin your journey today.',
+      title: 'Leisure',
+      description: 'Enjoy your free time and explore new connections.',
     ),
     OnboardingItem(
       image: 'assets/images/handshake.png',

@@ -1,4 +1,4 @@
-package com.example.blisso_mobile
+package tech.blisso.blisso_mobile
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

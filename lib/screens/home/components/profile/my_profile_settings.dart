@@ -83,7 +83,7 @@ class _ProfileSettingsPageState extends ConsumerState<MyProfileSettings> {
       context: context,
       initialDate: dob,
       firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // Users must be at least 18 years old
     );
     if (picked != null) {
       setState(() {

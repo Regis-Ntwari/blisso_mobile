@@ -5,6 +5,7 @@ import 'package:blisso_mobile/services/chat/get_chat_details_provider.dart';
 import 'package:blisso_mobile/services/message_requests/add_message_request_service_provider.dart';
 import 'package:blisso_mobile/services/permissions/permission_provider.dart';
 import 'package:blisso_mobile/services/profile/target_profile_provider.dart';
+import 'package:blisso_mobile/services/report/report_service_provider.dart';
 import 'package:blisso_mobile/services/video-post/video_post_service_provider.dart';
 import 'package:blisso_mobile/utils/global_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -55,6 +56,95 @@ class _TargetProfileComponentState
       grouped[category]![subCategory]!.add(snap);
     }
     return grouped;
+  }
+
+  void _openReportModal(
+      BuildContext context, WidgetRef ref, dynamic targetProfile) {
+    final TextEditingController reasonController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                const Text(
+                  'Report User',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Input
+                TextFormField(
+                  controller: reasonController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter reason...',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please provide a reason';
+                    }
+                    if (value.trim().length < 5) {
+                      return 'Reason is too short';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                // Submit button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (formKey.currentState!.validate()) {
+                        final username = targetProfile.user!['username'];
+                        final reason = reasonController.text.trim();
+
+                        ref.read(reportServiceProviderImpl.notifier).reportUser(
+                              reason,
+                              username,
+                            );
+
+                        Navigator.pop(context);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Report submitted')),
+                        );
+                      }
+                    },
+                    child: const Text('Submit Report'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -291,6 +381,12 @@ class _TargetProfileComponentState
                   targetProfile, videoState, cardColor, isLightTheme),
 
               const SizedBox(height: 40),
+
+              ButtonComponent(
+                  text: 'Report User',
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: GlobalColors.primaryColor,
+                  onTap: () => _openReportModal(context, ref, targetProfile)),
             ],
           ),
         ),
@@ -366,40 +462,157 @@ class _TargetProfileComponentState
 
   Widget _buildGroupedSnapshots(List<dynamic> snapshots) {
     final grouped = _groupByCategoryAndSubCategory(snapshots);
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+
     return Column(
-      children: grouped.entries
-          .map((cat) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(cat.key,
-                      style: TextStyle(
-                          color: GlobalColors.primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: cat.value.values
-                          .expand((e) => e)
-                          .map((snap) => Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        ...grouped.entries.map((categoryEntry) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: GlobalColors.primaryColor.withOpacity(0.15),
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category header (matches MyProfile style)
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: GlobalColors.primaryColor.withOpacity(0.1),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(13),
+                      topRight: Radius.circular(13),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.interests_rounded,
+                          size: 18, color: GlobalColors.primaryColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          categoryEntry.key,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: GlobalColors.primaryColor,
+                          ),
+                        ),
+                      ),
+                      // Item Count Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: GlobalColors.primaryColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${categoryEntry.value.values.fold<int>(0, (sum, list) => sum + list.length)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: GlobalColors.primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Sub-categories and Chips
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: categoryEntry.value.entries.map((subEntry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Sub-category Label with Indicator
+                            Row(
+                              children: [
+                                Container(
+                                  width: 3,
+                                  height: 14,
+                                  decoration: BoxDecoration(
                                     color: GlobalColors.primaryColor
-                                        .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20)),
-                                child: Text(snap['name'],
-                                    style: TextStyle(
+                                        .withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  subEntry.key,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isLightTheme
+                                        ? Colors.black54
+                                        : Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // The Chips
+                            Padding(
+                              padding: const EdgeInsets.only(left: 11),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: subEntry.value.map<Widget>((snap) {
+                                  // Check if we should show target scale (only for "Target" section)
+                                  final bool hasScale =
+                                      snap.containsKey('target_scale');
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: GlobalColors.primaryColor
+                                          .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: GlobalColors.primaryColor
+                                            .withOpacity(0.4),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      hasScale
+                                          ? '${snap['name']} - ${snap['target_scale']}/10'
+                                          : snap['name'],
+                                      style: TextStyle(
                                         color: GlobalColors.primaryColor,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold)),
-                              ))
-                          .toList()),
-                  const SizedBox(height: 16),
-                ],
-              ))
-          .toList(),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -524,7 +737,6 @@ class _TargetProfileComponentState
                   });
                   test = true;
                   break;
-
                 }
               }
               setState(() {
@@ -534,14 +746,18 @@ class _TargetProfileComponentState
                 Routemaster.of(context)
                     .push('/homepage/chat-detail/$targetUsername');
               } else {
-                ref.read(getChatDetailsProviderImpl.notifier).updateChatDetails({
+                ref
+                    .read(getChatDetailsProviderImpl.notifier)
+                    .updateChatDetails({
                   'username': targetUsername,
                   'profile_picture': targetProfile.profilePictureUri,
-                  'full_name': '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
+                  'full_name':
+                      '${targetProfile.user!['first_name']} ${targetProfile.user!['last_name']}',
                   'nickname': targetProfile.nickname,
                   'messages': []
                 });
-                Routemaster.of(context).push('/homepage/chat-detail/$targetUsername');
+                Routemaster.of(context)
+                    .push('/homepage/chat-detail/$targetUsername');
               }
             } else if (messageRequestResponse.statusCode == 201) {
               setState(() {

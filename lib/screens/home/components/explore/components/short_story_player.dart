@@ -38,19 +38,29 @@ class ShortStoryPlayer extends ConsumerStatefulWidget {
   ConsumerState<ShortStoryPlayer> createState() => _ShortStoryPlayerState();
 }
 
-class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
+class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer>
+    with SingleTickerProviderStateMixin {
   VideoPlayerController? _ctrl;
   bool _initialized = false;
   bool _buffering = false;
+
+  // ── Pause / play overlay ──────────────────────────────────────────────────
+  bool _manuallyPaused = false;
+  bool _showPauseIcon = false;
+  late AnimationController _iconAnimController;
+  late Animation<double> _iconOpacity;
+
+  // ── Seek bar ──────────────────────────────────────────────────────────────
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+  bool _isSeeking = false;
+  double _seekValue = 0;
 
   // Time tracking
   DateTime? _trackStart;
   bool _tracking = false;
 
-  // Ensures viewVideo() is only called once per player instance — not on
-  // every play/resume cycle.
   bool _hasRecordedView = false;
-
   bool _profileLoading = false;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -58,6 +68,15 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   @override
   void initState() {
     super.initState();
+
+    _iconAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _iconOpacity = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(parent: _iconAnimController, curve: Curves.easeOut),
+    );
+
     _attachController(widget.videoController);
   }
 
@@ -65,16 +84,14 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   void didUpdateWidget(covariant ShortStoryPlayer old) {
     super.didUpdateWidget(old);
 
-    // Manager handed a new controller for this slot
     if (widget.videoController != old.videoController) {
       _detachController();
       _attachController(widget.videoController);
     }
 
-    // Parent toggled active state
     if (widget.isActive != old.isActive) {
       if (widget.isActive) {
-        _play();
+        if (!_manuallyPaused) _play();
       } else {
         _pause();
         _stopTracking();
@@ -84,8 +101,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   @override
   void deactivate() {
-    // Fires immediately when the widget leaves the tree (tab switch, pop).
-    // Pause + stop tracking before dispose() runs so audio stops instantly.
     _pause();
     _stopTracking();
     super.deactivate();
@@ -95,6 +110,7 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   void dispose() {
     _stopTracking();
     _detachController();
+    _iconAnimController.dispose();
     super.dispose();
   }
 
@@ -102,7 +118,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
   void _attachController(VideoPlayerController? ctrl) {
     if (ctrl == null) {
-      // Manager hasn't preloaded this slot yet — own controller as fallback.
       final url = widget.video.videoUrl;
       if (url.isEmpty) return;
       final owned = VideoPlayerController.networkUrl(Uri.parse(url));
@@ -110,25 +125,26 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
       owned.initialize().then((_) {
         if (!mounted) return;
         owned.setLooping(true);
-        setState(() => _initialized = true);
-        if (widget.isActive) _play();
-      }).catchError((_) {
-        // Swallow — bad URL must never crash the player
-      });
+        setState(() {
+          _initialized = true;
+          _duration = owned.value.duration;
+        });
+        if (widget.isActive && !_manuallyPaused) _play();
+      }).catchError((_) {});
     } else {
       _ctrl = ctrl;
       _initialized = ctrl.value.isInitialized;
+      if (_initialized) _duration = ctrl.value.duration;
     }
 
     _ctrl?.addListener(_onControllerUpdate);
-    if (widget.isActive && _initialized) _play();
+    if (widget.isActive && _initialized && !_manuallyPaused) _play();
   }
 
   void _detachController() {
     _ctrl?.removeListener(_onControllerUpdate);
     _ctrl?.pause();
     _ctrl?.setVolume(0);
-    // Only dispose if we created the controller ourselves (no manager controller)
     if (widget.videoController == null) {
       _ctrl?.dispose();
     }
@@ -151,27 +167,59 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     _ctrl?.setVolume(0);
   }
 
+  /// Tap-to-toggle pause/play — user-driven.
+  void _togglePlayPause() {
+    if (!_initialized || _ctrl == null) return;
+    setState(() {
+      if (_ctrl!.value.isPlaying) {
+        _manuallyPaused = true;
+        _pause();
+        _stopTracking();
+        _showPauseIcon = true;
+        _iconAnimController.reset();
+        // Keep the icon visible while paused — don't auto-fade.
+      } else {
+        _manuallyPaused = false;
+        _play();
+        _showPauseIcon = true;
+        _iconAnimController.reset();
+        // Fade out the play icon after a short delay.
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) _iconAnimController.forward();
+        });
+      }
+    });
+  }
+
   // ── Controller listener ───────────────────────────────────────────────────
 
   void _onControllerUpdate() {
     if (!mounted || _ctrl == null) return;
-
     final val = _ctrl!.value;
 
-    // Sync initialisation state
     if (val.isInitialized && !_initialized) {
-      setState(() => _initialized = true);
-      if (widget.isActive) _play();
+      setState(() {
+        _initialized = true;
+        _duration = val.duration;
+      });
+      if (widget.isActive && !_manuallyPaused) _play();
     }
 
-    // Buffering indicator
     if (val.isBuffering != _buffering) {
       setState(() => _buffering = val.isBuffering);
     }
 
-    // Time tracking — only START here; stopping is handled explicitly
-    // in deactivate/dispose/didUpdateWidget to avoid premature flushes
-    // caused by brief isPlaying=false during buffering.
+    // Update seek bar position while not dragging.
+    if (!_isSeeking && val.isInitialized) {
+      setState(() {
+        _position = val.position;
+        if (val.duration > Duration.zero) {
+          _seekValue = val.position.inMilliseconds / val.duration.inMilliseconds;
+          _seekValue = _seekValue.clamp(0.0, 1.0);
+        }
+      });
+    }
+
     if (val.isPlaying && !_tracking) {
       _startTracking();
     }
@@ -184,17 +232,13 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     _trackStart = DateTime.now();
     _tracking = true;
 
-    // Record a view exactly once per player instance.
     if (!_hasRecordedView) {
       _hasRecordedView = true;
-      // Guard with mounted — controller listener can fire during deactivation.
       try {
         ref
             .read(viewVideoServiceProviderImpl.notifier)
             .viewVideo(widget.video.id);
-      } catch (_) {
-        // Provider may have been disposed — silently skip.
-      }
+      } catch (_) {}
     }
   }
 
@@ -205,8 +249,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     final videoId = widget.video.id;
     _tracking = false;
     _trackStart = null;
-    // Call the service directly instead of going through ref, because this
-    // can fire during deactivate()/dispose() when ref is no longer valid.
     VideoPostService().updateWatchTime(start, end, videoId);
   }
 
@@ -223,13 +265,11 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
         widget.video.likedThisStory = true;
       }
     });
-    // Keep the paginated data in sync so the like survives tab switches.
     ref.read(paginatedVideoPostProvider.notifier).toggleVideoLike(
           widget.video.id,
           liked: widget.video.likedThisStory,
           likes: widget.video.likes,
         );
-
     ref
         .read(getVideoPostProviderImpl.notifier)
         .likeVideoPost(int.parse(widget.video.id));
@@ -246,6 +286,12 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     if (v < 1000000) return fmt(v / 1000, 'k');
     if (v < 1000000000) return fmt(v / 1000000, 'M');
     return fmt(v / 1000000000, 'B');
+  }
+
+  String _formatDuration(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   // ── Build helpers ─────────────────────────────────────────────────────────
@@ -297,7 +343,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ── Profile avatar ──────────────────────────────────────────────
         if (widget.showStory)
           _shimmer(
             GestureDetector(
@@ -316,10 +361,8 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
               ),
             ),
           ),
-
         if (widget.showStory) const SizedBox(height: sectionGap),
 
-        // ── Views ───────────────────────────────────────────────────────
         _shimmer(Icon(
           Icons.remove_red_eye_outlined,
           color: Colors.white,
@@ -331,7 +374,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
         const SizedBox(height: sectionGap),
 
-        // ── Like ────────────────────────────────────────────────────────
         _shimmer(_actionButton(
           icon: widget.video.likedThisStory
               ? Icons.favorite
@@ -347,7 +389,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
         const SizedBox(height: sectionGap),
 
-        // ── Share ───────────────────────────────────────────────────────
         _shimmer(_actionButton(
           icon: Icons.reply,
           color: Colors.white,
@@ -359,7 +400,6 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
 
         const SizedBox(height: sectionGap),
 
-        // ── Caption ─────────────────────────────────────────────────────
         _shimmer(
           GestureDetector(
             onTap: _initialized ? _onCaption : null,
@@ -381,6 +421,78 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
                 ),
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Instagram-style seek bar pinned to the bottom of the screen.
+  Widget _buildSeekBar() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Time labels
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _formatDuration(_isSeeking
+                    ? Duration(
+                        milliseconds:
+                            (_seekValue * _duration.inMilliseconds).round())
+                    : _position),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                _formatDuration(_duration),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        // Slider
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 2.5,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+            activeTrackColor: Colors.white,
+            inactiveTrackColor: Colors.white30,
+            thumbColor: Colors.white,
+            overlayColor: Colors.white24,
+          ),
+          child: Slider(
+            value: _seekValue,
+            min: 0,
+            max: 1,
+            onChangeStart: (_) {
+              setState(() => _isSeeking = true);
+            },
+            onChanged: (v) {
+              setState(() => _seekValue = v);
+            },
+            onChangeEnd: (v) async {
+              if (_ctrl != null && _duration > Duration.zero) {
+                final target = Duration(
+                    milliseconds: (v * _duration.inMilliseconds).round());
+                await _ctrl!.seekTo(target);
+              }
+              setState(() => _isSeeking = false);
+              // Resume if it was playing before the seek.
+              if (!_manuallyPaused && widget.isActive) _play();
+            },
           ),
         ),
       ],
@@ -477,67 +589,124 @@ class _ShortStoryPlayerState extends ConsumerState<ShortStoryPlayer> {
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // ── Video / thumbnail / shimmer ──────────────────────────────────
-        Builder(builder: (context) {
-          final ctrl = _ctrl;
-          if (ctrl != null && _initialized) {
-            return Center(
-              child: AspectRatio(
-                aspectRatio: ctrl.value.aspectRatio,
-                child: VideoPlayer(ctrl),
+    return GestureDetector(
+      // Tap anywhere on the video to toggle pause/play.
+      onTap: _togglePlayPause,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Video / thumbnail / shimmer ────────────────────────────────
+          Builder(builder: (context) {
+            final ctrl = _ctrl;
+            if (ctrl != null && _initialized) {
+              return SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: ctrl.value.size.width,
+                    height: ctrl.value.size.height,
+                    child: VideoPlayer(ctrl),
+                  ),
+                ),
+              );
+            }
+            return CachedNetworkImage(
+              imageUrl: widget.video.postThumbnailUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              placeholder: (_, __) => Shimmer.fromColors(
+                baseColor: Colors.grey[900]!,
+                highlightColor: Colors.grey[800]!,
+                child: const ColoredBox(color: Colors.black),
+              ),
+              errorWidget: (_, __, ___) => Shimmer.fromColors(
+                baseColor: Colors.grey[900]!,
+                highlightColor: Colors.grey[800]!,
+                child: const ColoredBox(color: Colors.black),
               ),
             );
-          }
-          // Show thumbnail while the video controller initialises.
-          // Fall back to shimmer if the thumbnail URL is empty or fails.
-          return CachedNetworkImage(
-            imageUrl: widget.video.postThumbnailUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            placeholder: (_, __) => Shimmer.fromColors(
-              baseColor: Colors.grey[900]!,
-              highlightColor: Colors.grey[800]!,
-              child: const ColoredBox(color: Colors.black),
-            ),
-            errorWidget: (_, __, ___) => Shimmer.fromColors(
-              baseColor: Colors.grey[900]!,
-              highlightColor: Colors.grey[800]!,
-              child: const ColoredBox(color: Colors.black),
-            ),
-          );
-        }),
+          }),
 
-        // ── Buffering spinner ────────────────────────────────────────────
-        if (_buffering && _initialized)
-          Container(
-            color: Colors.black45,
-            child: const Center(
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: Colors.white),
+          // ── Tap-to-pause/play icon overlay ─────────────────────────────
+          if (_showPauseIcon && _initialized)
+            Center(
+              child: FadeTransition(
+                opacity: _manuallyPaused
+                    ? const AlwaysStoppedAnimation(1.0)
+                    : _iconOpacity,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _manuallyPaused ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ),
+            ),
+
+          // ── Buffering spinner ──────────────────────────────────────────
+          if (_buffering && _initialized)
+            Container(
+              color: Colors.black26,
+              child: const Center(
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+            ),
+
+          // ── Right-side actions ─────────────────────────────────────────
+          // Exclude the seek bar area (approx 60 px) from the right column.
+          Positioned(
+            right: 10,
+            bottom: bottomPad + 90 + 60,
+            child: _buildActionColumn(),
+          ),
+
+          // ── Bottom gradient + seek bar ─────────────────────────────────
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              // Prevent seek bar taps from toggling pause/play.
+              onTap: () {},
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Colors.black87, Colors.transparent],
+                    stops: [0, 1],
+                  ),
+                ),
+                padding: EdgeInsets.only(bottom: bottomPad + 8),
+                child: _initialized
+                    ? _buildSeekBar()
+                    : const SizedBox(height: 48),
+              ),
             ),
           ),
 
-        // ── Right-side actions ───────────────────────────────────────────
-        Positioned(
-          right: 10,
-          bottom: bottomPad + 90,
-          child: _buildActionColumn(),
-        ),
-
-        // ── Profile loading overlay ──────────────────────────────────────
-        if (_profileLoading)
-          Container(
-            color: Colors.black54,
-            child: const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+          // ── Profile loading overlay ────────────────────────────────────
+          if (_profileLoading)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

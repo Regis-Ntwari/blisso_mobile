@@ -98,7 +98,10 @@ class _ImageModalState extends ConsumerState<ImageModal> {
               const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: constraints.maxHeight * 0.4,
+                  ),
                   child: Image.file(
                     widget.image,
                     width: double.infinity,

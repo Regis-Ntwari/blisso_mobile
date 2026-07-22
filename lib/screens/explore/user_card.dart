@@ -36,6 +36,8 @@ class UserCard extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       clipBehavior: Clip.antiAlias,
+      elevation: 8,
+      shadowColor: Colors.black.withOpacity(0.6),
       child: Stack(
         children: [
           // Background image
@@ -60,12 +62,12 @@ class UserCard extends StatelessWidget {
               fadeInDuration: const Duration(milliseconds: 300),
             ),
           ),
-
+    
           // Overlay
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.3)),
           ),
-
+    
           // Score at top right
           Positioned(
             top: 8,
@@ -85,31 +87,29 @@ class UserCard extends StatelessWidget {
               ),
             ),
           ),
-
+    
           // Nickname at bottom
           Positioned(
             bottom: 10,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                user['nickanme'] ?? '',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 2,
-                      color: Colors.black,
-                    ),
-                  ],
-                ),
+            left: 10,
+            right: 10,
+            child: Text(
+              user['nickname'] ?? '',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                shadows: [
+                  Shadow(
+                    offset: Offset(0, 1),
+                    blurRadius: 2,
+                    color: Colors.black,
+                  ),
+                ],
               ),
             ),
           ),
-
+    
           // Loading overlay for this card
           if (isLoading)
             Positioned.fill(
